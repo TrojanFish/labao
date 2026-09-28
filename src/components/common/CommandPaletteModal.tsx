@@ -166,31 +166,33 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
           <div className="w-10 h-1 rounded-full bg-black/20 dark:bg-white/20" />
         </div>
 
-        {/* Search Header */}
-        <div className="relative flex items-center px-4 py-3 border-b border-black/[0.06] dark:border-white/[0.08]">
-          <Search className="w-5 h-5 text-slate-400 dark:text-slate-500 mr-2.5 shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={language === 'zh-TW' ? '搜尋 21 款單車科學工具、名山路書或標籤...' : '搜索 21 款单车科学工具、名山路书或标签...'}
-            className="flex-1 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
-          />
-          {query ? (
-            <button
-              onClick={() => setQuery('')}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 apple-touch"
-              aria-label="Clear search"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          ) : (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-mono font-medium text-slate-400 dark:text-slate-500 bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] rounded-md">
-              ESC
-            </kbd>
-          )}
+        {/* Search Header - Apple HIG Spotlight Capsule */}
+        <div className="p-3 sm:p-3.5 pb-2 border-b border-black/[0.04] dark:border-white/[0.06]">
+          <div className="relative flex items-center h-10 px-3.5 bg-black/[0.04] dark:bg-white/[0.08] border border-black/[0.05] dark:border-white/[0.08] rounded-xl focus-within:ring-2 focus-within:ring-ios-blue/40 focus-within:bg-white dark:focus-within:bg-[#2C2C2E] transition-all">
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 mr-2.5 shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={language === 'zh-TW' ? '搜尋 21 款單車科學工具、名山路書或標籤...' : '搜索 21 款单车科学工具、名山路书或标签...'}
+              className="flex-1 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
+            />
+            {query ? (
+              <button
+                onClick={() => setQuery('')}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 apple-touch"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-400 dark:text-slate-400 bg-white dark:bg-[#3A3A3C] border border-black/[0.06] dark:border-white/[0.08] rounded-md shadow-xs select-none pointer-events-none">
+                ESC
+              </kbd>
+            )}
+          </div>
         </div>
 
         {/* Tool Results List */}

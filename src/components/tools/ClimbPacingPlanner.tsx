@@ -712,16 +712,6 @@ export const ClimbPacingPlanner: React.FC<ClimbPacingPlannerProps> = ({ onNaviga
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             {language === 'zh-TW' ? '精選名山:' : '精选名山:'}
           </span>
-          <button
-            onClick={handleOpenStravaSegments}
-            className="flex items-center gap-1 h-9 px-3 rounded-xl text-xs font-bold transition shadow-ios-sm apple-touch border bg-[#FC4C02]/10 hover:bg-[#FC4C02]/20 text-[#FC4C02] border-[#FC4C02]/30 whitespace-nowrap shrink-0"
-            title="浏览并导入 Strava 赛段与经典 KOM 坡度"
-          >
-            <svg className="w-3 h-3 fill-current shrink-0" viewBox="0 0 24 24">
-              <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7.01 13.828h4.172" />
-            </svg>
-            <span>{language === 'zh-TW' ? 'Strava 賽段庫' : 'Strava 赛段库'}</span>
-          </button>
           {[
             { id: 'longjing', name: '杭州龙井', title: '杭州龙井 3.2km' },
             { id: 'miaofeng', name: '北京妙峰山', title: '北京妙峰山 20.5km' },

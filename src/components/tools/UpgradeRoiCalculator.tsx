@@ -165,30 +165,24 @@ export const UpgradeRoiCalculator: React.FC = () => {
   const [flatCruiseSpeedKmh, setFlatCruiseSpeedKmh] = useState<number>(35);
   const [climbPowerWatts, setClimbPowerWatts] = useState<number>(profile.ftpWatts || 240);
   const [climbGradePct, setClimbGradePct] = useState<number>(7.5);
-  const [currency, setCurrency] = useState<'CNY' | 'USD' | 'EUR' | 'GBP'>(isImperial ? 'USD' : 'CNY');
 
   // Share Poster State
   const [sharePosterUrl, setSharePosterUrl] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
-  // Reactively synchronize with global rider profile and unit system
+  // Reactively synchronize with global rider profile
   useEffect(() => {
     const totalW = (profile.weightKg || 68) + (profile.bikeWeightKg || 8.5);
     setTotalSystemWeightKg(totalW);
     if (profile.ftpWatts) setClimbPowerWatts(profile.ftpWatts);
-    if (unitSystem === 'imperial' && currency === 'CNY') {
-      setCurrency('USD');
-    }
-  }, [profile.weightKg, profile.bikeWeightKg, profile.ftpWatts, unitSystem]);
+  }, [profile.weightKg, profile.bikeWeightKg, profile.ftpWatts]);
 
+  // Adaptive currency symbol based on global language & unit system
   const currencySymbol = useMemo(() => {
-    switch (currency) {
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return '¥';
-    }
-  }, [currency]);
+    if (language === 'zh-TW') return 'NT$';
+    if (isImperial) return '$';
+    return '¥';
+  }, [language, isImperial]);
 
   const [items, setItems] = useState<UpgradeItem[]>(DEFAULT_ITEMS_WITH_SPECS);
 
@@ -415,59 +409,14 @@ export const UpgradeRoiCalculator: React.FC = () => {
         onShare={handleGeneratePoster}
         shareTitle="生成改装升级省瓦战报海报"
         actions={
-          <>
-            <IOSSegmentedControl
-              options={[
-                {
-                  id: 'CNY',
-                  label: (
-                    <>
-                      <span className="sm:hidden">¥</span>
-                      <span className="hidden sm:inline">¥ CNY</span>
-                    </>
-                  )
-                },
-                {
-                  id: 'USD',
-                  label: (
-                    <>
-                      <span className="sm:hidden">$</span>
-                      <span className="hidden sm:inline">$ USD</span>
-                    </>
-                  )
-                },
-                {
-                  id: 'EUR',
-                  label: (
-                    <>
-                      <span className="sm:hidden">€</span>
-                      <span className="hidden sm:inline">€ EUR</span>
-                    </>
-                  )
-                },
-                {
-                  id: 'GBP',
-                  label: (
-                    <>
-                      <span className="sm:hidden">£</span>
-                      <span className="hidden sm:inline">£ GBP</span>
-                    </>
-                  )
-                },
-              ]}
-              value={currency}
-              onChange={(val) => setCurrency(val as any)}
-              size="md"
-            />
-
-            <button
-              onClick={resetToDefaults}
-              className="apple-touch h-9 px-3.5 sm:px-4 rounded-xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 text-xs font-semibold border border-black/[0.04] dark:border-white/[0.06] transition flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 w-full sm:w-auto"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-ios-blue" />
-              <span>重置预设</span>
-            </button>
-          </>
+          <button
+            onClick={resetToDefaults}
+            className="apple-touch h-9 px-3.5 sm:px-4 rounded-xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 text-xs font-semibold border border-black/[0.04] dark:border-white/[0.06] transition flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+            title={language === 'zh-TW' ? '重設為預設改裝件清單' : '重置为预设改装件清单'}
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-ios-blue" />
+            <span>{language === 'zh-TW' ? '重設預設' : '重置预设'}</span>
+          </button>
         }
       />
 
@@ -617,7 +566,7 @@ export const UpgradeRoiCalculator: React.FC = () => {
                   {/* Editable 3 Inputs: Price, Weight Save, Watt Save */}
                   <div className="grid grid-cols-3 gap-2 text-xs pt-1.5 border-t border-black/[0.05] dark:border-white/[0.08] font-mono">
                     <div className="bg-slate-100/80 dark:bg-white/5 rounded-xl p-2.5 border border-black/[0.05] dark:border-white/[0.08]">
-                      <span className="text-xs text-slate-500 dark:text-slate-400 block mb-0.5 font-sans">实际价格 ({currency})</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 block mb-0.5 font-sans">{language === 'zh-TW' ? '實際價格' : '实际价格'} ({currencySymbol})</span>
                       <div className="flex items-center text-amber-500 dark:text-amber-400 font-bold">
                         <span className="text-[11px] mr-1">{currencySymbol}</span>
                         <input
