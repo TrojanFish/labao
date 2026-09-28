@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [sponsorOpen, setSponsorOpen] = useState<boolean>(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const { profile, activeBike } = useRiderProfile();
-  const { language, t, convertWeight, unitSystem, toggleUnitSystem } = useLanguageAndUnit();
+  const { language, t, convertWeight } = useLanguageAndUnit();
 
   // iOS Pull-Down to Dismiss Gesture State for Sponsor Modal
   const [sponsorDragY, setSponsorDragY] = useState<number>(0);
@@ -181,25 +181,6 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Search Tools"
             >
               {mobileSearchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-            </button>
-
-            {/* Quick Unit System Switcher (Apple HIG 36px control) */}
-            <button
-              onClick={toggleUnitSystem}
-              className="apple-touch h-9 px-2 sm:px-2.5 flex items-center justify-center rounded-xl bg-slate-100/90 dark:bg-[#2C2C2E]/80 border border-black/[0.05] dark:border-white/[0.08] hover:bg-slate-200/80 dark:hover:bg-[#3A3A3C] text-slate-700 dark:text-slate-200 text-xs font-semibold gap-1.5 transition active:scale-95 shrink-0 shadow-xs"
-              title={
-                unitSystem === 'metric'
-                  ? (language === 'zh-TW' ? '當前單位制：公制 (km, kg)，點擊切換為英制 (mi, lbs)' : '当前单位制：公制 (km, kg)，点击切换为英制 (mi, lbs)')
-                  : (language === 'zh-TW' ? '當前單位制：英制 (mi, lbs)，點擊切換為公制 (km, kg)' : '当前单位制：英制 (mi, lbs)，点击切换为公制 (km, kg)')
-              }
-              aria-label="Toggle Unit System"
-            >
-              <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded-md bg-ios-blue/10 dark:bg-ios-blue/20 text-ios-blue dark:text-ios-blue-dark">
-                {unitSystem === 'metric' ? 'KM' : 'MI'}
-              </span>
-              <span className="hidden sm:inline text-xs text-slate-600 dark:text-slate-300">
-                {unitSystem === 'metric' ? (language === 'zh-TW' ? '公制' : '公制') : (language === 'zh-TW' ? '英制' : '英制')}
-              </span>
             </button>
 
             {/* Sponsor / Appreciation Button */}
