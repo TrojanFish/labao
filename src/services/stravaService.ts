@@ -137,6 +137,7 @@ export const exchangeCodeForToken = async (
 ): Promise<StravaTokenData> => {
   const response = await fetch('/api/strava/token', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code, grantType: 'authorization_code' })
   });
@@ -166,6 +167,7 @@ export const refreshAccessToken = async (
 ): Promise<StravaTokenData> => {
   const response = await fetch('/api/strava/token', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken: refreshTokenStr, grantType: 'refresh_token' })
   });

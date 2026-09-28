@@ -1,7 +1,7 @@
-import crypto from 'node:crypto';
+import crypto from 'crypto';
 
 export const COOKIE_NAME = 'labao_strava_session';
-const key = () => crypto.createHash('sha256').update(process.env.STRAVA_SESSION_SECRET || '').digest();
+const key = () => crypto.createHash('sha256').update(process.env.STRAVA_SESSION_SECRET || 'labao_strava_salt').digest();
 
 export function seal(value: unknown) {
   const iv = crypto.randomBytes(12);
