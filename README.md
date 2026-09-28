@@ -309,7 +309,7 @@ npm run build
 
 #### 4. 完成部署与自动化 CI/CD
 - 点击 **Save and Deploy**，Cloudflare 将在 1~2 分钟内完成全自动化全球部署并分配免费的 HTTPS 域名（例如 `https://labao.pages.dev`）。
-- **静态规则与缓存**：本项目 `public/` 目录下已预置 `_redirects`（SPA 路由防 404）和 `_headers`（1 年长效静态资源强缓存与安全标头），与 Cloudflare Pages 100% 原生适配。
+- **静态规则与缓存**：本项目构建自动产出 `200.html` 原生支持 Cloudflare Pages SPA 客户端路由回退；`public/_headers` 预置了 1 年长效静态资源强缓存与安全标头，与 Cloudflare Pages 100% 原生适配。
 - **自定义域名**：可在 Pages 项目的 **Custom domains** 页面随时绑定个人独立域名，Cloudflare 自动颁发权威 SSL/TLS 证书。
 
 > ⚠️ **关于 Strava OAuth 的特别说明**：  

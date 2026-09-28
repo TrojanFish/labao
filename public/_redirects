@@ -1,1 +1,12 @@
-/*  /index.html  200
+# ============================================================
+# Cloudflare Pages SPA 路由与重定向说明
+# ============================================================
+#
+# 1. 单页应用 (SPA) 客户端路由:
+#    Cloudflare Pages 原生支持 200.html 回退机制。
+#    Vite 构建配置 (vite.config.ts) 已在 closeBundle 阶段自动将 index.html 复制为 200.html。
+#    当访问任意前端路由时，Cloudflare Pages 会自动以 200 状态码加载 200.html，无需任何重写规则。
+#    【重要】切勿在此添加 "/* /index.html 200"，Cloudflare 会因 URL 自动去 .html 特性检测到死循环并报错 [code: 100324]。
+#
+# 2. 外部 API 反向代理模板 (如需在 Pages 上对接独立 Strava 后端，可取消下方注释):
+# /api/*  https://your-api-server.com/api/:splat  200
