@@ -226,7 +226,26 @@ npm run dev
 ```
 打开浏览器访问：`http://localhost:3000`
 
-### 4. 运行全链路物理与生理学仿真套件 (Run Simulation Suite)
+### 4. Strava OAuth 配置
+
+Strava 使用平台统一应用。浏览器只接触公开的 Client ID；Client Secret、access token 和 refresh token 均由服务端处理，并保存在加密的 HttpOnly Session Cookie 中。
+
+复制环境变量模板并填写 Strava 应用信息：
+
+```bash
+cp .env.example .env.local
+```
+
+```env
+VITE_STRAVA_CLIENT_ID=你的_Strava_Client_ID
+STRAVA_CLIENT_ID=你的_Strava_Client_ID
+STRAVA_CLIENT_SECRET=你的_Strava_Client_Secret
+STRAVA_SESSION_SECRET=随机生成的长密钥
+```
+
+`STRAVA_SESSION_SECRET` 只能放在服务端环境变量中，不能使用 `VITE_` 前缀，也不要提交到 Git。Strava 后台的 Authorization Callback Domain 应配置为当前部署域名。
+
+### 5. 运行全链路物理与生理学仿真套件 (Run Simulation Suite)
 ```bash
 npx tsx scratch/simulate_five_phases.ts
 ```
@@ -246,7 +265,7 @@ npm run build
 
 ## 🌐 Production Deployment / 生产部署与投放指南
 
-本项目为基于 **React 18 + TypeScript + Vite 5** 的纯静态单页应用（SPA），采用 **Local-First（本地优先）** 架构。所有 IndexedDB 时序数据库与个性化配置均在用户浏览器端运行，**无需任何后端服务器与外部数据库**，支持在各大静态托管平台一键免费上线。
+本项目为基于 **React 18 + TypeScript + Vite** 的 SPA，采用 **Local-First（本地优先）** 架构。普通工具仍可作为静态站点部署；但启用 Strava OAuth 时必须同时部署项目中的 `/api/strava/*` 服务端接口，用于保护 Client Secret 并签发 HttpOnly Session Cookie。
 
 ---
 
@@ -273,7 +292,10 @@ npm run build
 #### 3. 环境变量配置 (Environment variables)
 在下方展开 **Environment variables** 填入：
 - `NODE_VERSION`: `20` (推荐 Node.js 20 LTS 运行时)
-- `VITE_STRAVA_CLIENT_ID`: `(可选)` 若需为整站开启默认公共 Strava 授权可填入，普通用户亦可直接在前端设置面板填入个人密钥。
+- `VITE_STRAVA_CLIENT_ID`: 平台统一 Strava App 的 Client ID
+- `STRAVA_CLIENT_ID`: 同上，供 Serverless Function 使用
+- `STRAVA_CLIENT_SECRET`: Strava App 的 Client Secret（仅服务端）
+- `STRAVA_SESSION_SECRET`: 随机长密钥，用于加密 HttpOnly Session Cookie
 
 #### 4. 完成部署与自动化 CI/CD
 - 点击 **Save and Deploy**，Cloudflare 将在 1~2 分钟内完成全自动化全球部署并分配免费的 HTTPS 域名（例如 `https://cycling-tools.pages.dev`）。
@@ -287,6 +309,12 @@ npm run build
 1. 将本仓库推送到 GitHub；
 2. 登录 [Vercel](https://vercel.com)，点击 **Add New...** -> **Project** 并导入该仓库；
 3. Vercel 会自动识别 Vite 框架并执行 `npm run build`，几十秒内全球 Anycast CDN 自动化上线。
+4. 在 **Settings → Environment Variables** 添加 `VITE_STRAVA_CLIENT_ID`、`STRAVA_CLIENT_ID`、`STRAVA_CLIENT_SECRET` 和 `STRAVA_SESSION_SECRET`，然后重新部署。
+5. 在 Strava 应用设置中，将 **Authorization Callback Domain** 配置为 Vercel 自定义域名（只填域名，不包含 `https://` 或路径）。
+
+Vercel 是当前推荐的 Strava 部署方式，因为它会自动部署根目录下的 `api/strava/` Serverless Functions。不要把 `STRAVA_CLIENT_SECRET` 或 `STRAVA_SESSION_SECRET` 写入前端 `.env` 或提交到仓库。
+
+> Cloudflare Pages 和纯 Nginx 静态部署只能承载前端静态文件，不能直接执行本项目的 `/api/strava/*` 接口。若使用这些平台，需额外部署同等功能的 Node/Serverless API，并将 `/api/strava/*` 反向代理到该 API；否则 Strava 授权不可用。
 
 ---
 

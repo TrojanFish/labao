@@ -13,6 +13,7 @@ import {
   saveStoredSettings,
   buildAuthorizeUrl,
   exchangeCodeForToken,
+  restoreStravaSession,
   getValidAccessToken,
   fetchAthleteProfile,
   fetchAthleteActivities,
@@ -118,6 +119,12 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  useEffect(() => {
+    restoreStravaSession().then(session => {
+      if (session) setTokenData(session);
+    }).catch(() => undefined);
+  }, []);
+
   // Save API keys
   const saveApiKeys = useCallback((keys: StravaApiKeys) => {
     saveStoredApiKeys(keys);
@@ -136,7 +143,7 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Initiate OAuth Authorization
   const initiateAuth = useCallback(() => {
     if (!apiKeys?.clientId) {
-      showToast('请先填写 Client ID', 'warning');
+      showToast('Strava 服务尚未配置，请联系管理员', 'warning');
       return;
     }
     const url = buildAuthorizeUrl(apiKeys.clientId);
@@ -145,6 +152,7 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Disconnect & Clear
   const disconnect = useCallback(async () => {
+    await fetch('/api/strava/logout', { method: 'POST', credentials: 'include' });
     clearStoredTokenData();
     setTokenData(null);
     setActivities([]);
@@ -466,7 +474,7 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     if (code && state === 'solorider_strava_auth') {
       const keys = getStoredApiKeys();
-      if (!keys?.clientId || !keys?.clientSecret) {
+      if (!keys?.clientId) {
         showToast('缺少 Client ID / Secret，无法完成授权交换', 'error');
         return;
       }
@@ -474,7 +482,7 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       (async () => {
         try {
           showToast('正在完成 Strava 授权握手...', 'info');
-          const tokenRes = await exchangeCodeForToken(keys.clientId, keys.clientSecret, code);
+          const tokenRes = await exchangeCodeForToken(code);
           setTokenData(tokenRes);
 
           // Clean URL

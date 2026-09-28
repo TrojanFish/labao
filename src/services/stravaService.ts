@@ -20,11 +20,14 @@ export const STRAVA_OAUTH_BASE = 'https://www.strava.com/oauth';
 export const STORAGE_KEY_API_KEYS = 'solorider_strava_api_keys';
 export const STORAGE_KEY_TOKEN = 'solorider_strava_token';
 export const STORAGE_KEY_SETTINGS = 'solorider_strava_settings';
+let memoryTokenData: StravaTokenData | null = null;
 
 export interface StravaApiKeys {
   clientId: string;
-  clientSecret: string;
 }
+
+export const PLATFORM_STRAVA_CLIENT_ID =
+  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_STRAVA_CLIENT_ID || '';
 
 export interface StravaBike {
   id: string;
@@ -68,47 +71,26 @@ export const DEFAULT_SYNC_SETTINGS: StravaSyncSettings = {
 // --- Storage Helpers ---
 
 export const getStoredApiKeys = (): StravaApiKeys | null => {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_API_KEYS);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed.clientId && parsed.clientSecret) {
-      return parsed;
-    }
-  } catch {}
-  return null;
+  return PLATFORM_STRAVA_CLIENT_ID ? { clientId: PLATFORM_STRAVA_CLIENT_ID } : null;
 };
 
-export const saveStoredApiKeys = (keys: StravaApiKeys): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY_API_KEYS, JSON.stringify(keys));
-  } catch {}
-};
+export const saveStoredApiKeys = (_keys: StravaApiKeys): void => undefined;
 
 export const getStoredTokenData = (): StravaTokenData | null => {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_TOKEN);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {}
-  return null;
+  return memoryTokenData;
 };
 
-export const saveStoredTokenData = (data: StravaTokenData): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY_TOKEN, JSON.stringify(data));
-  } catch {}
-};
+export const saveStoredTokenData = (data: StravaTokenData): void => { memoryTokenData = data; };
 
-export const clearStoredTokenData = (): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-  } catch {}
+export const clearStoredTokenData = (): void => { memoryTokenData = null; };
+
+export const restoreStravaSession = async (): Promise<StravaTokenData | null> => {
+  const response = await fetch('/api/strava/session', { credentials: 'include' });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const tokenData = { accessToken: 'session', refreshToken: '', expiresAt: data.expiresAt, athlete: data.athlete };
+  memoryTokenData = tokenData;
+  return tokenData;
 };
 
 export const getStoredSettings = (): StravaSyncSettings => {
@@ -144,19 +126,12 @@ export const buildAuthorizeUrl = (clientId: string, redirectUri?: string): strin
  * Exchange Authorization Code for Access & Refresh Tokens
  */
 export const exchangeCodeForToken = async (
-  clientId: string,
-  clientSecret: string,
   code: string
 ): Promise<StravaTokenData> => {
-  const response = await fetch(`${STRAVA_OAUTH_BASE}/token`, {
+  const response = await fetch('/api/strava/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      code,
-      grant_type: 'authorization_code'
-    })
+    body: JSON.stringify({ code, grantType: 'authorization_code' })
   });
 
   if (!response.ok) {
@@ -180,19 +155,12 @@ export const exchangeCodeForToken = async (
  * Refresh Access Token using Refresh Token
  */
 export const refreshAccessToken = async (
-  clientId: string,
-  clientSecret: string,
   refreshTokenStr: string
 ): Promise<StravaTokenData> => {
-  const response = await fetch(`${STRAVA_OAUTH_BASE}/token`, {
+  const response = await fetch('/api/strava/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshTokenStr,
-      grant_type: 'refresh_token'
-    })
+    body: JSON.stringify({ refreshToken: refreshTokenStr, grantType: 'refresh_token' })
   });
 
   if (!response.ok) {
@@ -218,23 +186,15 @@ export const refreshAccessToken = async (
  */
 export const getValidAccessToken = async (): Promise<string | null> => {
   const tokenData = getStoredTokenData();
-  const apiKeys = getStoredApiKeys();
-  if (!tokenData || !tokenData.accessToken) return null;
+  if (!tokenData) return null;
+  return 'session';
+};
 
-  const nowSec = Math.floor(Date.now() / 1000);
-  // If token expires in less than 300 seconds (5 min) and we have keys, refresh it
-  if (tokenData.expiresAt && nowSec > tokenData.expiresAt - 300) {
-    if (apiKeys?.clientId && apiKeys?.clientSecret && tokenData.refreshToken) {
-      try {
-        const refreshed = await refreshAccessToken(apiKeys.clientId, apiKeys.clientSecret, tokenData.refreshToken);
-        return refreshed.accessToken;
-      } catch {
-        return tokenData.accessToken; // fallback to existing token
-      }
-    }
-  }
-
-  return tokenData.accessToken;
+const stravaProxy = async (path: string, query: Record<string, string> = {}) => {
+  const params = new URLSearchParams({ path, ...query });
+  const response = await fetch(`/api/strava/proxy?${params}`, { credentials: 'include' });
+  if (!response.ok) throw new Error(`Strava request failed: ${response.statusText}`);
+  return response.json();
 };
 
 // --- API Endpoints ---
@@ -243,15 +203,7 @@ export const getValidAccessToken = async (): Promise<string | null> => {
  * Fetch Current Athlete Profile
  */
 export const fetchAthleteProfile = async (token: string): Promise<StravaAthlete> => {
-  const response = await fetch(`${STRAVA_API_BASE}/athlete`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch athlete profile: ${response.statusText}`);
-  }
-
-  return response.json();
+  return stravaProxy('/athlete');
 };
 
 /**
@@ -263,20 +215,7 @@ export const fetchAthleteActivities = async (
   page: number = 1,
   perPage: number = 50
 ): Promise<any[]> => {
-  let url = `${STRAVA_API_BASE}/athlete/activities?page=${page}&per_page=${perPage}`;
-  if (afterTimestamp && afterTimestamp > 0) {
-    url += `&after=${Math.floor(afterTimestamp)}`;
-  }
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch activities: ${response.statusText}`);
-  }
-
-  return response.json();
+  return stravaProxy('/athlete/activities', { page: String(page), per_page: String(perPage), ...(afterTimestamp && afterTimestamp > 0 ? { after: String(Math.floor(afterTimestamp)) } : {}) });
 };
 
 /**
@@ -287,17 +226,7 @@ export const fetchActivityStreams = async (
   activityId: number
 ): Promise<StravaStreamsRecord> => {
   const keys = 'time,watts,heartrate,cadence,velocity_smooth,altitude,latlng';
-  const url = `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=${keys}&key_by_type=true`;
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch activity streams: ${response.statusText}`);
-  }
-
-  const data = await response.json();
+  const data = await stravaProxy(`/activities/${activityId}/streams`, { keys, key_by_type: 'true' });
   const record: StravaStreamsRecord = {
     activityId,
     updatedAt: Date.now(),
@@ -318,15 +247,7 @@ export const fetchActivityStreams = async (
  * Fetch Athlete Routes
  */
 export const fetchAthleteRoutes = async (token: string): Promise<StravaRouteRecord[]> => {
-  const response = await fetch(`${STRAVA_API_BASE}/athlete/routes?per_page=30`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch routes: ${response.statusText}`);
-  }
-
-  const rawRoutes = await response.json();
+  const rawRoutes = await stravaProxy('/athlete/routes', { per_page: '30' });
   const routes: StravaRouteRecord[] = rawRoutes.map((r: any) => ({
     id: String(r.id_str || r.id),
     name: r.name,
@@ -711,15 +632,7 @@ export const CURATED_STRAVA_SEGMENTS: StravaSegmentItem[] = [
  * Fetch Starred Segments of the authenticated athlete
  */
 export const fetchStarredSegments = async (token: string): Promise<StravaSegmentItem[]> => {
-  const response = await fetch(`${STRAVA_API_BASE}/segments/starred?page=1&per_page=50`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch starred segments: ${response.statusText}`);
-  }
-
-  const rawList = await response.json();
+  const rawList = await stravaProxy('/segments/starred', { page: '1', per_page: '50' });
   return rawList.map((s: any) => ({
     id: s.id,
     name: s.name,
@@ -741,15 +654,7 @@ export const fetchStarredSegments = async (token: string): Promise<StravaSegment
  * Fetch detailed segment info by segmentId
  */
 export const fetchSegmentDetails = async (token: string, segmentId: number): Promise<any> => {
-  const response = await fetch(`${STRAVA_API_BASE}/segments/${segmentId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch segment details: ${response.statusText}`);
-  }
-
-  return response.json();
+  return stravaProxy(`/segments/${segmentId}`);
 };
 
 // --- Peak Power & MMP Sliding Window Calculation ---

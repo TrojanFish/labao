@@ -106,7 +106,6 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
     lastSyncTime: stravaLastSyncTime,
     activities: stravaActivities,
     syncSettings: stravaSyncSettings,
-    saveApiKeys: saveStravaApiKeys,
     initiateAuth: initiateStravaAuth,
     disconnect: disconnectStrava,
     clearCache: clearStravaCache,
@@ -124,9 +123,6 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
     }
   }, [initialTab, isOpen]);
 
-  const [clientIdInput, setClientIdInput] = useState(apiKeys?.clientId || '');
-  const [clientSecretInput, setClientSecretInput] = useState(apiKeys?.clientSecret || '');
-  const [showSecret, setShowSecret] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
   const [storageInfo, setStorageInfo] = useState<StravaStorageInfo | null>(null);
@@ -1151,64 +1147,20 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
                         <p>1. 电脑或手机浏览器打开 <a href="https://www.strava.com/settings/api" target="_blank" rel="noreferrer" className="text-[#FC4C02] underline font-medium">strava.com/settings/api</a> 登录您的账号；</p>
                         <p>2. 创建应用：<strong>Application Name</strong> 填 <code className="bg-black/5 dark:bg-white/10 px-1 rounded">LaBao</code>，<strong>Category</strong> 选 <code className="bg-black/5 dark:bg-white/10 px-1 rounded">Other</code>；</p>
                         <p>3. <strong>Authorization Callback Domain</strong> 填入 <code className="bg-black/5 dark:bg-white/10 px-1 rounded">localhost</code>（或您访问本系统的域名）；</p>
-                        <p>4. 创建成功后，复制页面上的 <strong>Client ID</strong> 与 <strong>Client Secret</strong> 粘贴在下方。</p>
+                        <p>4. 平台统一使用 LaBao Strava 应用，密钥由服务器安全保管，您无需填写任何 API 密钥。</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Input Form */}
                   <div className="space-y-3 pt-1">
-                    <div>
-                      <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">
-                        Client ID
-                      </label>
-                      <input
-                        type="text"
-                        value={clientIdInput}
-                        onChange={(e) => setClientIdInput(e.target.value)}
-                        placeholder="例如: 123456"
-                        className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#FC4C02]/30"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1 flex items-center justify-between">
-                        <span>Client Secret</span>
-                        <button
-                          type="button"
-                          onClick={() => setShowSecret(!showSecret)}
-                          className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-600 flex items-center gap-1"
-                        >
-                          {showSecret ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                          {showSecret ? '隐藏' : '显示'}
-                        </button>
-                      </label>
-                      <input
-                        type={showSecret ? 'text' : 'password'}
-                        value={clientSecretInput}
-                        onChange={(e) => setClientSecretInput(e.target.value)}
-                        placeholder="例如: 8a7b6c5d4e3f..."
-                        className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#FC4C02]/30"
-                      />
-                    </div>
-
+                    <p className="text-xs text-slate-600 dark:text-slate-300">本平台使用统一的 LaBao Strava 应用，Client Secret 由服务器安全保管，浏览器不会保存或接触。</p>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!clientIdInput.trim() || !clientSecretInput.trim()) {
-                          showToast('请完整填写 Client ID 和 Client Secret', 'warning');
-                          return;
-                        }
-                        saveStravaApiKeys({
-                          clientId: clientIdInput.trim(),
-                          clientSecret: clientSecretInput.trim()
-                        });
-                        initiateStravaAuth();
-                      }}
+                      onClick={initiateStravaAuth}
                       className="apple-touch w-full h-9 rounded-xl bg-[#FC4C02] hover:bg-[#E34402] text-white font-bold text-xs shadow-ios-sm flex items-center justify-center gap-2 transition active:scale-98"
                     >
                       <Cloud className="w-4 h-4" />
-                      <span>保存密钥并前往 Strava 授权连接</span>
+                      <span>前往 Strava 授权连接</span>
                     </button>
                   </div>
                 </div>
