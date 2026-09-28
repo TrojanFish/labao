@@ -80,6 +80,7 @@ interface StravaContextType {
     sampleCount: number;
   } | null>;
   clearCache: () => Promise<void>;
+  reloadActivities: () => Promise<void>;
   updateSettings: (settings: Partial<StravaSyncSettings>) => void;
 }
 
@@ -189,6 +190,16 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       showToast('清理本地离线缓存失败', 'error');
     }
   }, [showToast]);
+
+  // Re-read all activities from IndexedDB without invoking Strava cloud API
+  const reloadActivities = useCallback(async () => {
+    try {
+      const cached = await getAllActivitiesFromDb();
+      setActivities(cached);
+    } catch {
+      // IndexedDB query failed silently
+    }
+  }, []);
 
   // Sync Activities
   const syncActivities = useCallback(async (forceFullRefresh: boolean = false): Promise<{ count: number }> => {
@@ -535,6 +546,7 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       getSegmentDetails,
       extractBestPowerPeaks,
       clearCache,
+      reloadActivities,
       updateSettings
     }),
     [
@@ -557,6 +569,7 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       getSegmentDetails,
       extractBestPowerPeaks,
       clearCache,
+      reloadActivities,
       updateSettings
     ]
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRiderProfile, TeamRider, BikeProfile } from '../../context/RiderProfileContext';
 import { useStrava } from '../../context/StravaContext';
 import { useToast } from '../../context/ToastContext';
@@ -40,13 +40,17 @@ import {
   Wrench,
   ChevronDown,
   ChevronUp,
-  Download
+  Download,
+  Upload,
+  AlertTriangle
 } from 'lucide-react';
 import { PoweredByStravaBadge } from './PoweredByStravaBadge';
 import { NumberStepper } from './NumberStepper';
 import { IOSSegmentedControl } from './IOSSegmentedControl';
-import { getStravaStorageInfo, getAllActivitiesFromDb, StravaStorageInfo } from '../../utils/indexedDb';
+import { getStravaStorageInfo, getAllActivitiesFromDb, saveActivitiesToDb, StravaStorageInfo } from '../../utils/indexedDb';
 import { exportActivitiesToJson } from '../../utils/stravaCockpitAnalytics';
+import { batchIngestActivityFiles } from '../../utils/batchFitImporter';
+import { convertLocalToStravaRecord } from '../../utils/stravaStreamAdapter';
 import {
   ALL_NAV_TOOLS,
   NAV_PRESETS,
@@ -110,6 +114,7 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
     disconnect: disconnectStrava,
     clearCache: clearStravaCache,
     syncActivities: syncStravaActivities,
+    reloadActivities: reloadStravaActivities,
     updateSettings: updateStravaSettings
   } = useStrava();
 
@@ -127,6 +132,50 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
 
   const [storageInfo, setStorageInfo] = useState<StravaStorageInfo | null>(null);
   const [avatarError, setAvatarError] = useState(false);
+
+  const profileFitFileInputRef = useRef<HTMLInputElement>(null);
+  const [isProfileImporting, setIsProfileImporting] = useState<boolean>(false);
+
+  const handleProfileBatchImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setIsProfileImporting(true);
+    try {
+      showToast(
+        language === 'zh-TW'
+          ? `正在解析並匯入 ${files.length} 個碼表文件...`
+          : `正在解析并导入 ${files.length} 个码表文件...`,
+        'info'
+      );
+      const result = await batchIngestActivityFiles(
+        files,
+        profile.ftpWatts || 220,
+        profile.weightKg || 68,
+        profile.maxHr || 185
+      );
+      if (result.successfulCount > 0) {
+        const converted = result.importedRecords.map(convertLocalToStravaRecord);
+        await saveActivitiesToDb(converted);
+        await reloadStravaActivities();
+        const info = await getStravaStorageInfo();
+        setStorageInfo(info);
+        showToast(
+          language === 'zh-TW'
+            ? `成功匯入 ${result.successfulCount} 筆活動，已存入本地資料庫！`
+            : `成功导入 ${result.successfulCount} 笔活动，已存入本地数据库！`,
+          'success'
+        );
+      } else {
+        showToast(language === 'zh-TW' ? '未解析到有效騎行資料' : '未解析到有效骑行数据', 'warning');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '解析失败';
+      showToast(`导入失败: ${msg}`, 'error');
+    } finally {
+      setIsProfileImporting(false);
+      if (profileFitFileInputRef.current) profileFitFileInputRef.current.value = '';
+    }
+  };
 
   React.useEffect(() => {
     if (modalTab === 'strava') {
@@ -1358,6 +1407,49 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Strava Non-Member Guidance Banner when 0 activities are synced */}
+                {stravaActivities.length === 0 && (
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <span className="font-semibold text-amber-900 dark:text-amber-200 block">
+                          {language === 'zh-TW' ? 'Strava 官方政策與非會員活動拉取說明' : 'Strava 官方政策与非会员活动拉取说明'}
+                        </span>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
+                          {language === 'zh-TW'
+                            ? '依據 Strava 最新規範，非會員帳號或自建標準應用在活動拉取上受到嚴格限制，API 接口常因隱私設定或會員等級返回 0 筆雲端記錄。無需開通 Strava 付費會員！您可直接匯入 Garmin / Wahoo / 邁金 / iGPSport / 高馳等碼表原始 FIT / GPX 文件，享受 100% 完整的純本機 PMC 體能建模。'
+                            : '依据 Strava 最新规范，非会员账号或自建标准应用在活动拉取上受到严格限制，API 接口常因隐私设置或会员等级返回 0 条云端记录。无需开通 Strava 付费会员！您可直接导入 Garmin / Wahoo / 迈金 / iGPSport / 高驰等码表原始 FIT / GPX 文件，享受 100% 完整的纯本地 PMC 体能建模。'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1 pl-6">
+                      <input
+                        ref={profileFitFileInputRef}
+                        type="file"
+                        multiple
+                        accept=".fit,.gpx,.tcx"
+                        onChange={handleProfileBatchImport}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => profileFitFileInputRef.current?.click()}
+                        disabled={isProfileImporting}
+                        className="apple-touch h-8 px-3 rounded-lg bg-amber-500 text-white font-medium text-xs hover:bg-amber-600 transition flex items-center gap-1.5 shadow-xs"
+                      >
+                        <Upload className={`w-3.5 h-3.5 ${isProfileImporting ? 'animate-bounce' : ''}`} />
+                        <span>
+                          {isProfileImporting
+                            ? (language === 'zh-TW' ? '解析中...' : '解析中...')
+                            : (language === 'zh-TW' ? '匯入本地 FIT/GPX' : '导入本地 FIT/GPX')}
+                        </span>
+                      </button>
                     </div>
                   </div>
                 )}

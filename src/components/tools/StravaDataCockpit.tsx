@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   RefreshCw,
@@ -28,7 +28,8 @@ import {
   CheckCircle2,
   ExternalLink,
   MapPin,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -56,9 +57,11 @@ import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 import { useToast } from '../../context/ToastContext';
 import { StravaActivityRecord } from '../../utils/indexedDb';
 import { setPendingTransfer } from '../../hooks/useToolDraftState';
-import { saveActivityToDb } from '../../utils/localActivityDb';
+import { saveActivityToDb, getAllLocalActivities, LocalActivityRecord } from '../../utils/localActivityDb';
+import { batchIngestActivityFiles } from '../../utils/batchFitImporter';
 import {
   convertStravaToLocalRecord,
+  convertLocalToStravaRecord,
   stravaStreamsToWaypoints,
   exportStravaActivityToGpxXml
 } from '../../utils/stravaStreamAdapter';
@@ -123,6 +126,22 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
 
   const [loadingActId, setLoadingActId] = useState<number | null>(null);
   const [loadingActAction, setLoadingActAction] = useState<'analyze' | 'gpx' | 'export' | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [localActivities, setLocalActivities] = useState<LocalActivityRecord[]>([]);
+  const [isImporting, setIsImporting] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getAllLocalActivities()
+      .then((records) => {
+        if (isMounted) setLocalActivities(records);
+      })
+      .catch(() => undefined);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Tab State: Overview vs Fitness vs Fleet
   const [activeTab, setActiveTab] = useState<CockpitTab>('overview');
@@ -354,16 +373,73 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
     }
   };
 
+  // Handle local FIT / GPX / TCX multi-file batch ingestion
+  const handleImportFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setIsImporting(true);
+    try {
+      showToast(
+        language === 'zh-TW'
+          ? `正在解析並匯入 ${files.length} 個碼表文件...`
+          : `正在解析并导入 ${files.length} 个码表文件...`,
+        'info'
+      );
+      const ftp = profile.ftpWatts || 220;
+      const weight = profile.weightKg || 68;
+      const maxHr = profile.maxHr || 185;
+      const result = await batchIngestActivityFiles(files, ftp, weight, maxHr);
+
+      if (result.successfulCount > 0) {
+        showToast(
+          language === 'zh-TW'
+            ? `成功匯入 ${result.successfulCount} 筆活動，已即時更新數據羅盤與 PMC！`
+            : `成功导入 ${result.successfulCount} 笔活动，已即时更新数据罗盘与 PMC！`,
+          'success'
+        );
+        const updated = await getAllLocalActivities();
+        setLocalActivities(updated);
+        setUseDemoMode(false);
+      } else {
+        showToast(language === 'zh-TW' ? '未解析到有效騎行資料' : '未解析到有效骑行数据', 'warning');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '解析失败';
+      showToast(`导入失败: ${msg}`, 'error');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   // Demo Activities Cache
   const demoActivities = useMemo(() => generateDemoStravaActivities(), []);
 
-  // Effective Activities Array
+  // Effective Activities Array (Seamlessly combines Strava cloud sync + local imported FIT/GPX rides)
   const effectiveActivities: StravaActivityRecord[] = useMemo(() => {
-    if (useDemoMode || !isConnected || realActivities.length === 0) {
+    if (useDemoMode) {
       return demoActivities;
     }
-    return realActivities;
-  }, [useDemoMode, isConnected, realActivities, demoActivities]);
+
+    const localConverted = localActivities.map(convertLocalToStravaRecord);
+    const combined = [...realActivities];
+
+    for (const act of localConverted) {
+      const isDup = combined.some(ca =>
+        Math.abs(new Date(ca.start_date).getTime() - new Date(act.start_date).getTime()) < 60000 ||
+        (ca.distance > 0 && Math.abs(ca.distance - act.distance) < 50 && Math.abs(new Date(ca.start_date).getTime() - new Date(act.start_date).getTime()) < 300000)
+      );
+      if (!isDup) {
+        combined.push(act);
+      }
+    }
+
+    if (combined.length === 0) {
+      return demoActivities;
+    }
+
+    return combined;
+  }, [useDemoMode, realActivities, localActivities, demoActivities]);
 
   // Filtered by selected period
   const periodFilteredActivities = useMemo(() => {
@@ -1118,6 +1194,28 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
         shareTitle={language === 'zh-TW' ? '生成數據羅盤海報' : '生成数据罗盘海报'}
         actions={
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Hidden File Input for FIT/GPX/TCX Batch Ingestion */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".fit,.gpx,.tcx"
+              onChange={handleImportFiles}
+              className="hidden"
+            />
+
+            {/* Local FIT / GPX File Ingestion Button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="h-9 px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 apple-touch transition flex items-center gap-1.5 shrink-0"
+              title={language === 'zh-TW' ? '匯入本地碼表原始檔 (FIT / GPX / TCX)' : '导入本地码表原始文件 (FIT / GPX / TCX)'}
+            >
+              <Upload className={`w-3.5 h-3.5 text-ios-blue ${isImporting ? 'animate-bounce' : ''}`} />
+              <span>{isImporting ? (language === 'zh-TW' ? '解析中...' : '解析中...') : (language === 'zh-TW' ? '匯入碼表' : '导入码表')}</span>
+            </button>
+
             {/* Demo Toggle Pill */}
             <button
               onClick={() => setUseDemoMode(!useDemoMode)}
@@ -1167,6 +1265,45 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
           ]}
         />
       </div>
+
+      {/* 2.1 Strava Non-Member / Policy Reassurance Banner */}
+      {isConnected && realActivities.length === 0 && !useDemoMode && (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-amber-900 dark:text-amber-200">
+                {language === 'zh-TW' ? 'Strava 官方 API 與非會員資料拉取說明' : 'Strava 官方 API 与非会员数据拉取说明'}
+              </p>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs">
+                {language === 'zh-TW'
+                  ? 'Strava 最新開發者條款對非付費會員帳號及自建應用的活動拉取實施了嚴格限制，API 接口常因會員權限或隱私設定返回 0 筆雲端記錄。無需開通 Strava 付費會員！點擊上方「匯入碼表」，將 Garmin / Wahoo / 邁金 / iGPSport / 高馳的原始 FIT/GPX 檔拖入，LaBao 100% 本地離線引擎即可為您呈現無損精度的 PMC 體能模型、功率曲線與生理診斷。'
+                  : 'Strava 最新开发者条款对非付费会员账号及自建应用的活动拉取实施了严格限制，API 接口常因会员权限或隐私设置返回 0 条云端记录。无需开通 Strava 付费会员！点击上方「导入码表」，将 Garmin / Wahoo / 迈金 / iGPSport / 高驰的原始 FIT/GPX 文件拖入，LaBao 100% 本地离线引擎即可为您呈现无损精度的 PMC 体能模型、功率曲线与生理诊断。'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 pt-1 pl-6">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="apple-touch h-8 px-3 rounded-lg bg-amber-500 text-white font-medium text-xs hover:bg-amber-600 transition flex items-center gap-1.5 shadow-xs"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>{language === 'zh-TW' ? '立即匯入本地 FIT/GPX' : '立即导入本地 FIT/GPX'}</span>
+            </button>
+            {onNavigateTool && (
+              <button
+                type="button"
+                onClick={() => onNavigateTool('activity-analyzer')}
+                className="apple-touch h-8 px-3 rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-medium text-xs hover:bg-slate-300/80 dark:hover:bg-white/15 transition flex items-center gap-1.5"
+              >
+                <span>{language === 'zh-TW' ? '前往碼表工坊' : '前往码表工坊'}</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 2.2 Live Sync Progress Bar Banner (Collapsible Apple HIG HUD) */}
       {syncProgress && (

@@ -438,3 +438,38 @@ export function generateSimulatedStravaStream(
   };
 }
 
+/**
+ * Converts a LocalActivityRecord into a StravaActivityRecord
+ * allowing local FIT/GPX/TCX activities to feed seamlessly into Strava Data Cockpit & PMC.
+ */
+export function convertLocalToStravaRecord(record: LocalActivityRecord): StravaActivityRecord {
+  let numId = parseInt(record.id.replace(/\D/g, ''), 10);
+  if (isNaN(numId) || numId <= 0) {
+    numId = Math.abs(record.id.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0)) || Date.now();
+  }
+
+  return {
+    id: numId,
+    name: record.name,
+    distance: Math.round(record.distanceKm * 1000),
+    moving_time: record.movingTimeSec || record.totalDurationSec,
+    elapsed_time: record.totalDurationSec,
+    total_elevation_gain: Math.round(record.elevationGainM),
+    type: 'Ride',
+    sport_type: 'Ride',
+    start_date: record.startDate,
+    start_date_local: record.startDate,
+    average_speed: record.avgSpeedKmh > 0 ? parseFloat((record.avgSpeedKmh / 3.6).toFixed(2)) : 0,
+    max_speed: record.maxSpeedKmh > 0 ? parseFloat((record.maxSpeedKmh / 3.6).toFixed(2)) : 0,
+    average_watts: record.avgPower,
+    weighted_average_watts: record.normalizedPower,
+    kilojoules: record.workKj,
+    device_watts: Boolean(record.hasHardwarePower),
+    has_heartrate: Boolean(record.hasHeartRate),
+    average_heartrate: record.avgHeartRate,
+    max_heartrate: record.maxHeartRate,
+    tss: record.tss,
+    intensityFactor: record.intensityFactor
+  };
+}
+

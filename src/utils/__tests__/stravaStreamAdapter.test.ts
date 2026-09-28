@@ -3,7 +3,8 @@ import {
   stravaStreamsToActivityPoints,
   stravaStreamsToWaypoints,
   exportStravaActivityToGpxXml,
-  convertStravaToLocalRecord
+  convertStravaToLocalRecord,
+  convertLocalToStravaRecord
 } from '../stravaStreamAdapter';
 import { StravaActivityRecord, StravaStreamsRecord } from '../indexedDb';
 
@@ -146,5 +147,52 @@ describe('stravaStreamAdapter', () => {
     expect(points.length).toBe(0);
     expect(analysis.normalizedPower).toBe(220);
     expect(analysis.totalDistanceKm).toBe(25);
+  });
+
+  it('converts LocalActivityRecord to StravaActivityRecord accurately', () => {
+    const localRecord = {
+      id: 'local-act-987654',
+      name: 'Sunday Morning Century Ride',
+      startDate: '2026-06-21T06:30:00.000Z',
+      startTime: 1782023400000,
+      distanceKm: 102.5,
+      totalDurationSec: 14400,
+      movingTimeSec: 13500,
+      elevationGainM: 1250,
+      elevationLossM: 1240,
+      avgPower: 215,
+      maxPower: 680,
+      normalizedPower: 238,
+      intensityFactor: 0.85,
+      tss: 260,
+      variabilityIndex: 1.11,
+      workKj: 2900,
+      caloriesKcal: 2750,
+      avgHeartRate: 148,
+      maxHeartRate: 175,
+      avgCadence: 88,
+      maxCadence: 112,
+      avgSpeedKmh: 27.33,
+      maxSpeedKmh: 58.4,
+      mmp: [],
+      fileType: 'fit' as const,
+      hasHardwarePower: true,
+      hasHeartRate: true,
+      createdAt: Date.now()
+    };
+
+    const stravaRecord = convertLocalToStravaRecord(localRecord);
+    expect(stravaRecord.name).toBe('Sunday Morning Century Ride');
+    expect(stravaRecord.distance).toBe(102500); // 102.5 km -> 102500 m
+    expect(stravaRecord.moving_time).toBe(13500);
+    expect(stravaRecord.elapsed_time).toBe(14400);
+    expect(stravaRecord.total_elevation_gain).toBe(1250);
+    expect(stravaRecord.average_watts).toBe(215);
+    expect(stravaRecord.weighted_average_watts).toBe(238);
+    expect(stravaRecord.tss).toBe(260);
+    expect(stravaRecord.intensityFactor).toBe(0.85);
+    expect(stravaRecord.device_watts).toBe(true);
+    expect(stravaRecord.has_heartrate).toBe(true);
+    expect(stravaRecord.average_heartrate).toBe(148);
   });
 });
