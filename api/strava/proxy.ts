@@ -12,7 +12,12 @@ export default async function handler(req: any, res: any) {
   if (!accessToken || session.expiresAt < Math.floor(Date.now() / 1000) + 300) {
     const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ client_id: process.env.STRAVA_CLIENT_ID || '', client_secret: process.env.STRAVA_CLIENT_SECRET || '', refresh_token: session.refreshToken, grant_type: 'refresh_token' })
+      body: new URLSearchParams({
+        client_id: process.env.STRAVA_CLIENT_ID || process.env.VITE_STRAVA_CLIENT_ID || '',
+        client_secret: process.env.STRAVA_CLIENT_SECRET || '',
+        refresh_token: session.refreshToken,
+        grant_type: 'refresh_token'
+      })
     });
     if (!tokenResponse.ok) return res.status(401).json({ message: 'Strava authorization expired' });
     const refreshed = await tokenResponse.json();

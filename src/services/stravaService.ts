@@ -27,7 +27,13 @@ export interface StravaApiKeys {
 }
 
 export const PLATFORM_STRAVA_CLIENT_ID =
-  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_STRAVA_CLIENT_ID || '';
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_STRAVA_CLIENT_ID) || '';
+
+let dynamicPlatformClientId = PLATFORM_STRAVA_CLIENT_ID;
+
+export const setDynamicPlatformClientId = (id: string): void => {
+  dynamicPlatformClientId = id;
+};
 
 export interface StravaBike {
   id: string;
@@ -71,7 +77,8 @@ export const DEFAULT_SYNC_SETTINGS: StravaSyncSettings = {
 // --- Storage Helpers ---
 
 export const getStoredApiKeys = (): StravaApiKeys | null => {
-  return PLATFORM_STRAVA_CLIENT_ID ? { clientId: PLATFORM_STRAVA_CLIENT_ID } : null;
+  const id = dynamicPlatformClientId || PLATFORM_STRAVA_CLIENT_ID;
+  return id ? { clientId: id } : null;
 };
 
 export const saveStoredApiKeys = (_keys: StravaApiKeys): void => undefined;

@@ -24,7 +24,8 @@ import {
   CURATED_STRAVA_SEGMENTS,
   fetchStarredSegments,
   fetchSegmentDetails,
-  extractBestMmpFromActivities
+  extractBestMmpFromActivities,
+  setDynamicPlatformClientId
 } from '../services/stravaService';
 import {
   StravaActivityRecord,
@@ -123,7 +124,19 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     restoreStravaSession().then(session => {
       if (session) setTokenData(session);
     }).catch(() => undefined);
-  }, []);
+
+    if (!apiKeys?.clientId) {
+      fetch('/api/strava/config')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.clientId) {
+            setDynamicPlatformClientId(data.clientId);
+            setApiKeys({ clientId: data.clientId });
+          }
+        })
+        .catch(() => undefined);
+    }
+  }, [apiKeys]);
 
   // Save API keys
   const saveApiKeys = useCallback((keys: StravaApiKeys) => {
@@ -473,12 +486,6 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     if (code && state === 'solorider_strava_auth') {
-      const keys = getStoredApiKeys();
-      if (!keys?.clientId) {
-        showToast('缺少 Client ID / Secret，无法完成授权交换', 'error');
-        return;
-      }
-
       (async () => {
         try {
           showToast('正在完成 Strava 授权握手...', 'info');
