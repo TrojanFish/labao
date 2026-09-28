@@ -522,7 +522,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
     }
     try {
       showToast('正在从 Strava 同步最新骑行活动...', 'info');
-      const res = await syncActivities(false);
+      const res = await syncActivities(realActivities.length === 0);
       setUseDemoMode(false);
       showToast(`同步完成，成功刷新 ${res.count} 场骑行记录！`, 'success');
     } catch (err: unknown) {

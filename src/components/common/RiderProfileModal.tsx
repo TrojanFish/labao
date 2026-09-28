@@ -126,6 +126,7 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
   const [showGuide, setShowGuide] = useState(false);
 
   const [storageInfo, setStorageInfo] = useState<StravaStorageInfo | null>(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   React.useEffect(() => {
     if (modalTab === 'strava') {
@@ -1172,10 +1173,11 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
                 <div className="p-4 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-black/[0.05] dark:border-white/[0.08] shadow-xs space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      {athlete?.profile_medium ? (
+                      {athlete?.profile_medium && !avatarError && !athlete.profile_medium.includes('avatar/athlete/') ? (
                         <img
                           src={athlete.profile_medium}
                           alt={athlete.firstname}
+                          onError={() => setAvatarError(true)}
                           className="w-11 h-11 rounded-2xl object-cover border border-black/10 dark:border-white/10 shrink-0"
                         />
                       ) : (
@@ -1203,7 +1205,7 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
                       <PoweredByStravaBadge />
                       <button
                         type="button"
-                        onClick={() => syncStravaActivities(false)}
+                        onClick={() => syncStravaActivities(true)}
                         disabled={isStravaSyncing}
                         className="apple-touch px-3.5 py-1.5 rounded-xl bg-[#FC4C02]/10 hover:bg-[#FC4C02]/20 text-[#FC4C02] text-xs font-semibold border border-[#FC4C02]/20 flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50 shrink-0"
                       >
@@ -1300,11 +1302,16 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
                         <IOSSegmentedControl
                           options={[
                             { value: '30', label: '30天' },
-                            { value: '60', label: '60天' },
                             { value: '90', label: '90天' },
+                            { value: '365', label: '1年' },
+                            { value: '3650', label: '全部' },
                           ]}
-                          value={String(stravaSyncSettings.syncDays || 90)}
-                          onChange={(val) => updateStravaSettings({ syncDays: Number(val) })}
+                          value={String(stravaSyncSettings.syncDays || 365)}
+                          onChange={(val) => {
+                            const days = Number(val);
+                            updateStravaSettings({ syncDays: days });
+                            syncStravaActivities(true);
+                          }}
                           size="sm"
                         />
                       </div>

@@ -247,21 +247,26 @@ export const StravaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (!forceFullRefresh && lastSyncTime && lastSyncTime > 0) {
         afterSec = lastSyncTime;
       } else {
-        // Sync past N days
-        const daysBack = syncSettings.syncDays || 90;
-        afterSec = nowSec - daysBack * 86400;
+        // Sync past N days (or all time if >= 3650)
+        const daysBack = syncSettings.syncDays || 365;
+        afterSec = daysBack >= 3650 ? undefined : nowSec - daysBack * 86400;
       }
 
-      setSyncProgress({ current: 30, total: 100, stage: 'activities', message: '正在增量拉取 Strava 活动记录...' });
+      setSyncProgress({
+        current: 30,
+        total: 100,
+        stage: 'activities',
+        message: forceFullRefresh ? '正在全量拉取 Strava 活动记录...' : '正在增量拉取 Strava 活动记录...'
+      });
 
       // Fetch pages
       const rawActivities: any[] = [];
       let page = 1;
       let hasMore = true;
 
-      while (hasMore && page <= 4) { // safety ceiling: max 200 activities per sync
+      while (hasMore && page <= 10) { // safety ceiling: max 500 activities per sync
         setSyncProgress({
-          current: Math.min(75, 30 + page * 12),
+          current: Math.min(80, 25 + page * 5),
           total: 100,
           stage: 'activities',
           message: `正在拉取第 ${page} 页 Strava 骑行活动...`

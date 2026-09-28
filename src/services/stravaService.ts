@@ -71,7 +71,7 @@ export interface StravaSyncSettings {
 
 export const DEFAULT_SYNC_SETTINGS: StravaSyncSettings = {
   autoSyncBikes: true,
-  syncDays: 90
+  syncDays: 365
 };
 
 // --- Storage Helpers ---
