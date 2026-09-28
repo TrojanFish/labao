@@ -4,11 +4,13 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-61dafb?logo=react)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-192%2F192%20PASS-brightgreen?logo=vitest)](https://vitest.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
 [![Apple HIG](https://img.shields.io/badge/Apple%20HIG-100.0%2F100-success)](https://developer.apple.com/design/human-interface-guidelines)
 [![Tools](https://img.shields.io/badge/Tools-21%20Engines-blueviolet)]()
 [![Dexie IndexedDB](https://img.shields.io/badge/Local--First-Dexie.js-orange)]()
+[![Offline Map Tiles](https://img.shields.io/badge/Offline%20Tiles-IndexedDB-blue)]()
 [![Simulation](https://img.shields.io/badge/Simulation-13%2F13%20PASS-brightgreen)]()
 [![Strava](https://img.shields.io/badge/Strava-Integrated-FC4C02?logo=strava)](https://www.strava.com)
 [![i18n](https://img.shields.io/badge/i18n-English%20%7C%20%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%20%7C%20%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-brightgreen)]()
@@ -41,6 +43,7 @@ graph TB
     subgraph DataBus ["⚡ 全局数据总线与存储层 (Local-First)"]
         VG["虚拟车库总线 (VirtualGarageContext)"]
         IDB["IndexedDB / Dexie.js (离线时序活动数据库)"]
+        TileCache["地图瓦片离线缓存 (IndexedDB MapTileCache)"]
         FIT["Garmin FIT 二进制流解析引擎 (@garmin/fitsdk)"]
         StravaAPI["Strava Cloud API v3 五维互联"]
     end
@@ -83,7 +86,8 @@ graph TB
 ### 3. 🗺️ Phase 3: 路线工坊升维与风阻/体能策略引擎 (Best Bike Split & Wind Vector Engine)
 - **大圆球面切片与航向角解算**：基于 Haversine 球面距离与正向方位角公式（Forward Azimuth），微米级离散剖析路线各路段朝向；
 - **ISA 国际标准大气与微气象 3D 投影**：结合海拔气压衰减计算真实空气密度 $\rho(h)$，将 Open-Meteo 实时风向风速沿行驶矢量正交分解为净迎面阻力与侧风偏航角；
-- **Best Bike Split 变功率优化模型**：根据下坡、平路、缓坡、陡坡智能动态分配踏力，预估完赛总时间、规整化功率 (NP) 与补水/碳水消耗速率。
+- **Best Bike Split 变功率优化模型**：根据下坡、平路、缓坡、陡坡智能动态分配踏力，预估完赛总时间、规整化功率 (NP) 与补水/碳水消耗速率；
+- **IndexedDB 离线地图瓦片持久化**：深度封装 Leaflet 切片图层，将浏览过的 CartoDB、OpenStreetMap 与 ArcGIS 卫星切片自动沉淀在本地 IndexedDB，支持 LRU 容量智能淘汰，确保车手在荒野爬坡、无蜂窝网络信号覆盖区域时依然能够秒级离线查阅地形与路线起伏。
 
 ### 4. 📅 Phase 4: 年度周期训练赛历与巅峰规划器 (ATP Calendar & Target Peak Wizard)
 - **Tudor Bompa & Joe Friel 经典周期化模型**：以赛季 A 级目标赛事为锚点，智能逆推并排布【基础期 Base】、【进展期 Build】、【巅峰期 Peak】与【减量期 Taper】；
@@ -91,7 +95,7 @@ graph TB
 - **结构化课表生成与 Zwift 导出**：可视化编排间歇训练段落，一键导出合规 Zwift `.zwo` 与 Garmin/Wahoo `.mrc` 文件。
 
 ### 5. ⚡ Phase 5: 双端 Apple HIG 原生体验与极致性能打磨 (Zero-Jank & Dual-Platform)
-- **双端 Apple HIG 体系 (100.0/100 合规评分)**：
+- **双端 Apple HIG 体系 (100.0/100 合规评分)**：113 个源码文件 100.0 / 100 分通过自动化严格审查。
   - **桌面端 (≥640px)**：macOS Sequoia / Sonoma 原生沉浸视觉、统一定制标题栏、快捷侧边栏、统一 $36\,\mathrm{px}$ (`h-9`) 控件高度；
   - **移动端 (<640px)**：iOS 18 底部悬浮操作岛、原生拖拽底部抽屉（Bottom Sheet，`rounded-t-[28px]`）、全宽分段选择器；
 - **按需动态代码分割**：全量 21 款工具均采用 `React.lazy` 与 `Suspense` 隔离，首屏 Bundle 体积从 960 kB 锐减至 **311 kB**（gzip 后仅 **98 kB**，缩减 **68%**）；
@@ -192,13 +196,15 @@ LaBao Pro 严格划分为四大科学领域，各领域具有统一的 Apple HIG
 ## 🛠️ Technology Stack / 现代化工程技术栈
 
 - **Core Framework**: React 18.2 + TypeScript 5.2 (严格类型安全模式，严格零 `any` 侵入)
-- **Build Engine**: Vite 5.4 + Rollup `manualChunks` 隔离优化
+- **Build Engine**: Vite 6.0 + Rollup `manualChunks` 隔离优化
 - **Design System & Styling**: 
   - Tailwind CSS 3.4 + Tailwind Merge + CLSX
   - 深度遵循 **Apple Human Interface Guidelines (HIG)**
   - 桌面 (macOS Sequoia) 与移动端 (iOS 18) 双端原生体验架构，HIG 自动化合规分 **100.0 / 100**
-- **Local-First Database**: Dexie.js (IndexedDB 包装器，支持百万级时序点离线秒级检索)
-- **Mapping & GIS**: Leaflet 1.9 + OpenStreetMap Tile Layer (全球免 Key、离线瓦片平滑切片)
+- **Local-First Database & Storage**:
+  - Dexie.js (IndexedDB 包装器，支持百万级时序点离线秒级检索)
+  - MapTileCache (原生 IndexedDB 离线地图切片持久化，LRU 智能容量淘汰)
+- **Mapping & GIS**: Leaflet 1.9 + CartoDB / OSM / ArcGIS Cached Layers (离线切片平滑缓存)
 - **Data Visualization**: Chart.js 4.4 + React-Chartjs-2 (动态功率折线图、极化雷达图、PMC 堆叠面积图、MMP 双层包络线)
 - **Binary & FIT Parser**: `@garmin/fitsdk` + 自研二进制流解码器 (支持 `.fit`, `.gpx`, `.tcx` 离线秒级解析)
 - **External API**: Open-Meteo REST API (全球无限制免费高精气象源，原生 HTTPS，免 API Key)
@@ -245,17 +251,22 @@ STRAVA_SESSION_SECRET=随机生成的长密钥
 
 `STRAVA_SESSION_SECRET` 只能放在服务端环境变量中，不能使用 `VITE_` 前缀，也不要提交到 Git。Strava 后台的 Authorization Callback Domain 应配置为当前部署域名。
 
-### 5. 运行全链路物理与生理学仿真套件 (Run Simulation Suite)
+### 5. 运行 Vitest 全量单元测试套件 (Run Unit Tests)
+```bash
+npm run test
+```
+
+### 6. 运行全链路物理与生理学仿真套件 (Run Simulation Suite)
 ```bash
 npx tsx scratch/simulate_five_phases.ts
 ```
 
-### 5. 运行 Apple HIG 规范合规自动化审查 (HIG Automated Audit)
+### 7. 运行 Apple HIG 规范合规自动化审查 (HIG Automated Audit)
 ```bash
 python .agents/skills/apple-hig-compliance/scripts/hig_checker.py scan src
 ```
 
-### 6. 生产构建与类型检查 (Production Build)
+### 8. 生产构建与类型检查 (Production Build)
 ```bash
 npm run build
 ```
@@ -406,15 +417,17 @@ cd /opt/labao
 
 | 核验维度 | 检查项 | 状态 | 详细说明 |
 |---|---|---|---|
+| **单元测试套件** | Vitest 全量自动化测试 | ✅ 100% PASS | 17 个测试文件，192 项数学模型与物理动力学算法测试全部通过 |
 | **物理力学仿真** | 13 项跨模块动力学与生理数学仿真 | ✅ 100% PASS | 涵盖功率风阻平衡、PMC 减量预测、MMP PR 检定、ISA 大气与赛历反推 |
-| **设计规范** | Apple HIG 双端人机交互规范 | ✅ 100.0 / 100 | 桌面 macOS Sequoia + 移动 iOS 18，81 个源码文件 0 错误 0 警告 |
-| **代码与类型** | TypeScript 严格编译 | ✅ PASS | `tsc` 编译通过，0 类型错误与警告 |
+| **设计规范** | Apple HIG 双端人机交互规范 | ✅ 100.0 / 100 | 桌面 macOS Sequoia + 移动 iOS 18，113 个源码文件 0 错误 0 警告 |
+| **代码与类型** | TypeScript 严格编译 | ✅ PASS | `tsc` 严格检查通过，0 类型错误与警告 |
 | **构建优化** | Vite Dynamic Code Splitting | ✅ PASS | 首屏体积锐减 68% (311 kB)，21 个工具干净隔离为按需模块 |
-| **数据库** | Local-First IndexedDB (Dexie.js) | ✅ PASS | 纯前端本地持久化，FIT 码表记录与年度排程秒级存取 |
-| **路由与刷新** | SPA 路由深度链接 | ✅ PASS | `vercel.json` rewrite 配置完成，任意刷新页面不 404 |
+| **本地数据库** | Local-First IndexedDB (Dexie.js) | ✅ PASS | 纯前端本地持久化，FIT 码表记录与年度排程秒级存取 |
+| **离线地图切片** | IndexedDB 瓦片缓存 (MapTileCache) | ✅ PASS | 自动离线持久化 CartoDB / OSM / ArcGIS 底图，荒野断网可用 |
+| **路由与刷新** | SPA 路由深度链接 | ✅ PASS | `vercel.json` 排除 `/api/` 重定向，任意刷新页面不 404 |
 | **多语言完整度** | i18n 三语字典一致性 | ✅ PASS | 21 款工具全量覆盖简中、繁中与英文，专业术语对齐 |
 | **双单位引擎** | Metric ↔ Imperial 换算 | ✅ PASS | 体重、距离、高度、速度、胎压、温度、扭矩双向联动 |
-| **GIS与气象** | OpenStreetMap & Open-Meteo | ✅ PASS | 全站 HTTPS 协议，全球可用，免 API Key 限制 |
+| **GIS与气象** | CartoDB, OSM & Open-Meteo | ✅ PASS | 全站 HTTPS 协议，全球可用，免 API Key 限制 |
 | **云端互联** | Strava OAuth 与五维拉取 | ✅ PASS | 路书、赛段、峰值功率、FIT活动与全景罗盘五重读取正常 |
 | **PWA 与离线** | Manifest & Service Worker | ✅ PASS | 支持桌面与手机添加到主屏幕，山野断网环境下全离线可用 |
 | **隐私合规** | GDPR / CCPA 零数据回传 | ✅ PASS | 纯本地计算与存储，无任何外部遥测或第三方用户追踪 |

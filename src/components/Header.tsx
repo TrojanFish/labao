@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Sun, Moon, User, X, Settings, PanelLeft, Heart, Bike } from 'lucide-react';
+import { Search, X, Settings, PanelLeft, Heart } from 'lucide-react';
 import { LaBaoLogo } from './common/LaBaoLogo';
 import { BackgroundMusicControl } from './BackgroundMusicControl';
 import { RiderProfileModal } from './common/RiderProfileModal';
@@ -216,30 +216,6 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Streamlined Background Music Switch */}
             <BackgroundMusicControl />
-
-            {/* Theme Toggle Button - Apple HIG 36px button */}
-            <button
-              onClick={() => {
-                if (setThemeMode) {
-                  setThemeMode(isDark ? 'light' : 'dark');
-                } else {
-                  setIsDark(!isDark);
-                }
-              }}
-              className="apple-touch w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-[#1C1C1E] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-white/20 active:scale-95 transition shrink-0"
-              title={
-                themeMode === 'system'
-                  ? (isDark
-                      ? (language === 'zh-TW' ? '跟隨手機(深色) - 點擊切換為淺色' : '跟随手机(深色) - 点击切换为浅色')
-                      : (language === 'zh-TW' ? '跟隨手機(淺色) - 點擊切換為深色' : '跟随手机(浅色) - 点击切换为深色'))
-                  : (isDark
-                      ? (language === 'zh-TW' ? '深色模式 - 點擊切換為淺色' : '深色模式 - 点击切换为浅色')
-                      : (language === 'zh-TW' ? '淺色模式 - 點擊切换为深色' : '浅色模式 - 点击切换为深色'))
-              }
-              aria-label="Toggle Theme"
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-            </button>
           </div>
         </div>
 
