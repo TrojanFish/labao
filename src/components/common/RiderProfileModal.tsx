@@ -256,7 +256,7 @@ export const RiderProfileModal: React.FC<RiderProfileModalProps> = ({
               { id: 'roster', label: language === 'zh-TW' ? '車隊' : '车队', icon: Users, badge: roster.length },
               { id: 'garage', label: language === 'zh-TW' ? '戰車' : '战车', icon: Bike, badge: bikes.length },
               { id: 'strava', label: 'Strava', icon: Cloud, dot: isStravaConnected },
-              { id: 'system', label: language === 'zh-TW' ? '導航' : '导航', icon: SlidersHorizontal }
+              { id: 'system', label: language === 'zh-TW' ? '偏好' : '偏好', icon: SlidersHorizontal }
             ]}
             value={modalTab}
             onChange={(val) => setModalTab(val as any)}

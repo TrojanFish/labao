@@ -114,7 +114,11 @@ type CockpitTab = 'overview' | 'fitness' | 'segments' | 'fleet';
 export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigateTool }) => {
   const { isConnected, athlete, activities: realActivities, isSyncing, syncActivities, getStarredSegments, syncProgress, getActivityStreams } = useStrava();
   const { profile, bikes: userBikes } = useRiderProfile();
-  const { language, convertDistance, convertElevation } = useLanguageAndUnit();
+  const { language, unitSystem, convertDistance, convertElevation, convertSpeed } = useLanguageAndUnit();
+  const isImperial = unitSystem === 'imperial';
+  const distUnit = isImperial ? 'mi' : 'km';
+  const eleUnit = isImperial ? 'ft' : 'm';
+  const speedUnit = isImperial ? 'mph' : 'km/h';
   const { showToast } = useToast();
 
   const [loadingActId, setLoadingActId] = useState<number | null>(null);
@@ -695,15 +699,15 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
         datasets: [
           {
             type: 'bar' as const,
-            label: language === 'zh-TW' ? '實際累計爬升 (m)' : '实际累计爬升 (m)',
-            data: annualElevationProgress.monthlyBreakdown.map(m => m.actualElevationM),
+            label: language === 'zh-TW' ? `實際累計爬升 (${eleUnit})` : `实际累计爬升 (${eleUnit})`,
+            data: annualElevationProgress.monthlyBreakdown.map(m => isImperial ? Math.round(m.actualElevationM * 3.28084) : m.actualElevationM),
             backgroundColor: '#34C759',
             borderRadius: 4
           },
           {
             type: 'line' as const,
-            label: language === 'zh-TW' ? '目標月均基準線 (m)' : '目标月均基准线 (m)',
-            data: annualElevationProgress.monthlyBreakdown.map(m => m.targetPaceElevationM),
+            label: language === 'zh-TW' ? `目標月均基準線 (${eleUnit})` : `目标月均基准线 (${eleUnit})`,
+            data: annualElevationProgress.monthlyBreakdown.map(m => isImperial ? Math.round(m.targetPaceElevationM * 3.28084) : m.targetPaceElevationM),
             borderColor: '#AF52DE',
             borderWidth: 1.5,
             borderDash: [4, 4],
@@ -719,15 +723,15 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
       datasets: [
         {
           type: 'bar' as const,
-          label: language === 'zh-TW' ? '實際完成里程 (km)' : '实际完成里程 (km)',
-          data: annualProgress.monthlyBreakdown.map(m => m.actualKm),
+          label: language === 'zh-TW' ? `實際完成里程 (${distUnit})` : `实际完成里程 (${distUnit})`,
+          data: annualProgress.monthlyBreakdown.map(m => isImperial ? parseFloat((m.actualKm * 0.621371).toFixed(1)) : m.actualKm),
           backgroundColor: '#007AFF',
           borderRadius: 4
         },
         {
           type: 'line' as const,
-          label: language === 'zh-TW' ? '目標月均基準線 (km)' : '目标月均基准线 (km)',
-          data: annualProgress.monthlyBreakdown.map(m => m.targetPaceKm),
+          label: language === 'zh-TW' ? `目標月均基準線 (${distUnit})` : `目标月均基准线 (${distUnit})`,
+          data: annualProgress.monthlyBreakdown.map(m => isImperial ? parseFloat((m.targetPaceKm * 0.621371).toFixed(1)) : m.targetPaceKm),
           borderColor: '#FF9500',
           borderWidth: 1.5,
           borderDash: [4, 4],
@@ -736,7 +740,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
         }
       ]
     };
-  }, [annualGoalMetric, annualElevationProgress, annualProgress, language]);
+  }, [annualGoalMetric, annualElevationProgress, annualProgress, language, isImperial, distUnit, eleUnit]);
 
   const annualGoalMonthlyChartOptions = useMemo(() => {
     const isElevation = annualGoalMetric === 'elevation';
@@ -756,7 +760,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
           callbacks: {
             label: (context: any) => {
               const val = context.parsed.y;
-              return ` ${context.dataset.label}: ${val.toLocaleString()} ${isElevation ? 'm' : 'km'}`;
+              return ` ${context.dataset.label}: ${val.toLocaleString()} ${isElevation ? eleUnit : distUnit}`;
             }
           }
         }
@@ -767,12 +771,12 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
           grid: { color: 'rgba(120, 120, 128, 0.12)' },
           ticks: {
             font: { size: 10 },
-            callback: (v: any) => `${v.toLocaleString()} ${isElevation ? 'm' : 'km'}`
+            callback: (v: any) => `${v.toLocaleString()} ${isElevation ? eleUnit : distUnit}`
           }
         }
       }
     };
-  }, [annualGoalMetric]);
+  }, [annualGoalMetric, distUnit, eleUnit]);
 
   // 3. Weekly Volume Dual-Y Axis Chart
   const weeklyVolumeChartData = useMemo(() => {
@@ -789,8 +793,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
         },
         {
           type: 'line' as const,
-          label: '周度里程 (km)',
-          data: weeklyVolume.weeks.map(w => w.distanceKm),
+          label: isImperial ? '周度里程 (mi)' : '周度里程 (km)',
+          data: weeklyVolume.weeks.map(w => isImperial ? parseFloat((w.distanceKm * 0.621371).toFixed(1)) : w.distanceKm),
           borderColor: '#34C759',
           backgroundColor: 'rgba(52, 199, 89, 0.1)',
           tension: 0.3,
@@ -801,7 +805,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
         }
       ]
     };
-  }, [weeklyVolume]);
+  }, [weeklyVolume, isImperial]);
 
   const weeklyVolumeChartOptions = useMemo(() => {
     return {
@@ -837,11 +841,14 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
           display: true,
           position: 'right' as const,
           grid: { display: false },
-          ticks: { font: { size: 10 } }
+          ticks: {
+            font: { size: 10 },
+            callback: (v: any) => `${v} ${distUnit}`
+          }
         }
       }
     };
-  }, []);
+  }, [distUnit]);
 
   // 4. Ramp Rate History Bar Chart
   const rampRateChartData = useMemo(() => {
@@ -1003,14 +1010,14 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
       labels: bioclock.byDayOfWeek.map(d => d.label),
       datasets: [
         {
-          label: '骑行里程 (km)',
-          data: bioclock.byDayOfWeek.map(d => d.distanceKm),
+          label: isImperial ? '骑行里程 (mi)' : '骑行里程 (km)',
+          data: bioclock.byDayOfWeek.map(d => isImperial ? parseFloat((d.distanceKm * 0.621371).toFixed(1)) : d.distanceKm),
           backgroundColor: '#007AFF',
           borderRadius: 6
         }
       ]
     };
-  }, [bioclock]);
+  }, [bioclock, isImperial]);
 
   // 9. MMP Curve Data
   const mmpCurveData = useMemo(() => {
@@ -1267,7 +1274,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
               label="加权平均功率"
               value={kpi.avgNpWatts > 0 ? `${kpi.avgNpWatts}` : '--'}
               unit="W NP"
-              subtext={`EF ${aerobicEfficiency.avgEf > 0 ? aerobicEfficiency.avgEf : '--'} · 均速 ${kpi.avgSpeedKmh}km/h`}
+              subtext={`EF ${aerobicEfficiency.avgEf > 0 ? aerobicEfficiency.avgEf : '--'} · 均速 ${convertSpeed(kpi.avgSpeedKmh).formatted}`}
               icon={<Zap className="w-3.5 h-3.5 text-ios-mint" />}
               accentColor="mint"
             />
@@ -1285,8 +1292,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                 }
                 subtitle={
                   annualGoalMetric === 'distance'
-                    ? `${annualProgress.year} 年度目标 ${annualProgress.targetKm.toLocaleString()} km · 已完成 ${annualProgress.currentKm.toLocaleString()} km (${annualProgress.progressPct}%)`
-                    : `${annualElevationProgress.year} 年度目标 ${annualElevationProgress.targetElevationM.toLocaleString()} m · 已完成 ${annualElevationProgress.currentElevationM.toLocaleString()} m (${annualElevationProgress.progressPct}%) · 相当于 ${annualElevationProgress.everestingCount} 座珠峰 ⛰️`
+                    ? `${annualProgress.year} 年度目标 ${(isImperial ? Math.round(annualProgress.targetKm * 0.621371) : annualProgress.targetKm).toLocaleString()} ${distUnit} · 已完成 ${(isImperial ? Math.round(annualProgress.currentKm * 0.621371) : annualProgress.currentKm).toLocaleString()} ${distUnit} (${annualProgress.progressPct}%)`
+                    : `${annualElevationProgress.year} 年度目标 ${(isImperial ? Math.round(annualElevationProgress.targetElevationM * 3.28084) : annualElevationProgress.targetElevationM).toLocaleString()} ${eleUnit} · 已完成 ${(isImperial ? Math.round(annualElevationProgress.currentElevationM * 3.28084) : annualElevationProgress.currentElevationM).toLocaleString()} ${eleUnit} (${annualElevationProgress.progressPct}%) · 相当于 ${annualElevationProgress.everestingCount} 座珠峰 ⛰️`
                 }
                 icon={annualGoalMetric === 'distance' ? Target : Mountain}
                 iconColor={annualGoalMetric === 'distance' ? 'text-ios-blue bg-ios-blue/10' : 'text-ios-green bg-ios-green/10'}
@@ -1314,11 +1321,11 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                       <span>
                         {annualGoalMetric === 'distance'
                           ? (annualProgress.isAheadOfPace
-                              ? `超前 +${annualProgress.paceDeltaKm} km`
-                              : `落后 ${annualProgress.paceDeltaKm} km`)
+                              ? `超前 +${isImperial ? (annualProgress.paceDeltaKm * 0.621371).toFixed(1) : annualProgress.paceDeltaKm} ${distUnit}`
+                              : `落后 ${isImperial ? (annualProgress.paceDeltaKm * 0.621371).toFixed(1) : annualProgress.paceDeltaKm} ${distUnit}`)
                           : (annualElevationProgress.isAheadOfPace
-                              ? `超前 +${annualElevationProgress.paceDeltaElevationM.toLocaleString()} m`
-                              : `落后 ${annualElevationProgress.paceDeltaElevationM.toLocaleString()} m`)}
+                              ? `超前 +${(isImperial ? Math.round(annualElevationProgress.paceDeltaElevationM * 3.28084) : annualElevationProgress.paceDeltaElevationM).toLocaleString()} ${eleUnit}`
+                              : `落后 ${(isImperial ? Math.round(annualElevationProgress.paceDeltaElevationM * 3.28084) : annualElevationProgress.paceDeltaElevationM).toLocaleString()} ${eleUnit}`)}
                       </span>
                     </div>
                   </div>
@@ -1335,8 +1342,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {language === 'zh-TW' ? '剩餘 ' : '剩余 '}
                     {annualGoalMetric === 'distance'
-                      ? `${annualProgress.remainingKm.toLocaleString()} km`
-                      : `${annualElevationProgress.remainingElevationM.toLocaleString()} m`}
+                      ? `${(isImperial ? Math.round(annualProgress.remainingKm * 0.621371) : annualProgress.remainingKm).toLocaleString()} ${distUnit}`
+                      : `${(isImperial ? Math.round(annualElevationProgress.remainingElevationM * 3.28084) : annualElevationProgress.remainingElevationM).toLocaleString()} ${eleUnit}`}
                   </div>
                 </div>
                 <div>
@@ -1347,30 +1354,30 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {language === 'zh-TW' ? '年終預估 ' : '年终预估 '}
                     {annualGoalMetric === 'distance'
-                      ? `${annualProgress.projectedYearEndKm.toLocaleString()} km`
-                      : `${annualElevationProgress.projectedYearEndElevationM.toLocaleString()} m`}
+                      ? `${(isImperial ? Math.round(annualProgress.projectedYearEndKm * 0.621371) : annualProgress.projectedYearEndKm).toLocaleString()} ${distUnit}`
+                      : `${(isImperial ? Math.round(annualElevationProgress.projectedYearEndElevationM * 3.28084) : annualElevationProgress.projectedYearEndElevationM).toLocaleString()} ${eleUnit}`}
                   </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '達成需日均' : '达成需日均'}</div>
                   <div className="text-xl sm:text-2xl font-bold text-ios-orange tabular-nums">
                     {annualGoalMetric === 'distance'
-                      ? annualProgress.requiredDailyKm
-                      : annualElevationProgress.requiredDailyElevationM.toLocaleString()}
+                      ? (isImperial ? (annualProgress.requiredDailyKm * 0.621371).toFixed(1) : annualProgress.requiredDailyKm)
+                      : (isImperial ? Math.round(annualElevationProgress.requiredDailyElevationM * 3.28084) : annualElevationProgress.requiredDailyElevationM).toLocaleString()}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {annualGoalMetric === 'distance' ? (language === 'zh-TW' ? 'km / 剩餘日' : 'km / 剩余日') : (language === 'zh-TW' ? 'm / 剩餘日' : 'm / 剩余日')}
+                    {annualGoalMetric === 'distance' ? (language === 'zh-TW' ? `${distUnit} / 剩餘日` : `${distUnit} / 剩余日`) : (language === 'zh-TW' ? `${eleUnit} / 剩餘日` : `${eleUnit} / 剩余日`)}
                   </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '當期月均量' : '当期月均量'}</div>
                   <div className="text-xl sm:text-2xl font-bold text-ios-green tabular-nums">
                     {annualGoalMetric === 'distance'
-                      ? annualProgress.monthlyRateKm.toLocaleString()
-                      : annualElevationProgress.monthlyRateElevationM.toLocaleString()}
+                      ? (isImperial ? Math.round(annualProgress.monthlyRateKm * 0.621371) : annualProgress.monthlyRateKm).toLocaleString()
+                      : (isImperial ? Math.round(annualElevationProgress.monthlyRateElevationM * 3.28084) : annualElevationProgress.monthlyRateElevationM).toLocaleString()}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {annualGoalMetric === 'distance' ? (language === 'zh-TW' ? 'km / 月' : 'km / 月') : (language === 'zh-TW' ? 'm / 月' : 'm / 月')}
+                    {annualGoalMetric === 'distance' ? (language === 'zh-TW' ? `${distUnit} / 月` : `${distUnit} / 月`) : (language === 'zh-TW' ? `${eleUnit} / 月` : `${eleUnit} / 月`)}
                   </div>
                 </div>
               </div>
@@ -1381,8 +1388,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   <span className="text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '當前累積完成率' : '当前累积完成率'}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
                     {annualGoalMetric === 'distance'
-                      ? `${annualProgress.currentKm.toLocaleString()} / ${annualProgress.targetKm.toLocaleString()} km`
-                      : `${annualElevationProgress.currentElevationM.toLocaleString()} / ${annualElevationProgress.targetElevationM.toLocaleString()} m`}
+                      ? `${(isImperial ? Math.round(annualProgress.currentKm * 0.621371) : annualProgress.currentKm).toLocaleString()} / ${(isImperial ? Math.round(annualProgress.targetKm * 0.621371) : annualProgress.targetKm).toLocaleString()} ${distUnit}`
+                      : `${(isImperial ? Math.round(annualElevationProgress.currentElevationM * 3.28084) : annualElevationProgress.currentElevationM).toLocaleString()} / ${(isImperial ? Math.round(annualElevationProgress.targetElevationM * 3.28084) : annualElevationProgress.targetElevationM).toLocaleString()} ${eleUnit}`}
                   </span>
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden relative">
@@ -1396,10 +1403,10 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                           : (annualElevationProgress.expectedPaceElevationM / annualElevationProgress.targetElevationM) * 100
                       )}%`
                     }}
-                    title={`${language === 'zh-TW' ? '標準進度線: ' : '标准进度线: '}${
+                    title={`${language === 'zh-TW' ? '標準進度线: ' : '标准进度线: '}${
                       annualGoalMetric === 'distance'
-                        ? `${annualProgress.expectedPaceKm} km`
-                        : `${annualElevationProgress.expectedPaceElevationM.toLocaleString()} m`
+                        ? `${isImperial ? (annualProgress.expectedPaceKm * 0.621371).toFixed(1) : annualProgress.expectedPaceKm} ${distUnit}`
+                        : `${(isImperial ? Math.round(annualElevationProgress.expectedPaceElevationM * 3.28084) : annualElevationProgress.expectedPaceElevationM).toLocaleString()} ${eleUnit}`
                     }`}
                   />
                   <div
@@ -1500,7 +1507,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                     <span>里程</span>
                   </div>
                   <span className="font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                    {ringData.distance.current} / {ringData.distance.target} km ({Math.round(ringData.distance.pct * 100)}%)
+                    {isImperial ? (ringData.distance.current * 0.621371).toFixed(1) : ringData.distance.current} / {isImperial ? Math.round(ringData.distance.target * 0.621371) : ringData.distance.target} {distUnit} ({Math.round(ringData.distance.pct * 100)}%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1509,7 +1516,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                     <span>爬升</span>
                   </div>
                   <span className="font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                    +{ringData.elevation.current} / +{ringData.elevation.target} m ({Math.round(ringData.elevation.pct * 100)}%)
+                    +{isImperial ? Math.round(ringData.elevation.current * 3.28084) : ringData.elevation.current} / +{isImperial ? Math.round(ringData.elevation.target * 3.28084) : ringData.elevation.target} {eleUnit} ({Math.round(ringData.elevation.pct * 100)}%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1563,7 +1570,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                             <div
                               key={cell.date}
                               className={`w-3.5 h-3.5 rounded-[3px] ${colorClass} transition-all hover:scale-125 cursor-pointer`}
-                              title={`${cell.date}: ${cell.distanceKm} km, +${cell.elevationM} m (${cell.rides} 场)`}
+                              title={`${cell.date}: ${isImperial ? (cell.distanceKm * 0.621371).toFixed(1) : cell.distanceKm} ${distUnit}, +${isImperial ? Math.round(cell.elevationM * 3.28084) : cell.elevationM} ${eleUnit} (${cell.rides} 场)`}
                             />
                           );
                         })}
@@ -1797,8 +1804,10 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">周均骑行里程</div>
-                    <div className="text-xl sm:text-2xl font-bold text-ios-green tabular-nums">{weeklyVolume.avgWeeklyDistanceKm}</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">km / 周</div>
+                    <div className="text-xl sm:text-2xl font-bold text-ios-green tabular-nums">
+                      {isImperial ? (weeklyVolume.avgWeeklyDistanceKm * 0.621371).toFixed(1) : weeklyVolume.avgWeeklyDistanceKm}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{distUnit} / 周</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">历史峰值负荷周</div>
@@ -1982,7 +1991,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
               label={language === 'zh-TW' ? '標星賽段' : '标星赛段'}
               value={`${segmentStats.totalSegments}`}
               unit="个"
-              subtext={`覆盖 ${segmentStats.totalDistanceKm} km 经典赛线`}
+              subtext={`覆盖 ${isImperial ? (segmentStats.totalDistanceKm * 0.621371).toFixed(1) : segmentStats.totalDistanceKm} ${distUnit} 经典赛线`}
               icon={<Flag className="w-3.5 h-3.5 text-ios-blue" />}
               accentColor="blue"
             />
@@ -1996,8 +2005,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
             />
             <IOSMetricTile
               label="攻坚累计爬升"
-              value={`${segmentStats.totalGainM.toLocaleString()}`}
-              unit="m"
+              value={`${(isImperial ? Math.round(segmentStats.totalGainM * 3.28084) : segmentStats.totalGainM).toLocaleString()}`}
+              unit={eleUnit}
               subtext={`平均攀爬坡度 ${segmentStats.avgGradePct}%`}
               icon={<Mountain className="w-3.5 h-3.5 text-ios-green" />}
               accentColor="green"
@@ -2109,7 +2118,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                       <div>
                         <div className="text-[10px] text-slate-500 dark:text-slate-400">赛段距离</div>
                         <div className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums">
-                          {(seg.distance / 1000).toFixed(1)} km
+                          {isImperial ? `${((seg.distance / 1000) * 0.621371).toFixed(2)} mi` : `${(seg.distance / 1000).toFixed(1)} km`}
                         </div>
                       </div>
                       <div>
@@ -2121,7 +2130,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                       <div>
                         <div className="text-[10px] text-slate-500 dark:text-slate-400">累计爬升</div>
                         <div className="text-xs sm:text-sm font-bold text-ios-green tabular-nums">
-                          {seg.total_elevation_gain} m
+                          {isImperial ? `${Math.round(seg.total_elevation_gain * 3.28084)} ft` : `${seg.total_elevation_gain} m`}
                         </div>
                       </div>
                       <div>
@@ -2214,7 +2223,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                               <div className="flex justify-between">
                                 <span>标杆 VAM:</span>
                                 <strong className="text-amber-600 dark:text-amber-400 font-mono">
-                                  {Math.round((seg.total_elevation_gain / komTime) * 3600)} m/h
+                                  {Math.round((seg.total_elevation_gain / komTime) * 3600)} m/h {isImperial ? `(${Math.round((seg.total_elevation_gain / komTime) * 3600 * 3.28084)} ft/h)` : ''}
                                 </strong>
                               </div>
                               {gapSec !== null && !isKom && (
@@ -2255,7 +2264,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                                 key={idx}
                                 style={{ width: `${pct}%` }}
                                 className={`h-full rounded-sm ${color} transition-all duration-300 hover:opacity-80`}
-                                title={`${cs.name}: ${cs.distanceKm}km @ ${cs.gradePct}%`}
+                                title={`${cs.name}: ${isImperial ? (cs.distanceKm * 0.621371).toFixed(1) + 'mi' : cs.distanceKm + 'km'} @ ${cs.gradePct}%`}
                               />
                             );
                           })}
@@ -2275,7 +2284,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   {/* Bottom Action Bar: Climb Pacing Planner synergy */}
                   <div className="pt-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between gap-2">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                      {seg.elevation_low}m ~ {seg.elevation_high}m 海拔跨度
+                      {isImperial ? `${Math.round(seg.elevation_low * 3.28084)}ft ~ ${Math.round(seg.elevation_high * 3.28084)}ft` : `${seg.elevation_low}m ~ ${seg.elevation_high}m`} 海拔跨度
                     </div>
                     {onNavigateTool && (
                       <button
@@ -2341,7 +2350,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">
-                      {activeBike.totalDistanceKm.toLocaleString()} km
+                      {isImperial ? `${Math.round(activeBike.totalDistanceKm * 0.621371).toLocaleString()} mi` : `${activeBike.totalDistanceKm.toLocaleString()} km`}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">占全队总里程 {activeBike.distancePct}%</div>
                   </div>
@@ -2382,8 +2391,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                       </div>
 
                       <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
-                        <span>已骑 {comp.currentKm} km</span>
-                        <span>上限 {comp.criticalKm} km</span>
+                        <span>已骑 {isImperial ? Math.round(comp.currentKm * 0.621371) : comp.currentKm} {distUnit}</span>
+                        <span>上限 {isImperial ? Math.round(comp.criticalKm * 0.621371) : comp.criticalKm} {distUnit}</span>
                       </div>
                     </div>
                   ))}
@@ -2410,7 +2419,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                   E = {eddington.E}
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  代表车手一生中至少有 <strong className="text-ios-blue">{eddington.E}</strong> 天，单日骑行突破了 <strong className="text-ios-blue">{eddington.E} km</strong>。
+                  代表车手一生中至少有 <strong className="text-ios-blue">{eddington.E}</strong> 天，单日骑行突破了 <strong className="text-ios-blue">{eddington.E} km{isImperial ? ` (${(eddington.E * 0.621371).toFixed(0)} mi)` : ''}</strong>。
                 </p>
               </div>
 
@@ -2421,7 +2430,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                     冲级至 <strong className="text-ios-blue">E = {eddington.nextE}</strong>
                   </span>
                   <span className="text-slate-500 dark:text-slate-400 font-mono">
-                    差 <strong>{eddington.ridesNeededForNextE}</strong> 场 ≥ {eddington.nextE}km 骑行
+                    差 <strong>{eddington.ridesNeededForNextE}</strong> 场 ≥ {eddington.nextE}km{isImperial ? ` (${(eddington.nextE * 0.621371).toFixed(0)}mi)` : ''} 骑行
                   </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
@@ -2588,9 +2597,9 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                       <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2.5 tabular-nums">
                         <span>{act.start_date.split('T')[0]}</span>
                         <span>·</span>
-                        <span>{distKm} km</span>
+                        <span>{isImperial ? `${(distKm * 0.621371).toFixed(1)} mi` : `${distKm} km`}</span>
                         <span>·</span>
-                        <span>+{eleM} m</span>
+                        <span>+{isImperial ? `${Math.round(eleM * 3.28084)} ft` : `${eleM} m`}</span>
                         <span>·</span>
                         <span>{hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`}</span>
                         {act.weighted_average_watts && (

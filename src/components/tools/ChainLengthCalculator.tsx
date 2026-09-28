@@ -13,7 +13,8 @@ import { useRiderProfile } from '../../context/RiderProfileContext';
 
 export const ChainLengthCalculator: React.FC = () => {
   const { showToast } = useToast();
-  const { language } = useLanguageAndUnit();
+  const { language, unitSystem } = useLanguageAndUnit();
+  const isImperial = unitSystem === 'imperial';
   const { activeBike } = useRiderProfile();
 
   // Share Poster State
@@ -240,7 +241,7 @@ export const ChainLengthCalculator: React.FC = () => {
             {/* Chainstay Length */}
             <div>
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center">
-                后下叉长度 Chainstay RC (mm)
+                后下叉长度 Chainstay RC (mm){isImperial ? ` (${(chainstayLengthMm / 25.4).toFixed(1)}")` : ''}
                 <Tooltip content="五通中轴中心至后轮快拆/桶轴中心的直线距离，绝大多数公路车为 405~415mm，Gravel/耐力车为 420~435mm。" />
               </label>
               <NumberStepper
@@ -418,7 +419,7 @@ export const ChainLengthCalculator: React.FC = () => {
                 <Zap className="w-3.5 h-3.5 text-ios-blue" />
                 传动链条闭环受力几何示意
               </span>
-              <span className="font-mono text-ios-blue font-bold">RC: {chainstayLengthMm}mm</span>
+              <span className="font-mono text-ios-blue font-bold">RC: {chainstayLengthMm}mm{isImperial ? ` (${(chainstayLengthMm / 25.4).toFixed(1)}")` : ''}</span>
             </div>
 
             <div className="flex justify-center bg-black/[0.02] dark:bg-white/[0.03] rounded-2xl p-4 border border-black/[0.05] dark:border-white/[0.08] transition-colors">
@@ -426,7 +427,7 @@ export const ChainLengthCalculator: React.FC = () => {
                 {/* Chainstay line */}
                 <line x1="80" y1="70" x2="280" y2="70" stroke="#AEAEB2" strokeWidth="2.5" strokeDasharray="4 4" className="dark:stroke-[#3A3A3C]" />
                 <text x="180" y="62" fontSize="9" fill="#8E8E93" textAnchor="middle" fontFamily="monospace">
-                  RC = {chainstayLengthMm} mm
+                  RC = {chainstayLengthMm} mm{isImperial ? ` (${(chainstayLengthMm / 25.4).toFixed(1)}")` : ''}
                 </text>
 
                 {/* Chain Loop (upper & lower runs) */}

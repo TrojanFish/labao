@@ -20,6 +20,7 @@ import { LocalActivityRecord } from '../../utils/localActivityDb';
 import { PlannedWorkout } from '../../utils/periodizationEngine';
 import { WORKOUT_TEMPLATES } from './WorkoutBuilder';
 import { useToast } from '../../context/ToastContext';
+import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 
 interface DayWorkoutModalProps {
   isOpen: boolean;
@@ -41,6 +42,8 @@ export const DayWorkoutModal: React.FC<DayWorkoutModalProps> = ({
   onDeleteWorkout
 }) => {
   const { showToast } = useToast();
+  const { unitSystem } = useLanguageAndUnit();
+  const isImperial = unitSystem === 'imperial';
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(WORKOUT_TEMPLATES[0].id);
   const [customTitle, setCustomTitle] = useState<string>('');
@@ -171,8 +174,8 @@ export const DayWorkoutModal: React.FC<DayWorkoutModalProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono tabular-nums">
-                      <span>{act.distanceKm} km</span>
-                      <span>+{act.elevationGainM} m</span>
+                      <span>{isImperial ? `${(act.distanceKm * 0.621371).toFixed(1)} mi` : `${act.distanceKm} km`}</span>
+                      <span>+{isImperial ? `${Math.round(act.elevationGainM * 3.28084)} ft` : `${act.elevationGainM} m`}</span>
                       <span>{Math.round(act.movingTimeSec / 60)} 分钟</span>
                       <span>NP {act.normalizedPower}W</span>
                     </div>

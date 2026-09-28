@@ -46,7 +46,11 @@ const WIND_COMPASS_PRESETS = [
 export const GpxRouteCreator: React.FC = () => {
   const { showToast } = useToast();
   const { profile, activeBike } = useRiderProfile();
-  const { language } = useLanguageAndUnit();
+  const { language, unitSystem, convertDistance, convertElevation, convertSpeed } = useLanguageAndUnit();
+  const isImperial = unitSystem === 'imperial';
+  const distUnit = isImperial ? 'mi' : 'km';
+  const eleUnit = isImperial ? 'ft' : 'm';
+  const speedUnit = isImperial ? 'mph' : 'km/h';
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -201,7 +205,7 @@ export const GpxRouteCreator: React.FC = () => {
         });
         const startMarker = L.marker([waypoints[0].lat, waypoints[0].lng], { icon: startIcon })
           .addTo(map)
-          .bindPopup(`<b>起点: ${waypoints[0].name || '起点'}</b><br/>海拔: ${waypoints[0].elevation}m`);
+          .bindPopup(`<b>起点: ${waypoints[0].name || '起点'}</b><br/>海拔: ${isImperial ? `${Math.round(waypoints[0].elevation * 3.28084)}ft` : `${waypoints[0].elevation}m`}`);
         markersRef.current.push(startMarker);
       }
       if (waypoints.length > 1) {
@@ -222,11 +226,11 @@ export const GpxRouteCreator: React.FC = () => {
         });
         const endMarker = L.marker([endW.lat, endW.lng], { icon: endIcon })
           .addTo(map)
-          .bindPopup(`<b>终点: ${endW.name || '终点'}</b><br/>海拔: ${endW.elevation}m`);
+          .bindPopup(`<b>终点: ${endW.name || '终点'}</b><br/>海拔: ${isImperial ? `${Math.round(endW.elevation * 3.28084)}ft` : `${endW.elevation}m`}`);
         markersRef.current.push(endMarker);
       }
     }
-  }, [waypoints]);
+  }, [waypoints, isImperial]);
 
   // Reactive Physics & Aerodynamic Pacing Engine Solver
   const pacingPlan: CoursePacingSummary = useMemo(() => {
@@ -254,12 +258,12 @@ export const GpxRouteCreator: React.FC = () => {
     }
 
     return {
-      labels: segs.map(s => `${s.endDistKm} km`),
+      labels: segs.map(s => isImperial ? `${(s.endDistKm * 0.621371).toFixed(1)} mi` : `${s.endDistKm} km`),
       datasets: [
         {
           type: 'line' as const,
-          label: '海拔剖面 (m)',
-          data: segs.map(s => s.endEleM),
+          label: `海拔剖面 (${eleUnit})`,
+          data: segs.map(s => isImperial ? Math.round(s.endEleM * 3.28084) : s.endEleM),
           yAxisID: 'y',
           fill: true,
           tension: 0.3,
@@ -683,8 +687,8 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                     ? 'border-white/20 text-white/80'
                     : 'border-slate-200/60 dark:border-white/10 text-slate-500 dark:text-slate-400'
                 }`}>
-                  <span className="tabular-nums">{route.distanceKm}km</span>
-                  <span className={`tabular-nums ${isSelected ? 'text-amber-200 font-bold' : 'text-ios-orange font-semibold'}`}>+{route.elevationGainM}m</span>
+                  <span className="tabular-nums">{isImperial ? `${(route.distanceKm * 0.621371).toFixed(1)}mi` : `${route.distanceKm}km`}</span>
+                  <span className={`tabular-nums ${isSelected ? 'text-amber-200 font-bold' : 'text-ios-orange font-semibold'}`}>+{isImperial ? `${Math.round(route.elevationGainM * 3.28084)}ft` : `${route.elevationGainM}m`}</span>
                 </div>
               </button>
             );
@@ -751,24 +755,24 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <IOSMetricTile
                 label="全程总距离"
-                value={pacingPlan.totalDistanceKm}
-                unit="km"
+                value={isImperial ? (pacingPlan.totalDistanceKm * 0.621371).toFixed(1) : pacingPlan.totalDistanceKm}
+                unit={distUnit}
                 subtext={`${waypoints.length} 航点`}
                 theme="blue"
                 className="p-2.5 sm:p-4"
               />
               <IOSMetricTile
                 label="累计爬升"
-                value={`+${pacingPlan.totalElevationGainM}`}
-                unit="m"
+                value={`+${isImperial ? Math.round(pacingPlan.totalElevationGainM * 3.28084) : pacingPlan.totalElevationGainM}`}
+                unit={eleUnit}
                 subtext="海拔增益"
                 theme="green"
                 className="p-2.5 sm:p-4"
               />
               <IOSMetricTile
                 label="累计下降"
-                value={`-${pacingPlan.totalDescentM}`}
-                unit="m"
+                value={`-${isImperial ? Math.round(pacingPlan.totalDescentM * 3.28084) : pacingPlan.totalDescentM}`}
+                unit={eleUnit}
                 subtext="下坡缓释"
                 theme="amber"
                 className="p-2.5 sm:p-4"
@@ -805,7 +809,7 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                     },
                     scales: {
                       x: { grid: { color: 'rgba(148, 163, 184, 0.1)' } },
-                      y: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, title: { display: true, text: '海拔 (m)' } },
+                      y: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, title: { display: true, text: `海拔 (${eleUnit})` } },
                       y1: { display: false }
                     }
                   }}
@@ -840,7 +844,7 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
 
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-mono text-ios-blue font-semibold text-[11px] tabular-nums">
-                        {w.elevation}m
+                        {isImperial ? `${Math.round(w.elevation * 3.28084)}ft` : `${w.elevation}m`}
                       </span>
                       <div className="flex items-center gap-1">
                         <button
@@ -935,12 +939,12 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                     </span>
                   </div>
                   <NumberStepper
-                    value={windSpeedKmh}
-                    onChange={setWindSpeedKmh}
+                    value={isImperial ? parseFloat((windSpeedKmh * 0.621371).toFixed(1)) : windSpeedKmh}
+                    onChange={(v) => setWindSpeedKmh(isImperial ? Math.round(v / 0.621371) : v)}
                     min={0}
-                    max={65}
-                    step={2}
-                    unit="km/h"
+                    max={isImperial ? 40 : 65}
+                    step={isImperial ? 1 : 2}
+                    unit={speedUnit}
                   />
                 </div>
 
@@ -1032,7 +1036,7 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
               label="预估完赛总用时"
               value={pacingPlan.totalDurationFormatted}
               unit=""
-              subtext={`均速 ${pacingPlan.avgSpeedKmh} km/h`}
+              subtext={`均速 ${isImperial ? (pacingPlan.avgSpeedKmh * 0.621371).toFixed(1) : pacingPlan.avgSpeedKmh} ${speedUnit}`}
               theme="blue"
               className="p-3 sm:p-4"
             />
@@ -1114,13 +1118,13 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                     第 {selectedHoverSegment.index} 区段 · {selectedHoverSegment.gradientLabel}
                   </span>
                   <span className="font-semibold text-slate-800 dark:text-white tabular-nums">
-                    里程 {selectedHoverSegment.startDistKm} ~ {selectedHoverSegment.endDistKm}km ({selectedHoverSegment.distKm}km)
+                    里程 {isImperial ? (selectedHoverSegment.startDistKm * 0.621371).toFixed(1) : selectedHoverSegment.startDistKm} ~ {isImperial ? (selectedHoverSegment.endDistKm * 0.621371).toFixed(1) : selectedHoverSegment.endDistKm}{distUnit} ({isImperial ? (selectedHoverSegment.distKm * 0.621371).toFixed(2) : selectedHoverSegment.distKm}{distUnit})
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs font-mono tabular-nums">
                   <span>坡度: <b className="text-slate-900 dark:text-white">{selectedHoverSegment.gradePct > 0 ? `+${selectedHoverSegment.gradePct}%` : `${selectedHoverSegment.gradePct}%`}</b></span>
                   <span>目标功率: <b className="text-amber-500 font-bold">{selectedHoverSegment.targetWatts}W ({selectedHoverSegment.targetFtpPct}% FTP)</b></span>
-                  <span>预估速度: <b className="text-ios-blue font-bold">{selectedHoverSegment.speedKmh} km/h</b></span>
+                  <span>预估速度: <b className="text-ios-blue font-bold">{isImperial ? (selectedHoverSegment.speedKmh * 0.621371).toFixed(1) : selectedHoverSegment.speedKmh} {speedUnit}</b></span>
                   <span>耗时: <b className="text-slate-700 dark:text-slate-300">{selectedHoverSegment.durationStr}</b></span>
                   <span className="text-slate-500">{selectedHoverSegment.windRelationLabel}</span>
                 </div>
@@ -1153,7 +1157,7 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                     x: { grid: { color: 'rgba(148, 163, 184, 0.08)' } },
                     y: {
                       grid: { color: 'rgba(148, 163, 184, 0.08)' },
-                      title: { display: true, text: '海拔标高 (m)' }
+                      title: { display: true, text: `海拔标高 (${eleUnit})` }
                     },
                     y1: {
                       position: 'right',
@@ -1213,7 +1217,7 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                           #{seg.index}
                         </td>
                         <td className="py-2.5 text-slate-600 dark:text-slate-300 tabular-nums">
-                          {seg.startDistKm} ~ {seg.endDistKm}km
+                          {isImperial ? (seg.startDistKm * 0.621371).toFixed(1) : seg.startDistKm} ~ {isImperial ? (seg.endDistKm * 0.621371).toFixed(1) : seg.endDistKm}{distUnit}
                         </td>
                         <td className="py-2.5">
                           <span
@@ -1234,7 +1238,7 @@ ${waypoints.map(w => `      <trkpt lat="${w.lat}" lon="${w.lng}">
                           <span className="text-[10px] text-slate-400 font-normal ml-1">({seg.targetFtpPct}%)</span>
                         </td>
                         <td className="py-2.5 text-right font-bold text-ios-blue tabular-nums">
-                          {seg.speedKmh} <span className="text-[10px] font-normal text-slate-400">km/h</span>
+                          {isImperial ? (seg.speedKmh * 0.621371).toFixed(1) : seg.speedKmh} <span className="text-[10px] font-normal text-slate-400">{speedUnit}</span>
                         </td>
                         <td className="py-2.5 text-right text-slate-700 dark:text-slate-300 tabular-nums">
                           {seg.durationStr}

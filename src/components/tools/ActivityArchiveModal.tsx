@@ -66,7 +66,8 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
   onRefreshList
 }) => {
   const { showToast } = useToast();
-  const { language } = useLanguageAndUnit();
+  const { language, unitSystem } = useLanguageAndUnit();
+  const isImperial = unitSystem === 'imperial';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<'local' | 'strava'>('local');
@@ -455,12 +456,12 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
                           <span>{formatDuration(act.movingTimeSec || act.totalDurationSec)}</span>
                         </div>
                         <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
-                          <span>{act.distanceKm} km</span>
+                          <span>{isImperial ? `${(act.distanceKm * 0.621371).toFixed(1)} mi` : `${act.distanceKm} km`}</span>
                         </div>
                         {act.elevationGainM > 0 && (
                           <div className="flex items-center gap-1">
                             <Mountain className="w-3.5 h-3.5 text-ios-orange" />
-                            <span>+{act.elevationGainM}m</span>
+                            <span>+{isImperial ? `${Math.round(act.elevationGainM * 3.28084)}ft` : `${act.elevationGainM}m`}</span>
                           </div>
                         )}
                         {act.normalizedPower > 0 && (
@@ -578,12 +579,12 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
                           <span>{formatDuration(durSec)}</span>
                         </div>
                         <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
-                          <span>{distKm} km</span>
+                          <span>{isImperial ? `${(parseFloat(distKm) * 0.621371).toFixed(1)} mi` : `${distKm} km`}</span>
                         </div>
                         {eleM > 0 && (
                           <div className="flex items-center gap-1 text-ios-orange">
                             <Mountain className="w-3.5 h-3.5" />
-                            <span>+{eleM}m</span>
+                            <span>+{isImperial ? `${Math.round(eleM * 3.28084)}ft` : `${eleM}m`}</span>
                           </div>
                         )}
                         {np > 0 && (

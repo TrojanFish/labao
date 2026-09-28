@@ -20,6 +20,7 @@ import {
   RacePriority,
   RaceDiscipline
 } from '../../utils/periodizationEngine';
+import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 
 interface TargetRaceWizardModalProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ export const TargetRaceWizardModal: React.FC<TargetRaceWizardModalProps> = ({
   onSaveEvent,
   currentCtl
 }) => {
+  const { unitSystem } = useLanguageAndUnit();
+  const isImperial = unitSystem === 'imperial';
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Form State
@@ -146,8 +149,8 @@ export const TargetRaceWizardModal: React.FC<TargetRaceWizardModalProps> = ({
                         <div className="text-xs font-bold truncate">{preset.name}</div>
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between border-t border-slate-200/50 dark:border-white/5 pt-1.5">
-                        <span>{preset.distanceKm}km</span>
-                        <span className="text-ios-orange font-semibold">+{preset.elevationGainM}m</span>
+                        <span>{preset.distanceKm != null ? (isImperial ? `${(preset.distanceKm * 0.621371).toFixed(1)}mi` : `${preset.distanceKm}km`) : '--'}</span>
+                        <span className="text-ios-orange font-semibold">+{preset.elevationGainM != null ? (isImperial ? `${Math.round(preset.elevationGainM * 3.28084)}ft` : `${preset.elevationGainM}m`) : '--'}</span>
                       </div>
                     </button>
                   );
