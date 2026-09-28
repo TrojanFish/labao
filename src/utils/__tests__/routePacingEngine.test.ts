@@ -3,6 +3,8 @@ import {
   calculateHaversineDistance,
   calculateBearing,
   calculateAirDensity,
+  calculateLapseRateAirDensity,
+  calculateCorneringCentrifugalLimit,
   solveEquilibriumSpeed,
   formatDuration,
   computeCoursePacingPlan
@@ -39,6 +41,35 @@ describe('Route Pacing & Aerodynamics Physics Engine', () => {
       const mountainDensity = calculateAirDensity(2000, 15); // 2000m altitude
       expect(mountainDensity).toBeLessThan(seaLevelDensity);
       expect(mountainDensity).toBeGreaterThan(0.95);
+    });
+
+    it('calculates environmental lapse rate temperature drop and air density', () => {
+      // 1000m altitude gain from 0m with base temp 20°C: lapse rate is -6.5°C/1000m -> 13.5°C
+      const lapse1000 = calculateLapseRateAirDensity(1000, 0, 20);
+      expect(lapse1000.localTempC).toBe(13.5);
+      expect(lapse1000.airDensityRho).toBeLessThan(1.225);
+
+      // 2000m high mountain pass from 500m base with base temp 25°C: delta 1500m -> -9.75°C -> 15.2°C (or 15.3°C rounded)
+      const pass2000 = calculateLapseRateAirDensity(2000, 500, 25);
+      expect(pass2000.localTempC).toBe(15.3);
+      expect(pass2000.airDensityRho).toBeLessThan(1.10);
+    });
+
+    it('calculates centrifugal cornering speed caps for dry vs wet hairpins', () => {
+      // Hairpin curve radius = 15m, dry asphalt (mu = 0.8)
+      const dryHairpin = calculateCorneringCentrifugalLimit(15, 'dry');
+      expect(dryHairpin.maxSpeedKmh).toBeGreaterThan(35);
+      expect(dryHairpin.maxSpeedKmh).toBeLessThan(42);
+
+      // Hairpin curve radius = 15m, wet asphalt (mu = 0.45)
+      const wetHairpin = calculateCorneringCentrifugalLimit(15, 'wet');
+      expect(wetHairpin.maxSpeedKmh).toBeLessThan(32);
+      expect(wetHairpin.maxSpeedKmh).toBeGreaterThan(25);
+      expect(wetHairpin.warning).toContain('急弯/发卡弯极限安全过弯速度');
+
+      // Gravel surface (mu = 0.35)
+      const gravelHairpin = calculateCorneringCentrifugalLimit(15, 'gravel');
+      expect(gravelHairpin.maxSpeedKmh).toBeLessThan(wetHairpin.maxSpeedKmh);
     });
   });
 

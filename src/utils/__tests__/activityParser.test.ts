@@ -4,6 +4,8 @@ import {
   calculateMmpCurve,
   calculateSkibaWPrimeBalance,
   downsamplePoints,
+  analyzePoints,
+  generateRealisticDemoRide,
   ActivityPoint
 } from '../activityParser';
 
@@ -154,6 +156,32 @@ describe('Activity Parser & Advanced Physiological Metrics', () => {
       expect(sampled.length).toBe(600);
       expect(sampled[0].time).toBe(0);
       expect(sampled[sampled.length - 1].time).toBeGreaterThan(1900);
+    });
+  });
+
+  describe('analyzePoints & Left-Right Pedal Balance (Phase 1)', () => {
+    it('properly preserves leftRightBalance from analysis options', () => {
+      const points: ActivityPoint[] = [
+        { time: 0, distance: 0, power: 200 },
+        { time: 10, distance: 80, power: 210 },
+        { time: 20, distance: 160, power: 220 }
+      ];
+
+      const result = analyzePoints(points, 'test.fit', 'fit', 250, 70, 190, {
+        leftRightBalance: { leftPercent: 48, rightPercent: 52 }
+      });
+
+      expect(result.leftRightBalance).toBeDefined();
+      expect(result.leftRightBalance?.leftPercent).toBe(48);
+      expect(result.leftRightBalance?.rightPercent).toBe(52);
+    });
+
+    it('generates demo activity with valid dual-sided balance', () => {
+      const demo = generateRealisticDemoRide(260, 68, 185);
+      expect(demo.leftRightBalance).toBeDefined();
+      expect(demo.leftRightBalance?.leftPercent).toBe(49);
+      expect(demo.leftRightBalance?.rightPercent).toBe(51);
+      expect(demo.normalizedPower).toBeGreaterThan(0);
     });
   });
 });

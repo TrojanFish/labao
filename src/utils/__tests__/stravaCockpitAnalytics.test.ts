@@ -13,7 +13,8 @@ import {
   computeAerobicEfficiency,
   exportActivitiesToCsv,
   exportActivitiesToJson,
-  computeSegmentSummaryStats
+  computeSegmentSummaryStats,
+  computeGearFleet
 } from '../stravaCockpitAnalytics';
 import { StravaActivityRecord } from '../indexedDb';
 import { CURATED_STRAVA_SEGMENTS } from '../../services/stravaService';
@@ -380,6 +381,44 @@ describe('StravaCockpitAnalytics - Sports Science Calculations', () => {
       expect(stats.totalGainM).toBeGreaterThan(8000);
       expect(stats.totalAttempts).toBeGreaterThan(50);
       expect(stats.avgGradePct).toBeGreaterThan(5.0);
+    });
+  });
+
+  describe('computeGearFleet (Phase 1)', () => {
+    it('handles fallback bikes when empty bikes array provided', () => {
+      const fleet = computeGearFleet([], []);
+      expect(fleet.length).toBeGreaterThan(0);
+      expect(fleet[0].components).toHaveLength(3);
+      expect(fleet[0].components[0].status).toBeDefined();
+    });
+
+    it('retains maximum distance between bike profile mileage and recorded activities', () => {
+      const customBikes = [
+        { id: 'b_custom_1', name: 'Pinarello Dogma F', distance: 5000000, primary: true }
+      ];
+      const customActivities: StravaActivityRecord[] = [
+        {
+          id: 101,
+          name: 'Sunday Morning Loop',
+          distance: 60000,
+          gear_id: 'b_custom_1',
+          moving_time: 7200,
+          elapsed_time: 7500,
+          total_elevation_gain: 500,
+          type: 'Ride',
+          start_date: '2026-06-01T08:00:00Z',
+          start_date_local: '2026-06-01T08:00:00Z',
+          average_speed: 8.3,
+          max_speed: 16.0
+        }
+      ];
+
+      const fleet = computeGearFleet(customBikes, customActivities);
+      expect(fleet).toHaveLength(1);
+      expect(fleet[0].id).toBe('b_custom_1');
+      // 5000000m = 5000km, which is > 60km, so distance should be 5000km
+      expect(fleet[0].totalDistanceKm).toBe(5000);
+      expect(fleet[0].components).toHaveLength(3);
     });
   });
 });

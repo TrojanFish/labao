@@ -1874,6 +1874,18 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
                 </span>
               </span>
 
+              {analysis.leftRightBalance && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-ios-teal" />
+                  <span>{language === 'zh-TW' ? '雙邊平衡' : '双边平衡'}: <strong className="text-slate-900 dark:text-white tabular-nums">{analysis.leftRightBalance.leftPercent}% L / {analysis.leftRightBalance.rightPercent}% R</strong></span>
+                  {Math.abs(analysis.leftRightBalance.leftPercent - 50) > 3 ? (
+                    <span className="text-ios-amber text-[11px] font-medium">({language === 'zh-TW' ? '偏重' : '偏重'} {analysis.leftRightBalance.leftPercent > 50 ? '左' : '右'})</span>
+                  ) : (
+                    <span className="text-ios-green text-[11px] font-medium">({language === 'zh-TW' ? '均衡' : '均衡'})</span>
+                  )}
+                </span>
+              )}
+
               {analysis.efficiencyFactor && (
                 <span className="hidden sm:inline-flex items-center gap-1.5">
                   <Gauge className="w-4 h-4 text-ios-blue" />

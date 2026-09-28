@@ -13,7 +13,9 @@ import {
   Wrench,
   Thermometer,
   Clock,
-  Layers
+  Layers,
+  Download,
+  ArrowUpRight
 } from 'lucide-react';
 import { IOSCard, IOSMetricTile, IOSCardHeader } from '../common/IOSCard';
 import { IOSToolHeader } from '../common/IOSToolHeader';
@@ -21,8 +23,13 @@ import { IOSSegmentedControl } from '../common/IOSSegmentedControl';
 import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 import { useToast } from '../../context/ToastContext';
 import { useRiderProfile } from '../../context/RiderProfileContext';
+import { setPendingTransfer } from '../../hooks/useToolDraftState';
 
-export const TubelessSealantCalculator: React.FC = () => {
+export interface TubelessSealantCalculatorProps {
+  onNavigateTool?: (toolId: string) => void;
+}
+
+export const TubelessSealantCalculator: React.FC<TubelessSealantCalculatorProps> = ({ onNavigateTool }) => {
   const { language, unitSystem } = useLanguageAndUnit();
   const { showToast } = useToast();
   const { activeBike } = useRiderProfile();
@@ -198,6 +205,74 @@ export const TubelessSealantCalculator: React.FC = () => {
       maxPunctureMm
     };
   }, [wheelStandard, tireCategory, tireWidthMm, innerRimWidthMm, casingType, climate, rideFrequency, sealantType]);
+
+  // Recommended maintenance target date
+  const nextMaintenanceDateStr = useMemo(() => {
+    const d = new Date(Date.now() + calculation.inspectionDays * 86400000);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }, [calculation.inspectionDays]);
+
+  const handleExportIcsReminder = () => {
+    const dStr = nextMaintenanceDateStr.replace(/-/g, '');
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Yolo Cycling//Tubeless Sealant//CN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:tubeless-sealant-${Date.now()}@labao.app
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTART;VALUE=DATE:${dStr}
+DTEND;VALUE=DATE:${dStr}
+SUMMARY:🛠️ 真空胎补液例行维护: 单轮补充 ${calculation.topUpDoseMl}ml
+DESCRIPTION:外胎规格: ${wheelStandard} ${tireWidthMm}mm\\n推荐定期补液量: 单轮 ${calculation.topUpDoseMl}ml (整车双轮约 ${calculation.pairTotalMl}ml)\\n建议操作: 拔出气嘴芯用注胶量筒补注自补液，并摇晃车轮确认流动性！
+STATUS:CONFIRMED
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:明天需进行真空胎自补液补液维护
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LaBao_真空胎自补液维护提醒_${nextMaintenanceDateStr}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(language === 'zh-TW' ? '已成功匯出維護提醒日曆 (.ics)，可加入手機行事曆！' : '已成功导出维护提醒日历 (.ics)，可加入手机日历！', 'success');
+  };
+
+  const handleScheduleIntoCalendar = () => {
+    const ok = setPendingTransfer('solorider_pending_calendar_workout', {
+      targetDate: nextMaintenanceDateStr,
+      workout: {
+        id: `maint-${Date.now()}`,
+        date: nextMaintenanceDateStr,
+        title: `🛠️ 真空胎补液维护 (${calculation.topUpDoseMl}ml)`,
+        type: 'recovery',
+        durationMin: 15,
+        targetTss: 0,
+        focusAdaptation: '器材保养与自补液注胶'
+      }
+    });
+    if (ok) {
+      showToast(
+        language === 'zh-TW'
+          ? `已將「${nextMaintenanceDateStr} 自補液維護」排入賽歷！`
+          : `已将「${nextMaintenanceDateStr} 自补液维护」排入赛历！`,
+        'success'
+      );
+      if (onNavigateTool) {
+        onNavigateTool('training-calendar');
+      }
+    }
+  };
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -559,7 +634,7 @@ export const TubelessSealantCalculator: React.FC = () => {
             </div>
 
             {/* Inspection & Expiry Timeline */}
-            <div className="p-3.5 rounded-2xl bg-ios-orange/10 border border-ios-orange/20 text-slate-900 dark:text-white space-y-1.5 text-xs">
+            <div className="p-3.5 rounded-2xl bg-ios-orange/10 border border-ios-orange/20 text-slate-900 dark:text-white space-y-2.5 text-xs">
               <div className="font-bold flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-ios-orange">
                   <Calendar className="w-4 h-4" />
@@ -570,8 +645,33 @@ export const TubelessSealantCalculator: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                {`受当地${climate === 'hot_dry' ? '高温炎热' : '常温'}气候与${casingType === 'race' ? '竞速薄胎壁' : '标准'}胎体影响，乳胶在此周期后将逐渐胶化脱水，请提前摇轮听声自查。`}
+                {`受当地${climate === 'hot_dry' ? '高温炎热' : '常温'}气候与${casingType === 'race' ? '竞速薄胎壁' : '标准'}胎体影响，乳胶在此周期后将逐渐胶化脱水。建议下次维护日期：`}
+                <strong className="text-slate-900 dark:text-white font-mono font-bold ml-1">{nextMaintenanceDateStr}</strong>
               </p>
+
+              {/* Maintenance Schedule Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-ios-orange/20">
+                <button
+                  type="button"
+                  onClick={handleExportIcsReminder}
+                  className="apple-touch h-8 rounded-xl bg-white/80 dark:bg-white/10 hover:bg-white text-slate-800 dark:text-slate-200 border border-ios-orange/30 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition shadow-2xs"
+                  title="导出标准 iCalendar 维护事件"
+                >
+                  <Download className="w-3 h-3 text-ios-orange" />
+                  <span>{language === 'zh-TW' ? '匯出 .ICS 日曆' : '导出 .ICS 日历'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleScheduleIntoCalendar}
+                  className="apple-touch h-8 rounded-xl bg-ios-orange/20 hover:bg-ios-orange/30 text-ios-orange border border-ios-orange/30 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition shadow-2xs"
+                  title="将维护日期排入训练赛历"
+                >
+                  <Calendar className="w-3 h-3" />
+                  <span>{language === 'zh-TW' ? '排入訓練賽歷' : '排入训练赛历'}</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
 
             {/* Puncture Threshold Gauge */}

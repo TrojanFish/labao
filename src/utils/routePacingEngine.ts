@@ -53,6 +53,8 @@ export interface CourseSegment {
   
   // Aero & Climate
   airDensityRho: number;
+  localTempC?: number;
+  safeDescentCornerKmh?: number;
   relativeWindAngleDeg: number;
   headwindComponentMs: number; // positive = headwind, negative = tailwind
   crosswindComponentMs: number;
@@ -171,6 +173,45 @@ export function calculateAirDensity(elevationM: number, tempC: number): number {
   const pressure = p0 * Math.pow(1 - 0.0000225577 * safeElevation, 5.25588);
   const rho = pressure / (287.05 * T);
   return parseFloat(rho.toFixed(3));
+}
+
+/**
+ * Calculates environmental lapse rate adjusted temperature and air density at given elevation.
+ * Standard atmospheric lapse rate: -0.0065 °C / m (-0.65 °C per 100 meters).
+ */
+export function calculateLapseRateAirDensity(
+  elevationM: number,
+  baseElevationM: number,
+  baseTempC: number
+): { localTempC: number; airDensityRho: number } {
+  const deltaElev = Math.max(0, elevationM - baseElevationM);
+  const localTempC = parseFloat((baseTempC - deltaElev * 0.0065).toFixed(1));
+  const airDensityRho = calculateAirDensity(elevationM, localTempC);
+  return { localTempC, airDensityRho };
+}
+
+/**
+ * Calculates maximum safe cornering speed on descents based on centrifugal force and tire grip.
+ * v_max = sqrt(mu * g * R)
+ * @param cornerRadiusM Corner radius in meters (e.g. 15m for hairpin switchback, 35m for sweeping curve)
+ * @param surfaceCondition 'dry' | 'wet' | 'gravel'
+ */
+export function calculateCorneringCentrifugalLimit(
+  cornerRadiusM: number,
+  surfaceCondition: 'dry' | 'wet' | 'gravel' = 'dry'
+): { maxSpeedMs: number; maxSpeedKmh: number; warning: string } {
+  const g = 9.80665;
+  const mu = surfaceCondition === 'wet' ? 0.45 : surfaceCondition === 'gravel' ? 0.35 : 0.80;
+  const maxSpeedMs = Math.sqrt(Math.max(1, mu * g * cornerRadiusM));
+  const maxSpeedKmh = parseFloat((maxSpeedMs * 3.6).toFixed(1));
+  const warning = maxSpeedKmh < 35
+    ? `急弯/发卡弯极限安全过弯速度 ${maxSpeedKmh} km/h，入弯前必须充分减速制动防侧滑离心甩出！`
+    : `缓弯极限过弯速度 ${maxSpeedKmh} km/h，注意倾角压弯与对向车流。`;
+  return {
+    maxSpeedMs,
+    maxSpeedKmh,
+    warning
+  };
 }
 
 /**
@@ -504,7 +545,14 @@ export function computeCoursePacingPlan(
     const midLng = (startPt.lng + endPt.lng) / 2;
     const avgEleM = (startPt.elevation + endPt.elevation) / 2;
 
-    const airDensityRho = calculateAirDensity(avgEleM, options.ambientTempC);
+    const baseEleM = pointsWithDist[0]?.elevation || 0;
+    const { localTempC, airDensityRho } = calculateLapseRateAirDensity(avgEleM, baseEleM, options.ambientTempC);
+
+    let safeDescentCornerKmh: number | undefined = undefined;
+    if (gradePct < -4.0) {
+      const cornerLimit = calculateCorneringCentrifugalLimit(18, 'dry');
+      safeDescentCornerKmh = cornerLimit.maxSpeedKmh;
+    }
 
     const windDecomp = decomposeWind(
       bearingDeg,
@@ -573,6 +621,8 @@ export function computeCoursePacingPlan(
       color: gradientInfo.color,
       gradientLabel: gradientInfo.label,
       airDensityRho,
+      localTempC,
+      safeDescentCornerKmh,
       relativeWindAngleDeg: windDecomp.relativeWindAngleDeg,
       headwindComponentMs: windDecomp.headwindComponentMs,
       crosswindComponentMs: windDecomp.crosswindComponentMs,

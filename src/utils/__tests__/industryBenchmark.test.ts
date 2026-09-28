@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getBaseTirePsi, SURFACE_FACTORS, TIRE_SETUP_FACTORS } from '../../data/tirePressureConfig';
+import { getBaseTirePsi, SURFACE_FACTORS, TIRE_SETUP_FACTORS, calculateTemperatureCompensatedPressure } from '../../data/tirePressureConfig';
 
 /**
  * Industry Benchmark Validation Suite
@@ -97,6 +97,29 @@ describe('Industry Benchmark: SRAM AXS & Silca Tire Pressure Alignment', () => {
 
     expect(res.rearPsi).toBeGreaterThanOrEqual(34);
     expect(res.rearPsi).toBeLessThanOrEqual(42);
+  });
+
+  describe('calculateTemperatureCompensatedPressure (Gay-Lussac Ideal Gas Law)', () => {
+    it('increases recommended pump pressure when riding in cold winter conditions', () => {
+      // Pumping in a 20°C room for a 5°C winter ride
+      const res = calculateTemperatureCompensatedPressure(65, 5, 20);
+      expect(res.recommendedPumpPsi).toBeGreaterThan(65);
+      expect(res.deltaPsi).toBeGreaterThanOrEqual(3.0);
+      expect(res.deltaPsi).toBeLessThanOrEqual(5.0);
+    });
+
+    it('decreases recommended pump pressure when riding in hot summer asphalt conditions', () => {
+      // Pumping in a 20°C room for a 35°C hot summer ride
+      const res = calculateTemperatureCompensatedPressure(65, 35, 20);
+      expect(res.recommendedPumpPsi).toBeLessThan(65);
+      expect(res.deltaPsi).toBeLessThanOrEqual(-3.0);
+    });
+
+    it('returns exact target PSI when pump temperature equals ride temperature', () => {
+      const res = calculateTemperatureCompensatedPressure(65, 20, 20);
+      expect(res.recommendedPumpPsi).toBe(65);
+      expect(res.deltaPsi).toBe(0);
+    });
   });
 });
 

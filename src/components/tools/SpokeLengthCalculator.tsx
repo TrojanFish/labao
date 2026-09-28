@@ -21,6 +21,11 @@ import { IOSSegmentedControl } from '../common/IOSSegmentedControl';
 import { NumberStepper } from '../common/NumberStepper';
 import { IOSCard, IOSMetricTile, IOSCardHeader } from '../common/IOSCard';
 import { IOSToolHeader } from '../common/IOSToolHeader';
+import {
+  calculateSpokeLengths,
+  HubType,
+  LacingPattern
+} from '../../utils/spokeCalculatorEngine';
 
 export const SpokeLengthCalculator: React.FC = () => {
   const { language, unitSystem } = useLanguageAndUnit();
@@ -29,6 +34,8 @@ export const SpokeLengthCalculator: React.FC = () => {
   // Wheel Architecture Type
   const [wheelPosition, setWheelPosition] = useState<'rear' | 'front'>('rear');
   const [brakeType, setBrakeType] = useState<'disc' | 'rim'>('disc');
+  const [hubType, setHubType] = useState<HubType>('j_bend');
+  const [lacingPattern, setLacingPattern] = useState<LacingPattern>('standard');
   const [activePreset, setActivePreset] = useState<string>('dt350_rear_50');
 
   // Rim Parameters
@@ -54,10 +61,12 @@ export const SpokeLengthCalculator: React.FC = () => {
   const [nippleWasherMm, setNippleWasherMm] = useState<number>(0); // 0mm, 0.5mm, 1.0mm DT/Sapim washers
 
   // Quick Hardware Presets
-  const applyPreset = (preset: 'dt350_rear_50' | 'dt350_front_50' | 'gravel_asym_45' | 'mtb_29_xc' | 'rim_rear_classic') => {
+  const applyPreset = (preset: 'dt350_rear_50' | 'dt350_front_50' | 'dt240_sp_rear' | 'campy_2to1' | 'gravel_asym_45' | 'mtb_29_xc' | 'rim_rear_classic') => {
     if (preset === 'dt350_rear_50') {
       setWheelPosition('rear');
       setBrakeType('disc');
+      setHubType('j_bend');
+      setLacingPattern('standard');
       setErdMm(540);
       setRimOffsetMm(0);
       setSpokeCount(24);
@@ -68,9 +77,41 @@ export const SpokeLengthCalculator: React.FC = () => {
       setRightCenterDistMm(19.2);
       setRightCross(2);
       showToast(language === 'zh-TW' ? '已載入 DT350 碟煞後輪 + 50mm 碳圈預設' : '已载入 DT350 碟刹后轮 + 50mm 碳圈预设', 'info');
+    } else if (preset === 'dt240_sp_rear') {
+      setWheelPosition('rear');
+      setBrakeType('disc');
+      setHubType('straight_pull');
+      setLacingPattern('standard');
+      setErdMm(540);
+      setRimOffsetMm(0);
+      setSpokeCount(24);
+      setLeftPcdMm(44);
+      setLeftCenterDistMm(35.2);
+      setLeftCross(2);
+      setRightPcdMm(44);
+      setRightCenterDistMm(19.5);
+      setRightCross(2);
+      showToast(language === 'zh-TW' ? '已載入 DT240 直拉碟煞後輪預設' : '已载入 DT240 直拉碟刹后轮预设', 'info');
+    } else if (preset === 'campy_2to1') {
+      setWheelPosition('rear');
+      setBrakeType('disc');
+      setHubType('straight_pull');
+      setLacingPattern('triplet_2_to_1');
+      setErdMm(540);
+      setRimOffsetMm(0);
+      setSpokeCount(24);
+      setLeftPcdMm(46);
+      setLeftCenterDistMm(35.0);
+      setLeftCross(0);
+      setRightPcdMm(50);
+      setRightCenterDistMm(19.0);
+      setRightCross(2);
+      showToast(language === 'zh-TW' ? '已載入 2:1 Triplet 異側編法後輪 (左8/右16)' : '已载入 2:1 Triplet 异侧编法后轮 (左8/右16)', 'info');
     } else if (preset === 'dt350_front_50') {
       setWheelPosition('front');
       setBrakeType('disc');
+      setHubType('j_bend');
+      setLacingPattern('standard');
       setErdMm(540);
       setRimOffsetMm(0);
       setSpokeCount(24);
@@ -84,6 +125,8 @@ export const SpokeLengthCalculator: React.FC = () => {
     } else if (preset === 'gravel_asym_45') {
       setWheelPosition('rear');
       setBrakeType('disc');
+      setHubType('j_bend');
+      setLacingPattern('standard');
       setErdMm(550);
       setRimOffsetMm(2.6); // Asymmetric offset
       setSpokeCount(28);
@@ -97,6 +140,8 @@ export const SpokeLengthCalculator: React.FC = () => {
     } else if (preset === 'mtb_29_xc') {
       setWheelPosition('rear');
       setBrakeType('disc');
+      setHubType('j_bend');
+      setLacingPattern('standard');
       setErdMm(602);
       setRimOffsetMm(3.0);
       setSpokeCount(28);
@@ -110,6 +155,8 @@ export const SpokeLengthCalculator: React.FC = () => {
     } else if (preset === 'rim_rear_classic') {
       setWheelPosition('rear');
       setBrakeType('rim');
+      setHubType('j_bend');
+      setLacingPattern('standard');
       setErdMm(577); // Shallow alloy rim
       setRimOffsetMm(0);
       setSpokeCount(24);
@@ -123,108 +170,32 @@ export const SpokeLengthCalculator: React.FC = () => {
     }
   };
 
-  // Jobst Brandt Mathematical Trigonometry
+  // Jobst Brandt Mathematical Trigonometry & 2:1 Wheel Physics
   const result = useMemo(() => {
-    // Hardware compensation:
-    // DT Swiss / Sapim standard: 12mm nipple is the standard baseline.
-    // 14mm nipple has deeper thread entry (~0.5mm shorter spoke needed), 16mm nipple (~1.0mm shorter).
-    // Nipple washer (e.g. DT Swiss PHR / Sapim washer) raises the nipple bed, effectively increasing ERD by 2 * washerThickness.
-    const effectiveErd = erdMm + (nippleWasherMm * 2) + (nippleLengthMm === 14 ? -0.5 : nippleLengthMm === 16 ? -1.0 : 0);
-    const rRim = effectiveErd / 2;
-    const rLeftHub = leftPcdMm / 2;
-    const rRightHub = rightPcdMm / 2;
-
-    // Rim asymmetry offset moves rim holes toward Left or Right:
-    // On rear wheel, offset is toward Left (NDS) to increase drive-side bracing angle.
-    // On front disc wheel, offset is toward Right (non-rotor) to balance disc side.
-    let effLeftCenter = leftCenterDistMm;
-    let effRightCenter = rightCenterDistMm;
-
-    if (wheelPosition === 'rear') {
-      effLeftCenter = Math.max(5, leftCenterDistMm - rimOffsetMm);
-      effRightCenter = Math.max(5, rightCenterDistMm + rimOffsetMm);
-    } else {
-      effLeftCenter = Math.max(5, leftCenterDistMm + rimOffsetMm);
-      effRightCenter = Math.max(5, rightCenterDistMm - rimOffsetMm);
-    }
-
-    // Cross angle theta in radians: (720 * X) / N
-    const thetaLeft = ((720 * leftCross) / spokeCount) * (Math.PI / 180);
-    const thetaRight = ((720 * rightCross) / spokeCount) * (Math.PI / 180);
-
-    // 2D chord distance in wheel plane
-    const chordSqLeft = rRim * rRim + rLeftHub * rLeftHub - 2 * rRim * rLeftHub * Math.cos(thetaLeft);
-    const chordSqRight = rRim * rRim + rRightHub * rRightHub - 2 * rRim * rRightHub * Math.cos(thetaRight);
-
-    // 3D spoke vector length
-    const rawLeft = Math.sqrt(chordSqLeft + effLeftCenter * effLeftCenter);
-    const rawRight = Math.sqrt(chordSqRight + effRightCenter * effRightCenter);
-
-    // Correction for hub spoke hole diameter and tensile elongation
-    const holeRadius = spokeHoleDiaMm / 2;
-    const netLeft = rawLeft - holeRadius - spokeStretchCompensationMm;
-    const netRight = rawRight - holeRadius - spokeStretchCompensationMm;
-
-    // Commercial integer spoke length (round to nearest integer mm, or round down to avoid bottoming out threads)
-    const roundedLeft = Math.round(netLeft);
-    const roundedRight = Math.round(netRight);
-
-    // Lateral Bracing Angle
-    const angleLeftDeg = (Math.atan(effLeftCenter / rRim) * 180) / Math.PI;
-    const angleRightDeg = (Math.atan(effRightCenter / rRim) * 180) / Math.PI;
-
-    // Tension Balance Ratio
-    // Horizontal equilibrium: T_Left * effLeftCenter ≈ T_Right * effRightCenter
-    // Ratio = smaller bracing distance / larger bracing distance
-    const safeLeftCenter = Math.max(0.1, effLeftCenter || 0.1);
-    const safeRightCenter = Math.max(0.1, effRightCenter || 0.1);
-    const leftTensionRatio = safeRightCenter / safeLeftCenter;
-    const rightTensionRatio = safeLeftCenter / safeRightCenter;
-
-    let tensionDesc = '';
-    let tensionRatioPercent = 100;
-
-    if (wheelPosition === 'rear') {
-      // Right side (DS) is 100% tension baseline
-      tensionRatioPercent = Math.min(100, Math.max(10, Math.round(leftTensionRatio * 100) || 100));
-      tensionDesc = `驱动侧 DS 100% (基准 120kgf) : 非驱动侧 NDS ${tensionRatioPercent}% (${Math.round(120 * (tensionRatioPercent / 100))}kgf)`;
-    } else {
-      // Disc front: Left side (disc) is 100% tension baseline
-      tensionRatioPercent = Math.min(100, Math.max(10, Math.round(rightTensionRatio * 100) || 100));
-      tensionDesc = `碟刹侧 100% (基准 120kgf) : 右侧 ${tensionRatioPercent}% (${Math.round(120 * (tensionRatioPercent / 100))}kgf)`;
-    }
-
-    // Safety & Engineering Warnings
-    const warnings: string[] = [];
-
-    if (brakeType === 'disc' && wheelPosition === 'front' && leftCross === 0) {
-      warnings.push('严重安全隐患：碟刹前轮左侧严禁采用 0X 放射状直拉！刹车卡钳将产生数百牛米扭矩，直拉编法极易撕裂花鼓法兰或断条！');
-    }
-    if (brakeType === 'disc' && wheelPosition === 'rear' && leftCross === 0) {
-      warnings.push('安全警告：碟刹后轮碟刹侧采用 0X 直拉无法承受制动扭矩，必须至少采用 1X 或 2X 交叉！');
-    }
-    if (wheelPosition === 'rear' && rightCross === 0) {
-      warnings.push('传动警告：后轮驱动侧塔基端采用 0X 直拉无法有效传递链条踩踏扭矩，除非搭配超粗筒体花鼓或 2:1 异索编法。');
-    }
-    if (spokeCount <= 24 && (leftCross >= 3 || rightCross >= 3)) {
-      warnings.push('几何提示：24孔或更少孔数下采用 3X 交叉，辐条出条角度过大可能遮挡相邻辐条孔头或引起折角。建议 24孔使用 2X。');
-    }
-
-    return {
-      effectiveErd: parseFloat(effectiveErd.toFixed(1)),
-      netLeft: parseFloat(netLeft.toFixed(1)),
-      netRight: parseFloat(netRight.toFixed(1)),
-      roundedLeft,
-      roundedRight,
-      angleLeftDeg: parseFloat(angleLeftDeg.toFixed(1)),
-      angleRightDeg: parseFloat(angleRightDeg.toFixed(1)),
-      tensionRatioPercent,
-      tensionDesc,
-      warnings,
-      effLeftCenter: parseFloat(effLeftCenter.toFixed(1)),
-      effRightCenter: parseFloat(effRightCenter.toFixed(1))
-    };
+    return calculateSpokeLengths({
+      wheelPosition,
+      brakeType,
+      hubType,
+      lacingPattern,
+      erdMm,
+      rimOffsetMm,
+      spokeCount,
+      leftPcdMm,
+      leftCenterDistMm,
+      leftCross,
+      rightPcdMm,
+      rightCenterDistMm,
+      rightCross,
+      spokeHoleDiaMm,
+      spokeStretchCompensationMm,
+      nippleLengthMm,
+      nippleWasherMm
+    });
   }, [
+    wheelPosition,
+    brakeType,
+    hubType,
+    lacingPattern,
     erdMm,
     rimOffsetMm,
     spokeCount,
@@ -237,9 +208,7 @@ export const SpokeLengthCalculator: React.FC = () => {
     spokeHoleDiaMm,
     spokeStretchCompensationMm,
     nippleLengthMm,
-    nippleWasherMm,
-    wheelPosition,
-    brakeType
+    nippleWasherMm
   ]);
 
   return (
@@ -258,8 +227,9 @@ export const SpokeLengthCalculator: React.FC = () => {
         actions={
           <IOSSegmentedControl
             options={[
-              { value: 'dt350_rear_50', label: language === 'zh-TW' ? 'DT350 後輪' : 'DT350 后轮' },
-              { value: 'dt350_front_50', label: language === 'zh-TW' ? 'DT350 前輪' : 'DT350 前轮' },
+              { value: 'dt350_rear_50', label: language === 'zh-TW' ? 'DT350 彎頭' : 'DT350 弯头' },
+              { value: 'dt240_sp_rear', label: language === 'zh-TW' ? 'DT240 直拉' : 'DT240 直拉' },
+              { value: 'campy_2to1', label: language === 'zh-TW' ? '2:1 異側' : '2:1 异侧' },
               { value: 'gravel_asym_45', label: '偏心圈' },
               { value: 'mtb_29_xc', label: language === 'zh-TW' ? '山地 3X' : '山地 3X' },
             ]}
@@ -296,13 +266,13 @@ export const SpokeLengthCalculator: React.FC = () => {
           {/* Wheel Position & Brake System */}
           <IOSCard variant="default" className="space-y-4">
             <IOSCardHeader
-              title={language === 'zh-TW' ? '輪組架構與制動形式' : '轮组架构与制动形式'}
-              subtitle={language === 'zh-TW' ? '前後輪位置與煞車形式' : '前后轮位置与刹车形式'}
+              title={language === 'zh-TW' ? '輪組架構與編制形式' : '轮组架构与编制形式'}
+              subtitle={language === 'zh-TW' ? '前後輪位置、煞車形式、花鼓及編織配比' : '前后轮位置、刹车形式、花鼓及编制配比'}
               icon={Sliders}
               iconColor="text-ios-blue bg-ios-blue/10 dark:bg-ios-blue/20"
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1.5">车轮位置</label>
                 <IOSSegmentedControl
@@ -335,6 +305,32 @@ export const SpokeLengthCalculator: React.FC = () => {
                   ]}
                   value={brakeType}
                   onChange={(val) => setBrakeType(val as any)}
+                  size="sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1.5">花鼓类型</label>
+                <IOSSegmentedControl
+                  options={[
+                    { id: 'j_bend', label: language === 'zh-TW' ? '彎頭' : '弯头' },
+                    { id: 'straight_pull', label: language === 'zh-TW' ? '直拉' : '直拉' },
+                  ]}
+                  value={hubType}
+                  onChange={(val) => setHubType(val as any)}
+                  size="sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1.5">编制配比</label>
+                <IOSSegmentedControl
+                  options={[
+                    { id: 'standard', label: '1:1 等孔' },
+                    { id: 'triplet_2_to_1', label: '2:1 异侧' },
+                  ]}
+                  value={lacingPattern}
+                  onChange={(val) => setLacingPattern(val as any)}
                   size="sm"
                 />
               </div>
@@ -611,7 +607,7 @@ export const SpokeLengthCalculator: React.FC = () => {
                   精算值: {result.netLeft} mm
                 </div>
                 <div className="text-[11px] text-slate-400 tabular-nums">
-                  张力角: {result.angleLeftDeg}° · 需 {spokeCount / 2} 根
+                  张力角: {result.angleLeftDeg}° · 需 {result.leftSpokeCount} 根
                 </div>
               </div>
 
@@ -628,7 +624,7 @@ export const SpokeLengthCalculator: React.FC = () => {
                   精算值: {result.netRight} mm
                 </div>
                 <div className="text-[11px] text-slate-400 tabular-nums">
-                  张力角: {result.angleRightDeg}° · 需 {spokeCount / 2} 根
+                  张力角: {result.angleRightDeg}° · 需 {result.rightSpokeCount} 根
                 </div>
               </div>
             </div>
@@ -636,10 +632,17 @@ export const SpokeLengthCalculator: React.FC = () => {
             {/* Tension Balance Ratio Progress Bar */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.08] space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Scale className="w-4 h-4 text-purple-500" />
-                  <span>左右侧张力平衡比例</span>
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Scale className="w-4 h-4 text-purple-500" />
+                    <span>左右侧张力平衡比例</span>
+                  </span>
+                  {result.is2To1Balanced && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-600 dark:text-purple-400">
+                      2:1 异索均衡
+                    </span>
+                  )}
+                </div>
                 <span className="font-mono font-bold text-purple-600 dark:text-purple-400">
                   {result.tensionRatioPercent}%
                 </span>

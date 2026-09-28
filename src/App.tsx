@@ -274,7 +274,7 @@ const MainAppContent: React.FC = () => {
                 {currentToolId === 'tire-pressure' && <TirePressureCalculator />}
                 {currentToolId === 'gear-calculator' && <GearSpeedCadenceCalculator />}
                 {currentToolId === 'chain-calculator' && <ChainLengthCalculator />}
-                {currentToolId === 'climb-pacing' && <ClimbPacingPlanner />}
+                {currentToolId === 'climb-pacing' && <ClimbPacingPlanner onNavigateTool={(id) => handleSelectTool(id)} />}
                 {currentToolId === 'upgrade-roi' && <UpgradeRoiCalculator />}
                 {currentToolId === 'bike-fitter' && <RoadBikeFitter />}
                 {currentToolId === 'pain-checker' && <RoadBikePainChecker />}
@@ -285,12 +285,12 @@ const MainAppContent: React.FC = () => {
                 {currentToolId === 'power-radar' && <PowerProfileRadar onNavigateTool={(id) => handleSelectTool(id)} />}
                 {currentToolId === 'health-calculator' && <HealthCalculator />}
                 {currentToolId === 'activity-analyzer' && <FitActivityAnalyzer onNavigateTool={(id) => handleSelectTool(id)} />}
-                {currentToolId === 'workout-builder' && <WorkoutBuilder />}
-                {currentToolId === 'tubeless-sealant' && <TubelessSealantCalculator />}
+                {currentToolId === 'workout-builder' && <WorkoutBuilder onNavigateTool={(id) => handleSelectTool(id)} />}
+                {currentToolId === 'tubeless-sealant' && <TubelessSealantCalculator onNavigateTool={(id) => handleSelectTool(id)} />}
                 {currentToolId === 'spoke-calculator' && <SpokeLengthCalculator />}
                 {currentToolId === 'mtb-suspension' && <MtbSuspensionTuner />}
                 {currentToolId === 'strava-cockpit' && <StravaDataCockpit onNavigateTool={(id) => handleSelectTool(id)} />}
-                {currentToolId === 'training-calendar' && <TrainingPlanCalendar />}
+                {currentToolId === 'training-calendar' && <TrainingPlanCalendar onNavigateTool={(id) => handleSelectTool(id)} />}
               </React.Suspense>
             </ErrorBoundary>
           </main>

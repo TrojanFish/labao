@@ -1009,11 +1009,11 @@ export function computeGearFleet(
 
   for (const b of rawBikes) {
     const record = bikeDistances.get(b.id) || {
-      km: Math.round(b.distance / 1000),
-      rides: Math.round((b.distance / 1000) / 45),
+      km: Math.round((b.distance || 0) / 1000),
+      rides: Math.round(((b.distance || 0) / 1000) / 45),
       lastDate: new Date().toISOString()
     };
-    const distKm = Math.round(b.distance > 0 ? b.distance / 1000 : record.km);
+    const distKm = Math.max(Math.round((b.distance || 0) / 1000), Math.round(record.km));
     const distPct = totalAllKm > 0 ? Math.round((distKm / totalAllKm) * 100) : 50;
 
     // Component health calculation

@@ -59,6 +59,11 @@ import {
 import { TargetRaceWizardModal } from './TargetRaceWizardModal';
 import { DayWorkoutModal } from './DayWorkoutModal';
 import { generateTrainingCalendarPoster } from '../../utils/shareCardGenerators';
+import { consumePendingTransfer } from '../../hooks/useToolDraftState';
+
+export interface TrainingPlanCalendarProps {
+  onNavigateTool?: (toolId: string) => void;
+}
 
 ChartJS.register(
   CategoryScale,
@@ -71,7 +76,7 @@ ChartJS.register(
   Filler
 );
 
-export const TrainingPlanCalendar: React.FC = () => {
+export const TrainingPlanCalendar: React.FC<TrainingPlanCalendarProps> = ({ onNavigateTool }) => {
   const { language } = useLanguageAndUnit();
   const { showToast } = useToast();
   const { profile } = useRiderProfile();
@@ -99,6 +104,36 @@ export const TrainingPlanCalendar: React.FC = () => {
   // Share Poster
   const [sharePosterUrl, setSharePosterUrl] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+
+  // Check for workout transferred from WorkoutBuilder
+  useEffect(() => {
+    const transferred = consumePendingTransfer<PlannedWorkout>('solorider_pending_calendar_workout');
+    if (transferred && transferred.date && transferred.title) {
+      setPlannedWorkouts(prev => {
+        if (prev.some(w => w.id === transferred.id || (w.date === transferred.date && w.title === transferred.title))) {
+          return prev;
+        }
+        const updated = [...prev, transferred];
+        savePlannedWorkouts(updated);
+        return updated;
+      });
+
+      // Jump calendar month view to the scheduled workout's date
+      const targetDate = new Date(transferred.date + 'T00:00:00');
+      if (!isNaN(targetDate.getTime())) {
+        setCurrentDisplayDate(targetDate);
+        setSelectedDayDate(transferred.date);
+        setIsDayModalOpen(true);
+      }
+
+      showToast(
+        language === 'zh-TW'
+          ? `已成功排入課表「${transferred.title}」至 ${transferred.date}！`
+          : `已成功排入课表「${transferred.title}」至 ${transferred.date}！`,
+        'success'
+      );
+    }
+  }, [showToast, language]);
 
   // Load activities from IndexedDB
   useEffect(() => {

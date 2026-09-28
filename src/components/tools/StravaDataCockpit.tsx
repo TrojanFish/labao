@@ -29,7 +29,8 @@ import {
   ExternalLink,
   MapPin,
   Loader2,
-  Upload
+  Upload,
+  Wrench
 } from 'lucide-react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -116,7 +117,7 @@ type CockpitTab = 'overview' | 'fitness' | 'segments' | 'fleet';
 
 export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigateTool }) => {
   const { isConnected, athlete, activities: realActivities, isSyncing, syncActivities, getStarredSegments, syncProgress, getActivityStreams } = useStrava();
-  const { profile, bikes: userBikes } = useRiderProfile();
+  const { profile, bikes: userBikes, switchBike } = useRiderProfile();
   const { language, unitSystem, convertDistance, convertElevation, convertSpeed } = useLanguageAndUnit();
   const isImperial = unitSystem === 'imperial';
   const distUnit = isImperial ? 'mi' : 'km';
@@ -558,18 +559,43 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
 
   // 14. Gear Fleet
   const combinedBikes = useMemo(() => {
+    const list: Array<{ id: string; name: string; distance: number; primary: boolean; garageId?: string }> = [];
+    const seenIds = new Set<string>();
+
     if (athlete?.bikes && athlete.bikes.length > 0) {
-      return athlete.bikes;
+      for (const b of athlete.bikes) {
+        const matchingGarageBike = userBikes?.find(gb => gb.stravaGearId === b.id || gb.id === b.id);
+        const garageDistMeters = (matchingGarageBike?.mileageKm || 0) * 1000;
+        list.push({
+          id: b.id,
+          name: b.name || matchingGarageBike?.name || '未知战车',
+          distance: Math.max(b.distance || 0, garageDistMeters),
+          primary: Boolean(b.primary),
+          garageId: matchingGarageBike?.id
+        });
+        seenIds.add(b.id);
+        if (matchingGarageBike) {
+          seenIds.add(matchingGarageBike.id);
+        }
+      }
     }
+
     if (userBikes && userBikes.length > 0) {
-      return userBikes.map(b => ({
-        id: b.id,
-        name: b.name,
-        distance: (b.mileageKm || 0) * 1000,
-        primary: false
-      }));
+      for (const b of userBikes) {
+        if (!seenIds.has(b.id) && (!b.stravaGearId || !seenIds.has(b.stravaGearId))) {
+          list.push({
+            id: b.id,
+            name: b.name,
+            distance: (b.mileageKm || 0) * 1000,
+            primary: false,
+            garageId: b.id
+          });
+          seenIds.add(b.id);
+        }
+      }
     }
-    return [];
+
+    return list;
   }, [athlete?.bikes, userBikes]);
 
   const fleet = useMemo(() => {
@@ -2534,6 +2560,25 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
                     </div>
                   ))}
                 </div>
+
+                {onNavigateTool && (
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const matched = userBikes?.find(gb => gb.id === activeBike.id || gb.stravaGearId === activeBike.id || gb.name === activeBike.name);
+                        if (matched) {
+                          switchBike(matched.id);
+                        }
+                        onNavigateTool('garage');
+                      }}
+                      className="h-8 px-3 rounded-xl text-xs font-medium text-ios-blue hover:bg-ios-blue/10 border border-ios-blue/20 transition-colors flex items-center gap-1.5 apple-touch"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>{language === 'zh-TW' ? '在虛擬車庫中檢視 / 配置配件' : '在虚拟车库中查看 / 配置配件'}</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </IOSCard>

@@ -47,3 +47,43 @@ export function getBaseTirePsi(nominalWidthMm: number, systemWeightKg: number, b
     return Math.max(18, Math.min(45, basePressure));
   }
 }
+
+/**
+ * Calculates pump gauge pressure at indoor temperature to reach target gauge pressure at outdoor ride temperature.
+ * Based on Gay-Lussac's Law of ideal gases: (P1_abs / T1) = (P2_abs / T2)
+ * P_abs = P_gauge + 14.7 psi (1 atmosphere = 14.696 psi)
+ * @param targetRidePsi The desired tire pressure during the outdoor ride (PSI)
+ * @param rideTempC The expected ambient temperature during the ride (Celsius)
+ * @param pumpTempC The ambient temperature where the pump is located (Celsius, default 20°C)
+ */
+export function calculateTemperatureCompensatedPressure(
+  targetRidePsi: number,
+  rideTempC: number,
+  pumpTempC = 20
+): {
+  recommendedPumpPsi: number;
+  deltaPsi: number;
+  ridePressureDiffPct: number;
+} {
+  const tRideKelvin = rideTempC + 273.15;
+  const tPumpKelvin = pumpTempC + 273.15;
+
+  // Guard against near-absolute-zero or negative temperatures
+  if (tRideKelvin <= 100 || tPumpKelvin <= 100 || targetRidePsi <= 0) {
+    return { recommendedPumpPsi: targetRidePsi, deltaPsi: 0, ridePressureDiffPct: 0 };
+  }
+
+  // P_target_abs = targetRidePsi + 14.7
+  const pTargetAbs = targetRidePsi + 14.7;
+  // P_pump_abs = P_target_abs * (T_pump / T_ride)
+  const pPumpAbs = pTargetAbs * (tPumpKelvin / tRideKelvin);
+  const recommendedPumpPsi = Math.round((pPumpAbs - 14.7) * 10) / 10;
+  const deltaPsi = Math.round((recommendedPumpPsi - targetRidePsi) * 10) / 10;
+  const ridePressureDiffPct = targetRidePsi > 0 ? Math.round((deltaPsi / targetRidePsi) * 100) : 0;
+
+  return {
+    recommendedPumpPsi,
+    deltaPsi,
+    ridePressureDiffPct
+  };
+}

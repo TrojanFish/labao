@@ -59,6 +59,15 @@ import { ShareCardModal } from '../common/ShareCardModal';
 import { generateRoadbookPoster } from '../../utils/shareCardGenerators';
 import { useStrava } from '../../context/StravaContext';
 import { StravaRouteRecord } from '../../utils/indexedDb';
+import {
+  savePersonalRouteToDb,
+  getAllPersonalRoutesFromDb,
+  deletePersonalRouteFromDb,
+  saveBookmarkedRouteIdsToDb,
+  getBookmarkedRouteIdsFromDb,
+  exportPersonalRoutesJson,
+  importPersonalRoutesJson
+} from '../../utils/roadbookStorage';
 import { setPendingTransfer } from '../../hooks/useToolDraftState';
 import { useToast } from '../../context/ToastContext';
 import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
@@ -89,7 +98,7 @@ export const RoadbookLibrary: React.FC<RoadbookLibraryProps> = ({ onNavigateTool
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  // Personal user-saved roadbooks from localStorage
+  // Personal user-saved roadbooks from IndexedDB (with localStorage fallback)
   const [personalRoutes, setPersonalRoutes] = useState<RoadbookItem[]>(() => {
     try {
       const saved = localStorage.getItem('yolo_cycling_personal_roadbooks');
@@ -99,7 +108,7 @@ export const RoadbookLibrary: React.FC<RoadbookLibraryProps> = ({ onNavigateTool
     }
   });
 
-  // Bookmarked route IDs
+  // Bookmarked route IDs from IndexedDB (with localStorage fallback)
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('yolo_cycling_bookmarked_roadbooks');
@@ -116,29 +125,30 @@ export const RoadbookLibrary: React.FC<RoadbookLibraryProps> = ({ onNavigateTool
   const [sharePosterUrl, setSharePosterUrl] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
-  // Sync personal routes to localStorage
+  // Hydrate personal routes and bookmarks from IndexedDB on initial mount
   useEffect(() => {
-    try {
-      localStorage.setItem('yolo_cycling_personal_roadbooks', JSON.stringify(personalRoutes));
-    } catch {
-      // Silent degradation: storage quota exceeded or unavailable.
-    }
-  }, [personalRoutes]);
-
-  // Sync bookmarks
-  useEffect(() => {
-    try {
-      localStorage.setItem('yolo_cycling_bookmarked_roadbooks', JSON.stringify(bookmarkedIds));
-    } catch {
-      // Silent degradation: storage quota exceeded or unavailable.
-    }
-  }, [bookmarkedIds]);
+    let isMounted = true;
+    getAllPersonalRoutesFromDb().then(routes => {
+      if (isMounted && routes.length > 0) {
+        setPersonalRoutes(routes);
+      }
+    });
+    getBookmarkedRouteIdsFromDb().then(ids => {
+      if (isMounted && ids.length > 0) {
+        setBookmarkedIds(ids);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const toggleBookmark = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setBookmarkedIds(prev => {
       const exists = prev.includes(id);
       const next = exists ? prev.filter(item => item !== id) : [...prev, id];
+      saveBookmarkedRouteIdsToDb(next);
       showToast(exists ? '已取消收藏该路书' : '路书已加入我的收藏夹', 'info');
       return next;
     });
@@ -551,7 +561,8 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
           waypoints: sampled
         };
 
-        setPersonalRoutes(prev => [customRoute, ...prev]);
+        savePersonalRouteToDb(customRoute);
+        setPersonalRoutes(prev => [customRoute, ...prev.filter(r => r.id !== newRouteId)]);
         setActiveTab('personal');
         setSelectedRouteId(newRouteId);
         showToast('自定义 GPX 路书导入成功！', 'success', `已保存至本地路书库，里程 ${customRoute.distanceKm}km，爬升 +${customRoute.elevationGainM}m`);
@@ -566,8 +577,50 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
   // Delete personal route
   const deletePersonalRoute = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    deletePersonalRouteFromDb(id);
     setPersonalRoutes(prev => prev.filter(r => r.id !== id));
     showToast('已删除该自定义路书', 'info');
+  };
+
+  // Export personal routes backup JSON
+  const handleExportBackupJson = () => {
+    if (personalRoutes.length === 0) {
+      showToast('当前暂无个人自定义路书可供备份', 'warning');
+      return;
+    }
+    const jsonStr = exportPersonalRoutesJson(personalRoutes);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LaBao_个人路书备份_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`已成功导出 ${personalRoutes.length} 条个人路书备份！`, 'success');
+  };
+
+  // Import personal routes backup JSON
+  const handleImportBackupJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const res = await importPersonalRoutesJson(text);
+      if (res.count > 0) {
+        setPersonalRoutes(prev => {
+          const map = new Map(prev.map(r => [r.id, r]));
+          res.imported.forEach(r => map.set(r.id, r));
+          return Array.from(map.values());
+        });
+        setActiveTab('personal');
+        showToast(`已成功恢复 ${res.count} 条自定义路书！`, 'success');
+      } else {
+        showToast('备份文件中未发现有效路书数据', 'warning');
+      }
+    } catch {
+      showToast('解析备份文件失败，请确保格式正确', 'error');
+    }
+    e.target.value = '';
   };
 
   // Open Strava routes modal and load routes
@@ -651,6 +704,7 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
         waypoints: sampledWps
       };
 
+      savePersonalRouteToDb(newRoute);
       setPersonalRoutes(prev => {
         const filtered = prev.filter(r => r.id !== newRouteId);
         return [newRoute, ...filtered];
@@ -879,6 +933,37 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
         {/* Left Column: Route Cards Matrix */}
         <div className="lg:col-span-5 space-y-3 max-h-[820px] overflow-y-auto pr-1">
+          {/* Personal Routes Management Strip */}
+          {activeTab === 'personal' && (
+            <div className="flex items-center justify-between p-2.5 px-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.08] text-xs">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'zh-TW' ? '已存儲 ' : '已存储 '}
+                <strong className="text-slate-800 dark:text-slate-200 font-bold tabular-nums">{personalRoutes.length}</strong>
+                {language === 'zh-TW' ? ' 條自定義路書 (IndexedDB)' : ' 条自定义路书 (IndexedDB)'}
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleExportBackupJson}
+                  className="apple-touch h-7 px-2.5 rounded-lg border border-black/[0.08] dark:border-white/[0.12] text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-black/[0.04] flex items-center gap-1"
+                  title="备份所有路书为 JSON"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>{language === 'zh-TW' ? '備份' : '备份'}</span>
+                </button>
+
+                <label
+                  className="apple-touch h-7 px-2.5 rounded-lg border border-black/[0.08] dark:border-white/[0.12] text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-black/[0.04] flex items-center gap-1 cursor-pointer"
+                  title="从 JSON 备份恢复路书"
+                >
+                  <Upload className="w-3 h-3" />
+                  <span>{language === 'zh-TW' ? '恢復' : '恢复'}</span>
+                  <input type="file" accept=".json" onChange={handleImportBackupJson} className="hidden" />
+                </label>
+              </div>
+            </div>
+          )}
+
           {filteredRoutes.length === 0 ? (
             <div className="p-4 sm:p-5 py-8 sm:py-10 rounded-2xl border border-black/[0.05] dark:border-white/[0.08] bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl text-center space-y-3 shadow-ios-sm">
               <Compass className="w-10 h-10 text-slate-400 mx-auto opacity-50" />

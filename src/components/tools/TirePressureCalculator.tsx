@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Gauge, Info, AlertTriangle, Layers, Share2, Check, User, Package, Bike } from 'lucide-react';
-import { SURFACE_FACTORS, TIRE_SETUP_FACTORS, getBaseTirePsi } from '../../data/tirePressureConfig';
+import { Gauge, Info, AlertTriangle, Layers, Share2, Check, User, Package, Bike, Thermometer } from 'lucide-react';
+import { SURFACE_FACTORS, TIRE_SETUP_FACTORS, getBaseTirePsi, calculateTemperatureCompensatedPressure } from '../../data/tirePressureConfig';
 import { Tooltip } from '../common/Tooltip';
 import { TireGauge } from '../common/TireGauge';
 import { IOSCard, IOSCardHeader, IOSMetricTile } from '../common/IOSCard';
@@ -30,6 +30,12 @@ export const TirePressureCalculator: React.FC = () => {
   const [tireSetup, setTireSetup] = useState<'tubeless' | 'tube' | 'tubular'>(activeBike?.wheelTire?.tireSetup || 'tubeless');
   const [nominalWidth, setNominalWidth] = useState<number>(activeBike?.wheelTire?.nominalWidthMm || 28);
   const [actualWidth, setActualWidth] = useState<number>(activeBike?.wheelTire?.actualWidthMm || 29.5);
+  const [isStaggeredWidth, setIsStaggeredWidth] = useState<boolean>(false);
+  const [nominalWidthFront, setNominalWidthFront] = useState<number>(activeBike?.wheelTire?.nominalWidthMm || 28);
+  const [nominalWidthRear, setNominalWidthRear] = useState<number>(activeBike?.wheelTire?.nominalWidthMm ? Math.min(54, activeBike.wheelTire.nominalWidthMm + 2) : 30);
+  const [actualWidthFront, setActualWidthFront] = useState<number>(activeBike?.wheelTire?.actualWidthMm || 29.5);
+  const [actualWidthRear, setActualWidthRear] = useState<number>(activeBike?.wheelTire?.actualWidthMm ? activeBike.wheelTire.actualWidthMm + 2 : 31.5);
+  const [rideTempC, setRideTempC] = useState<number>(20);
   const [rimInnerWidth, setRimInnerWidth] = useState<number>(activeBike?.wheelTire?.rimInternalWidthMm || 21);
   const [isHookless, setIsHookless] = useState<boolean>(Boolean(activeBike?.wheelTire?.isHookless));
   const [hasTireInsert, setHasTireInsert] = useState<boolean>(false);
@@ -93,32 +99,43 @@ export const TirePressureCalculator: React.FC = () => {
 
   // Compute recommendations
   const result = useMemo(() => {
-    const basePsi = getBaseTirePsi(nominalWidth, totalSystemWeight, bikeType);
+    const effNominalFront = isStaggeredWidth ? nominalWidthFront : nominalWidth;
+    const effNominalRear = isStaggeredWidth ? nominalWidthRear : nominalWidth;
+    const effActualFront = isStaggeredWidth ? actualWidthFront : actualWidth;
+    const effActualRear = isStaggeredWidth ? actualWidthRear : actualWidth;
+
+    const basePsiFront = getBaseTirePsi(effNominalFront, totalSystemWeight, bikeType);
+    const basePsiRear = getBaseTirePsi(effNominalRear, totalSystemWeight, bikeType);
     const surfaceFactor = SURFACE_FACTORS[surfaceKey]?.factor || 1.0;
     const setupFactor = TIRE_SETUP_FACTORS[tireSetup]?.factor || 1.0;
 
-    let adjustedBase = basePsi * surfaceFactor * setupFactor;
+    let adjustedFront = basePsiFront * surfaceFactor * setupFactor;
+    let adjustedRear = basePsiRear * surfaceFactor * setupFactor;
 
-    if (actualWidth && nominalWidth && actualWidth !== nominalWidth) {
-      const diff = actualWidth - nominalWidth;
-      adjustedBase -= diff * 1.8;
+    if (effActualFront && effNominalFront && effActualFront !== effNominalFront) {
+      adjustedFront -= (effActualFront - effNominalFront) * 1.8;
+    }
+    if (effActualRear && effNominalRear && effActualRear !== effNominalRear) {
+      adjustedRear -= (effActualRear - effNominalRear) * 1.8;
     }
 
-    if (rimInnerWidth && rimInnerWidth >= 21 && nominalWidth <= 30) {
-      adjustedBase -= 1.5;
+    if (rimInnerWidth && rimInnerWidth >= 21) {
+      if (effNominalFront <= 30) adjustedFront -= 1.5;
+      if (effNominalRear <= 30) adjustedRear -= 1.5;
     }
 
     // Adaptive pressure reduction for tire insert (cushcore / vittoria)
     if (hasTireInsert) {
-      adjustedBase -= 2.5;
+      adjustedFront -= 2.5;
+      adjustedRear -= 2.5;
     }
 
     // Weight distribution factor relative to equal 50/50 balance (e.g. 44% front -> 0.94, 56% rear -> 1.06)
     const frontRatio = 0.5 + (effectiveFrontPct / 100);
     const rearRatio = 0.5 + (effectiveRearPct / 100);
 
-    let frontRec = Math.round(adjustedBase * frontRatio);
-    let rearRec = Math.round(adjustedBase * rearRatio);
+    let frontRec = Math.round(adjustedFront * frontRatio);
+    let rearRec = Math.round(adjustedRear * rearRatio);
 
     if (bikeType === 'road') {
       frontRec = Math.max(45, Math.min(110, frontRec));
@@ -136,25 +153,54 @@ export const TirePressureCalculator: React.FC = () => {
     const rearMin = Math.round(rearRec * 0.94);
     const rearMax = Math.round(rearRec * 1.06);
 
+    // Temperature compensation (Gay-Lussac Ideal Gas Law)
+    const frontComp = calculateTemperatureCompensatedPressure(frontRec, rideTempC, 20);
+    const rearComp = calculateTemperatureCompensatedPressure(rearRec, rideTempC, 20);
+
     const formatVal = (psiVal: number) => {
       if (pressureUnit === 'bar') return (psiVal * 0.0689476).toFixed(2);
       if (pressureUnit === 'kpa') return Math.round(psiVal * 6.89476).toString();
       return Math.round(psiVal).toString();
     };
 
-    const isHooklessWidthMismatch = isHookless && rimInnerWidth >= 23 && nominalWidth < 28;
+    const isHooklessWidthMismatch = isHookless && rimInnerWidth >= 23 && (effNominalFront < 28 || effNominalRear < 28);
     const isHooklessPressureExceeded = isHookless && (rearRec > 72.5 || frontRec > 72.5);
     const isHooklessPressureWarning = isHookless && !isHooklessPressureExceeded && (rearRec >= 68 || frontRec >= 68);
     const hasHooklessWarning = isHooklessPressureExceeded || isHooklessPressureWarning || isHooklessWidthMismatch;
 
     return {
-      front: { rec: formatVal(frontRec), min: formatVal(frontMin), max: formatVal(frontMax), rawPsi: frontRec },
-      rear: { rec: formatVal(rearRec), min: formatVal(rearMin), max: formatVal(rearMax), rawPsi: rearRec },
+      front: {
+        rec: formatVal(frontRec),
+        min: formatVal(frontMin),
+        max: formatVal(frontMax),
+        rawPsi: frontRec,
+        pumpRec: formatVal(frontComp.recommendedPumpPsi),
+        widthDesc: `${effNominalFront}c`
+      },
+      rear: {
+        rec: formatVal(rearRec),
+        min: formatVal(rearMin),
+        max: formatVal(rearMax),
+        rawPsi: rearRec,
+        pumpRec: formatVal(rearComp.recommendedPumpPsi),
+        widthDesc: `${effNominalRear}c`
+      },
+      tempDeltaPsi: frontComp.deltaPsi,
       hasHooklessWarning,
       isHooklessWidthMismatch,
       isHooklessPressureExceeded,
       isHooklessPressureWarning,
       notes: [
+        rideTempC !== 20
+          ? `环境气温热力学补偿（骑行环境 ${rideTempC}°C vs 打气环境 20°C）：气压温差偏移量约 ${frontComp.deltaPsi > 0 ? '+' : ''}${frontComp.deltaPsi} PSI。${
+              rideTempC < 20
+                ? '冬季室外寒冷气体遇冷收缩，室内充气需稍微多打以防出门欠压。'
+                : '夏季酷暑柏油地表暴晒，气体升温膨胀，室内充气需预留余量防超压。'
+            }`
+          : null,
+        isStaggeredWidth
+          ? `前后异宽设定生效：前轮 ${effNominalFront}c 侧重低风阻气动与操控，后轮 ${effNominalRear}c 侧重更强承重吸震与更低滚阻。`
+          : null,
         isHooklessWidthMismatch ? 'ETRTO 规范安全红线：无钩轮圈内宽 ≥23mm 严禁搭配小于 28c 外胎，极易脱圈导致严重摔车事故！' : null,
         surfaceKey === 'wet_slick' ? '雨天/湿滑路面：建议胎压调低 5~8 PSI 提升橡胶抓地力与刹车循迹性。' : null,
         tireSetup === 'tubeless' ? '真空胎优势：自补液自动密封微小穿孔，可安心使用较低胎压享受极致滤震与更低滚阻。' : '普通内胎：请勿低于推荐下限，以防过坑或减速带发生蛇咬爆胎。',
@@ -168,12 +214,34 @@ export const TirePressureCalculator: React.FC = () => {
                 : '中央车架包重心居中均衡，前后胎压同步增强'
             }。重车状态下制动距离显著延长，下长坡务必提前阶梯式制动控速，注意碟片热衰竭。`
           : null,
-        actualWidth > nominalWidth ? `实测胎宽 ${actualWidth}mm 宽于标称，已自动优化下调胎压以获得更平坦接地印记。` : null,
+        effActualRear > effNominalRear ? `实测胎宽宽于标称，已自动优化下调胎压以获得更平坦接地印记。` : null,
         isHooklessPressureExceeded ? '无钩轮圈极限安全气压为 72.5 PSI / 5.0 Bar，计算气压已超标，请立即更换更宽外胎降低胎压！' : null,
         isHooklessPressureWarning ? '当前气压逼近无钩轮圈 72.5 PSI 上限临界点，建议充气时预留余量以防日晒升温爆胎。' : null
       ].filter(Boolean) as string[]
     };
-  }, [bikeType, totalSystemWeight, tireSetup, nominalWidth, actualWidth, rimInnerWidth, isHookless, hasTireInsert, effectiveFrontPct, effectiveRearPct, isBikepacking, effectiveLuggage, luggageBias, surfaceKey, pressureUnit]);
+  }, [
+    bikeType,
+    totalSystemWeight,
+    tireSetup,
+    nominalWidth,
+    actualWidth,
+    isStaggeredWidth,
+    nominalWidthFront,
+    nominalWidthRear,
+    actualWidthFront,
+    actualWidthRear,
+    rideTempC,
+    rimInnerWidth,
+    isHookless,
+    hasTireInsert,
+    effectiveFrontPct,
+    effectiveRearPct,
+    isBikepacking,
+    effectiveLuggage,
+    luggageBias,
+    surfaceKey,
+    pressureUnit
+  ]);
 
   const handleGeneratePoster = () => {
     const url = generateTirePressurePoster({
@@ -429,49 +497,151 @@ export const TirePressureCalculator: React.FC = () => {
             </div>
 
             {/* Dimensions & Hookless toggle */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">标称胎宽 (mm)</label>
-                <select
-                  value={nominalWidth}
-                  onChange={(e) => {
-                    const w = Number(e.target.value);
-                    setNominalWidth(w);
-                    setActualWidth(w + 1);
-                  }}
-                  className="w-full h-9 bg-slate-50 dark:bg-black/40 border border-slate-200/80 dark:border-white/15 rounded-xl px-3 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-ios-blue"
+            {/* Dimensions & Staggered Width */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {language === 'zh-TW' ? '外胎規格設定' : '外胎规格设定'}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsStaggeredWidth(!isStaggeredWidth)}
+                  className={`h-7 px-2.5 rounded-lg text-xs font-medium transition-colors border apple-touch flex items-center gap-1 ${
+                    isStaggeredWidth
+                      ? 'bg-ios-blue text-white border-ios-blue'
+                      : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                  }`}
                 >
-                  {[23, 25, 28, 30, 32, 35, 38, 40, 42, 45, 50, 54].map((w) => (
-                    <option key={w} value={w}>{w}c / {w}mm</option>
-                  ))}
-                </select>
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>{isStaggeredWidth ? (language === 'zh-TW' ? '前後異寬模式已開啟' : '前后异宽模式已开启') : (language === 'zh-TW' ? '切換前後異寬' : '切换前后异宽')}</span>
+                </button>
               </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">实测胎宽 (mm)</label>
-                <NumberStepper
-                  value={actualWidth}
-                  onChange={setActualWidth}
-                  step={0.5}
-                  min={18}
-                  max={70}
-                  unit="mm"
-                  decimals={1}
-                />
-              </div>
+              {!isStaggeredWidth ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">标称胎宽 (mm)</label>
+                    <select
+                      value={nominalWidth}
+                      onChange={(e) => {
+                        const w = Number(e.target.value);
+                        setNominalWidth(w);
+                        setActualWidth(w + 1.5);
+                      }}
+                      className="w-full h-9 bg-slate-50 dark:bg-black/40 border border-slate-200/80 dark:border-white/15 rounded-xl px-3 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-ios-blue"
+                    >
+                      {[23, 25, 28, 30, 32, 35, 38, 40, 42, 45, 50, 54].map((w) => (
+                        <option key={w} value={w}>{w}c / {w}mm</option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">车圈内宽 (mm)</label>
-                <NumberStepper
-                  value={rimInnerWidth}
-                  onChange={setRimInnerWidth}
-                  step={0.5}
-                  min={13}
-                  max={45}
-                  unit="mm"
-                  decimals={1}
-                />
-              </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">实测胎宽 (mm)</label>
+                    <NumberStepper
+                      value={actualWidth}
+                      onChange={setActualWidth}
+                      step={0.5}
+                      min={18}
+                      max={70}
+                      unit="mm"
+                      decimals={1}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">车圈内宽 (mm)</label>
+                    <NumberStepper
+                      value={rimInnerWidth}
+                      onChange={setRimInnerWidth}
+                      step={0.5}
+                      min={13}
+                      max={45}
+                      unit="mm"
+                      decimals={1}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 p-3 rounded-2xl bg-ios-blue/5 dark:bg-ios-blue/10 border border-ios-blue/20">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                        <span>前轮规格 (注重气动破风)</span>
+                        <span className="font-mono text-ios-blue">{nominalWidthFront}c</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={nominalWidthFront}
+                          onChange={(e) => {
+                            const w = Number(e.target.value);
+                            setNominalWidthFront(w);
+                            setActualWidthFront(w + 1.5);
+                          }}
+                          className="w-full h-9 bg-white dark:bg-black/40 border border-slate-200/80 dark:border-white/15 rounded-xl px-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-ios-blue"
+                        >
+                          {[23, 25, 28, 30, 32, 35, 38, 40, 42, 45, 50, 54].map((w) => (
+                            <option key={w} value={w}>前 {w}c</option>
+                          ))}
+                        </select>
+                        <NumberStepper
+                          value={actualWidthFront}
+                          onChange={setActualWidthFront}
+                          step={0.5}
+                          min={18}
+                          max={70}
+                          unit="mm"
+                          decimals={1}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                        <span>后轮规格 (注重滤震与滚阻)</span>
+                        <span className="font-mono text-ios-blue">{nominalWidthRear}c</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={nominalWidthRear}
+                          onChange={(e) => {
+                            const w = Number(e.target.value);
+                            setNominalWidthRear(w);
+                            setActualWidthRear(w + 1.5);
+                          }}
+                          className="w-full h-9 bg-white dark:bg-black/40 border border-slate-200/80 dark:border-white/15 rounded-xl px-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-ios-blue"
+                        >
+                          {[23, 25, 28, 30, 32, 35, 38, 40, 42, 45, 50, 54].map((w) => (
+                            <option key={w} value={w}>后 {w}c</option>
+                          ))}
+                        </select>
+                        <NumberStepper
+                          value={actualWidthRear}
+                          onChange={setActualWidthRear}
+                          step={0.5}
+                          min={18}
+                          max={70}
+                          unit="mm"
+                          decimals={1}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300 block mb-1">车圈内宽 (mm)</label>
+                    <NumberStepper
+                      value={rimInnerWidth}
+                      onChange={setRimInnerWidth}
+                      step={0.5}
+                      min={13}
+                      max={45}
+                      unit="mm"
+                      decimals={1}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Hookless & Tire Insert Options */}
@@ -506,6 +676,36 @@ export const TirePressureCalculator: React.FC = () => {
                   onChange={(e) => setHasTireInsert(e.target.checked)}
                   className="w-4 h-4 rounded accent-ios-blue cursor-pointer"
                 />
+              </div>
+            </div>
+
+            {/* Ambient Temperature Compensation Slider */}
+            <div className="p-3.5 rounded-2xl bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/20 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Thermometer className="w-4 h-4 text-sky-500 shrink-0" />
+                  <label className="text-xs font-semibold text-slate-900 dark:text-white">
+                    {language === 'zh-TW' ? '騎行環境氣溫補償' : '骑行环境气温补偿'}
+                  </label>
+                  <Tooltip content="根据盖-吕萨克理想气体热力学定律，室外温度与打气筒所在室内温度存在温差时，实际骑行胎压会发生热胀冷缩偏移（约 0.1 Bar / 10°C）" />
+                </div>
+                <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400 tabular-nums">
+                  {rideTempC}°C ({Math.round(rideTempC * 1.8 + 32)}°F)
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-5"
+                max="45"
+                step="1"
+                value={rideTempC}
+                onChange={(e) => setRideTempC(Number(e.target.value))}
+                className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-sky-500"
+              />
+              <div className="flex justify-between text-[11px] text-slate-400">
+                <span>寒冬 -5°C</span>
+                <span>常温 20°C (基准)</span>
+                <span>酷暑 45°C</span>
               </div>
             </div>
 
@@ -609,20 +809,40 @@ export const TirePressureCalculator: React.FC = () => {
           {/* Numerical Display Cards */}
           <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
             <IOSMetricTile
-              label={language === 'zh-TW' ? '前輪建議區間' : '前轮建议区间'}
+              label={isStaggeredWidth ? `${result.front.widthDesc} ${language === 'zh-TW' ? '前輪區間' : '前轮区间'}` : (language === 'zh-TW' ? '前輪建議區間' : '前轮建议区间')}
               value={`${result.front.min} - ${result.front.max}`}
               unit={pressureUnit.toUpperCase()}
               subtext={language === 'zh-TW' ? '前轴抓地与舒适滤震' : '前轴抓地与舒适滤震'}
               accent="blue"
             />
             <IOSMetricTile
-              label={language === 'zh-TW' ? '後輪建議區間' : '后轮建议区间'}
+              label={isStaggeredWidth ? `${result.rear.widthDesc} ${language === 'zh-TW' ? '後輪區間' : '后轮区间'}` : (language === 'zh-TW' ? '後輪建議區间' : '后轮建议区间')}
               value={`${result.rear.min} - ${result.rear.max}`}
               unit={pressureUnit.toUpperCase()}
               subtext={language === 'zh-TW' ? '驱动承重与低滚阻' : '驱动承重与低滚阻'}
               accent="blue"
             />
           </div>
+
+          {/* Temperature Compensation Indoor Pump Guidance */}
+          {rideTempC !== 20 && (
+            <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-xs space-y-1">
+              <div className="flex items-center justify-between font-semibold text-sky-900 dark:text-sky-300">
+                <span className="flex items-center gap-1.5">
+                  <Thermometer className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                  <span>{language === 'zh-TW' ? '室內打氣基準建議 (20°C 基準)' : '室内打气基准建议 (20°C 基准)'}</span>
+                </span>
+                <span className="font-mono text-sky-600 dark:text-sky-400 font-bold tabular-nums">
+                  {result.tempDeltaPsi > 0 ? `+${result.tempDeltaPsi}` : result.tempDeltaPsi} PSI
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {rideTempC < 20
+                  ? `室外气温低（${rideTempC}°C），气体冷缩。建议在 20°C 室内打气时打至 前 ${result.front.pumpRec} / 后 ${result.rear.pumpRec} ${pressureUnit.toUpperCase()}，到室外冷缩后刚好达到最佳骑行胎压。`
+                  : `室外地面高温（${rideTempC}°C），气体受热膨胀。建议在 20°C 室内打气时预留余量打至 前 ${result.front.pumpRec} / 后 ${result.rear.pumpRec} ${pressureUnit.toUpperCase()}，上路升温后即可达到最佳骑行胎压。`}
+              </p>
+            </div>
+          )}
 
           {/* Quick Sync to Active Bike Footer */}
           {activeBike && (

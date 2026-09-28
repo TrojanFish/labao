@@ -224,3 +224,467 @@ export const GENERAL_RECOVERY_TIPS = [
     content: '每周训练量（里程/时间/TSS强度）增幅严格控制在 10%~15% 以内，每连续训练 3 周安排 1 周减量恢复周。'
   }
 ];
+
+export type PainTimingScenario = 'early_ride' | 'fatigue_endurance' | 'high_torque_climb' | 'aero_drop_posture';
+
+export interface TimingScenarioOption {
+  id: PainTimingScenario;
+  title: string;
+  subtitle: string;
+  badge: string;
+}
+
+export interface StretchExercise {
+  name: string;
+  target: string;
+  instructions: string;
+  duration: string;
+}
+
+export interface AreaTimingPrescription {
+  diagnosis: string;
+  mechanism: string;
+  mechanicalAdjustments: string[];
+  ridingAdjustments: string[];
+  stretchExercises: StretchExercise[];
+}
+
+export const TIMING_SCENARIOS: TimingScenarioOption[] = [
+  {
+    id: 'early_ride',
+    title: '起骑 15~30 分钟内迅速出现',
+    subtitle: '多为座舱几何、锁片定位或绝对高度严重失配',
+    badge: '静态几何失调'
+  },
+  {
+    id: 'fatigue_endurance',
+    title: '骑行 2 小时以上疲劳后显现',
+    subtitle: '多为核心疲劳、骨盆代偿下沉或坐垫支撑衰竭',
+    badge: '耐力代偿衰竭'
+  },
+  {
+    id: 'high_torque_climb',
+    title: '大阻力低踏频重踏或大坡度爬坡时',
+    subtitle: '多为踏频过低、齿比过重、曲柄过长或关节剪切力过大',
+    badge: '高扭矩峰值过载'
+  },
+  {
+    id: 'aero_drop_posture',
+    title: '抓握下把位或破风低趴气动姿势时加重',
+    subtitle: '多为座舱落差 Drop 过深或延伸 Reach 过长',
+    badge: '落差与屈曲极限'
+  }
+];
+
+export const AREA_TIMING_PRESCRIPTIONS: Record<string, Record<PainTimingScenario, AreaTimingPrescription>> = {
+  knee: {
+    early_ride: {
+      diagnosis: '静态坐垫高度/前后位置或锁片偏摆严重不匹配',
+      mechanism: '起骑即疼通常非疲劳引起，而是曲柄转动下死点腿部过度屈曲（坐垫过低引发髌腱高压）或过度超伸（坐垫过高引发腘肌拉扯），或锁片 0° 零浮动锁死自然内外旋力线。',
+      mechanicalAdjustments: [
+        '坐垫高度精准校准：脚跟踩在脚踏最低点时腿部完全伸直且骨盆不倾斜，以脚掌踩踏时膝角维持在 25°~30°。',
+        '前膝痛建议坐垫微调高 3~5mm 并向后移 3mm；后膝痛建议微调低 3~5mm 并微向前移。',
+        '锁鞋浮动片核查：严禁使用 0° 零浮动红片/黑片，换用 4.5°~6° 浮动锁片，释放脚踝天然微小旋动。'
+      ],
+      ridingAdjustments: [
+        '踩踏到底时脚跟保持平顺水平，严禁脚后跟下沉深踩。',
+        '蹬踏时双膝正对车架前梁上下直行，不要刻意内收或外撇。'
+      ],
+      stretchExercises: [
+        { name: '站姿股四头肌后拉伸展', target: '股直肌与髌骨上腱', instructions: '单腿站立，手拉同侧脚踝贴近臀部，膝盖垂直向下，挺胸骨盆中立。', duration: '每侧 30 秒 x 3 组' },
+        { name: '仰卧腘绳肌毛巾牵拉', target: '大腿后侧腘肌与半腱肌', instructions: '仰卧位用毛巾套住足弓，伸直腿向上牵拉至大腿后侧出现温和拉伸感。', duration: '每侧 35 秒 x 3 组' }
+      ]
+    },
+    fatigue_endurance: {
+      diagnosis: '长途耐力衰竭诱发臀中肌疲劳骨盆倾斜，引起髂胫束摩擦综合征 (ITBS)',
+      mechanism: '随着骑行时长增加，维持骨盆稳定的臀中肌力竭，骨盆向踩踏对侧下沉，导致大腿股骨内旋内收，髂胫束与股骨外侧髁剧烈摩擦形成无菌性炎症。',
+      mechanicalAdjustments: [
+        '坐垫微调低 2~3mm：略微降低下死点延伸量，减轻下肢在力竭状态下的骨盆摆动代偿。',
+        '检查坐垫支撑刚性：若旧坐垫底板塌陷软化，更换具有高弹发泡或碳纤底板的专业长途坐垫。',
+        '检查锁鞋内侧支撑：加装 1° 锁片内翻垫片稳定足弓力线，防止长途脚掌内扣。'
+      ],
+      ridingAdjustments: [
+        '长途巡航维持 85~95 RPM 稳定踏频，减少单脚大力深踏的力矩脉冲。',
+        '有意识微收核心下腹部，感知坐骨两侧均匀压实在坐垫后翼。'
+      ],
+      stretchExercises: [
+        { name: '髂胫束与阔筋膜张肌泡沫轴滚压', target: '大腿外侧 ITB 筋膜束', instructions: '侧卧在泡沫轴上，从髋骨外侧下方向膝盖上方缓慢滚动，在痛点停留深呼吸。', duration: '每侧 45 秒 x 2 组' },
+        { name: '鸽子式臀深层肌群拉伸', target: '臀中肌、梨状肌', instructions: '单腿前屈折叠贴地，后腿向后完全伸展，上身前倾下伏感受臀外侧深层牵拉。', duration: '每侧 40 秒 x 3 组' }
+      ]
+    },
+    high_torque_climb: {
+      diagnosis: '爬坡极低踏频大扭矩导致髌股关节过度挤压与乳酸堆积',
+      mechanism: '面对 8%~15% 陡坡且缺少大飞轮时，踏频暴跌至 50~60 RPM，单腿踩踏峰值切向力超过体重的 2~3 倍，使髌骨软骨承受极高的剪切冲击压。',
+      mechanicalAdjustments: [
+        '传动系统齿比扩容：改装 34T 或 36T 爬坡大飞轮，必要时搭配 50-34T 压缩盘。',
+        '缩短曲柄长度（如 172.5mm 改为 165mm 或 170mm）：减小上死点膝关节屈曲极限角，显著释放蹬踏启动峰值扭矩。'
+      ],
+      ridingAdjustments: [
+        '进陡坡前 50 米提前换轻档并提高踏频至 80 RPM 蓄势，避免硬抗重踏。',
+        '采用「坐踩 1 分钟 + 站姿摇车 15 秒」交替循环，利用自身体重分担膝盖局部肌肉张力。'
+      ],
+      stretchExercises: [
+        { name: '低位箭步蹲髂腰肌拉伸', target: '髋屈肌与股直肌近端', instructions: '单腿大步向前呈箭步蹲，后膝着地骨盆向前下沉，上身直立感受腹股沟牵拉。', duration: '每侧 30 秒 x 3 组' },
+        { name: '靠墙静蹲激活股内侧斜肌', target: 'VMO 股内侧肌', instructions: '背靠墙屈膝至 60°~90°，双膝夹一个瑜伽砖或软球，增强髌骨轨迹内向稳定性。', duration: '每次 45 秒 x 2 组' }
+      ]
+    },
+    aero_drop_posture: {
+      diagnosis: '深落差低趴姿态导致髋膝关节屈角受限与力线扭曲',
+      mechanism: '抓握下把位或伏把破风时，躯干与大腿夹角变小，若车手髋关节灵活性受限，膝盖会在上死点下意识外撇避让肋骨，造成内旋肌与髌腱力线折角扭曲。',
+      mechanicalAdjustments: [
+        '减少座舱落差（Drop）：在把立下方增加 5~10mm 垫圈，或更换小角度把立。',
+        '坐垫微向前滑动 3~5mm：打开髋关节角度，使伏把时上死点蹬踏更加顺畅。'
+      ],
+      ridingAdjustments: [
+        '伏把时胸腔微张，下背部保持微弧，用骨盆向前旋转带动上身，而非单单弯折腰椎。',
+        '避免双膝在踩踏上死点向大梁外侧大幅撇开。'
+      ],
+      stretchExercises: [
+        { name: '仰卧蝴蝶式髋关节外展拉伸', target: '内收肌群与髋臼关节囊', instructions: '仰卧脚心相对，双膝自然向两侧下沉打开，双手置于腹部平稳深呼吸。', duration: '每次 60 秒' },
+        { name: '坐姿转体胸椎活动度激活', target: '胸椎旋转度与腹外斜肌', instructions: '坐在椅子上双手抱头，呼气向一侧水平转动胸廓，骨盆保持正对前方。', duration: '每侧 10 次 x 2 组' }
+      ]
+    }
+  },
+  lower_back: {
+    early_ride: {
+      diagnosis: '座舱 Reach 过长或把立超长，脊柱过度前伸拉伤',
+      mechanism: '车架尺码偏大或把立过长，迫使骑手双臂死死向前探出，背部竖脊肌从起骑第 1 分钟起就处于被动持续极限牵拉状态，无法由核心分担重力。',
+      mechanicalAdjustments: [
+        '把立缩短 10~20mm（例如由 110mm 更换为 90mm），立竿见影缩短座舱延伸。',
+        '将弯把手变头向后上方仰调 2°~3°，缩短手部握持极限点。',
+        '坐垫适度向前滑动 3~5mm，拉近坐骨与车头的距离。'
+      ],
+      ridingAdjustments: [
+        '手臂保持微屈（手肘约 15° 弯曲），充当天然弹性减震臂，禁止双臂死直锁定。',
+        '骑行中不要把重心全部死死压在双手上。'
+      ],
+      stretchExercises: [
+        { name: '猫牛式脊柱多节段活动', target: '胸腰段竖脊肌与多裂肌', instructions: '四足跪姿，吸气抬头塌腰伸展腹部，呼气弓背低头收缩腹肌拉伸后背。', duration: '每组 10 次 x 3 组' },
+        { name: '婴儿式背部深度减压', target: '下背腰方肌与背阔肌', instructions: '双膝跪地臀部坐于脚后跟，双臂向前无限延伸趴在垫上，额头贴地深呼吸。', duration: '每次 60 秒' }
+      ]
+    },
+    fatigue_endurance: {
+      diagnosis: '核心腹横肌衰竭导致骨盆后倾，重力全由腰椎间盘硬抗',
+      mechanism: '2 小时以上骑行时腹肌与深层稳定肌力竭，骑手下意识塌腰弓背，使骨盆严重后倾，颠簸路面的垂直震动直击腰椎 L4-L5/S1 椎间盘。',
+      mechanicalAdjustments: [
+        '车头垫圈加高 5~10mm，使长途座舱处于更加直立舒展的耐力舒适几何。',
+        '检查坐垫俯仰角：坐垫鼻头若上翘会顶住耻骨迫使骨盆后倾，将其调平或鼻头微降 1°。'
+      ],
+      ridingAdjustments: [
+        '每骑行 20 分钟主动提肛微收小腹，重新唤醒骨盆中立位。',
+        '安全下坡或平路路段尝试短时间直立骑行（直腰脱把或单手握横把）放松腰背。'
+      ],
+      stretchExercises: [
+        { name: '眼镜蛇式腰椎伸展', target: '腹直肌拉伸与腰椎后伸间隙释放', instructions: '俯卧在垫上，双手撑在胸旁缓慢推起上半身，骨盆紧贴地面，微抬头感受腹部拉伸。', duration: '每次 30 秒 x 3 组' },
+        { name: '死虫式核心深层腹横肌激活', target: '深层核心腹横肌与骨盆稳定性', instructions: '仰卧举双手屈双腿 90°，对侧手脚缓慢下放至接近地面且下背部不离开地面。', duration: '每侧 12 次 x 2 组' }
+      ]
+    },
+    high_torque_climb: {
+      diagnosis: '陡坡大力摇车拔把发力，背阔肌与腰方肌超负荷代偿',
+      mechanism: '爬坡遇到重阻力时，很多车手习惯用双手使劲后拉车把借力，导致腰背竖脊肌与腰方肌承受双向非对称剪切扭矩。',
+      mechanicalAdjustments: [
+        '提升爬坡踏频：加装大飞轮或小盘，将踏频提至 75 RPM 以上以轻快转动代替重踏。',
+        '检查车把宽度：过窄的车把在摇车时杠杆力臂不足，迫使腰背付出更大扭转力量。'
+      ],
+      ridingAdjustments: [
+        '爬坡摇车时以重心的自然左右摆动带动车辆倾斜，严禁用手臂死力撕扯车把。',
+        '坐踩时手掌虚搭在横把上，专注于臀大肌的主动蹬踩。'
+      ],
+      stretchExercises: [
+        { name: '仰卧抱膝压胸放松', target: '下腰部脊柱减压', instructions: '仰卧双腿弯曲，双手抱住小腿向胸部收紧，轻轻左右晃动背部按摩腰椎。', duration: '每次 45 秒' },
+        { name: '骨盆臀桥激活臀大肌', target: '臀大肌伸髋驱动替代腰背借力', instructions: '仰卧屈膝脚踩地，利用臀部收紧发力将骨盆抬至膝髋肩成一条直线，顶峰收缩 2 秒。', duration: '15 次 x 3 组' }
+      ]
+    },
+    aero_drop_posture: {
+      diagnosis: '落差 Drop 深度超出车手髋关节后侧柔韧度代偿极限',
+      mechanism: '为了追求职业车手般激进的气动美学，把立垫圈全砍，导致下趴时腰椎被迫过度屈曲，引发腰背肌肉痉挛与神经根压迫。',
+      mechanicalAdjustments: [
+        '增加把立垫圈 10~15mm，或将原本负角度把立（-17°）换为常规（-6°）。',
+        '选用短鼻中空坐垫并允许坐骨适当支撑，使骨盆能够在低趴时整体向前顺畅旋转。'
+      ],
+      ridingAdjustments: [
+        '气动姿态应依靠髋关节（髋屈）向前折叠，而非弯曲腰背部。',
+        '短途突围或逆风时抓下把，平路巡航适度回归手变头位交替舒缓。'
+      ],
+      stretchExercises: [
+        { name: '站姿体前屈腘绳肌伸展', target: '下肢后侧链柔韧度', instructions: '双脚微开，从髋部折叠上身缓慢下沉，双手尽量触碰脚尖或脚踝，呼吸放松。', duration: '每次 40 秒 x 2 组' },
+        { name: '侧向支撑强化侧腹腰方肌', target: '腹内外斜肌与腰方肌抗侧屈稳定性', instructions: '单侧肘部支撑，身体侧向挺起成一条直线，保持核心紧绷骨盆不塌陷。', duration: '每侧 30 秒 x 2 组' }
+      ]
+    }
+  },
+  neck_shoulder: {
+    early_ride: {
+      diagnosis: '车把过宽或手变头角度外撇，肩袖肌群持续处于张力撕扯',
+      mechanism: '很多车友原厂搭配 420mm 车把，而实际肩宽仅 380~400mm。握距过宽导致双臂呈倒八字，肩胛骨长时间外展外旋，斜方肌和提肩胛肌从一开始就紧绷抽筋。',
+      mechanicalAdjustments: [
+        '更换与锁骨肩峰同宽的车把（例如换用 380mm 或 400mm 窄把）。',
+        '将手变头适当向内倾斜 3°~5°，符合手臂自然内收生理握持习惯。'
+      ],
+      ridingAdjustments: [
+        '沉肩、坠肘：骑行中经常自我提示将肩胛骨向下向后收紧，不要缩脖子耸肩。',
+        '手腕与小臂对齐，不要向外折角。'
+      ],
+      stretchExercises: [
+        { name: '侧向拉头斜方肌牵拉', target: '上斜方肌与提肩胛肌', instructions: '一手背后固定，另一手轻轻越过头顶将头部拉向同侧肩膀，感受对侧颈部拉伸。', duration: '每侧 30 秒 x 3 组' },
+        { name: '胸大肌门框后展伸展', target: '胸大肌与三角肌前束', instructions: '小臂贴在门框或墙角上，身体缓慢向前迈步，感受胸前肌群拉伸与肩胛回缩。', duration: '每侧 30 秒 x 2 组' }
+      ]
+    },
+    fatigue_endurance: {
+      diagnosis: '长时间同一姿势支撑导致肩颈静力性缺血僵硬',
+      mechanism: '长时间保持手握手变头单一姿势，颈后头夹肌与颈夹肌持续抗阻头部重力（头部加头盔重达 6kg 以上），缺乏体态交替引发肌纤维局部微缺血。',
+      mechanicalAdjustments: [
+        '增加把立垫圈 5mm，减轻仰头视物视角 3°~5°。',
+        '选用视野开阔的无边框轻量化骑行眼镜，避免因眼镜框遮挡视线而被迫使劲仰头。'
+      ],
+      ridingAdjustments: [
+        '骑行中每 15 分钟变换一次握把姿态：横把位巡航、手变头推行、下把位冲刺交替。',
+        '在安全笔直平路路段轻微左右转头并耸肩放松，促进肩颈血液回流。'
+      ],
+      stretchExercises: [
+        { name: '靠墙 W-to-Y 肩胛骨滑动', target: '菱形肌与下斜方肌', instructions: '背靠墙小臂贴墙呈 W 姿态，沿墙面向上推成 Y 姿态，感受肩胛骨下沉与背部发力。', duration: '12 次 x 3 组' },
+        { name: '下颌内收强化颈深屈肌', target: '颈深部屈肌群（抗低头劳损）', instructions: '身体直立，用手指轻按鼻尖引导头部水平向后平移做「收双下巴」动作。', duration: '每次停顿 5 秒 x 10 次' }
+      ]
+    },
+    high_torque_climb: {
+      diagnosis: '爬坡攻坚过度紧张，死力抓把引起斜方肌应激性痉挛',
+      mechanism: '爬陡坡时由于心率飙升与腿部酸痛，上肢下意识死死捏紧刹把，肩膀高高耸起甚至耸到耳根，将腿部的疲劳转化成了肩颈的过度发力。',
+      mechanicalAdjustments: [
+        '缠绕 2.5~3.0mm 厚度高吸震把带，减少路面颠簸冲击波直传肩胛。',
+        '调整刹把握距调节螺丝（Reach Adjust），让手指更轻松勾到刹车，消除紧绷感。'
+      ],
+      ridingAdjustments: [
+        '爬坡时做规律深长呼吸，每次呼气时主动提示双肩下沉放松。',
+        '手掌仅需松弛地搭在车把手变头顶部，让重力自然下沉。'
+      ],
+      stretchExercises: [
+        { name: '双肩前后大环绕', target: '肩锁关节与斜方肌', instructions: '挺胸直立，双肩由前向上、向后向下做大幅度顺畅旋转，消除紧绷痉挛感。', duration: '顺时针与逆时针各 15 圈' },
+        { name: '双手背后交叉反向牵拉', target: '胸背联动筋膜链', instructions: '双手在背后十指相扣，手心向外缓慢向上抬起，同时挺胸抬头伸展。', duration: '每次 30 秒 x 2 组' }
+      ]
+    },
+    aero_drop_posture: {
+      diagnosis: '极致低趴使颈椎处于过度后伸过仰，枕下神经受压',
+      mechanism: '握下把破风或 TT 骑行时，躯干几乎与地面水平，为了看清前方 50 米路况，颈椎必须维持近 60° 的极限仰角，枕下肌群极度受挤。',
+      mechanicalAdjustments: [
+        '减少落差 10mm，寻找速度与舒适的折中平衡点。',
+        '头盔换用轻量化破风盔（<230g），减少颈椎承受的额外重力力矩。'
+      ],
+      ridingAdjustments: [
+        '学会「眼球上视」替代「使劲仰头」：头部保持中立，利用眼球向上转动观察路况。',
+        '非必要冲刺时不要整程死握下把，分段切换姿态。'
+      ],
+      stretchExercises: [
+        { name: '颈部前侧胸锁乳突肌斜拉伸', target: '胸锁乳突肌', instructions: '一手按住锁骨，头向对侧后上方微仰，感受颈侧与下颌缘紧绷拉伸。', duration: '每侧 25 秒 x 2 组' },
+        { name: '枕下肌群指压放松', target: '风池穴与枕骨下缘肌群', instructions: '双手大拇指置于后脑勺骨头下凹陷处，做温和画圈按压深呼吸。', duration: '按压 40 秒' }
+      ]
+    }
+  },
+  wrist_hand: {
+    early_ride: {
+      diagnosis: '坐垫过度向前倾斜，身体前滑导致双臂掌根承受大部分体重',
+      mechanism: '坐垫鼻头下斜过多，骑手屁股像滑滑梯一样不断向前出溜，为了不跌下坐垫，双手只能死命推顶车把，正中神经与尺神经遭受剧烈挤压。',
+      mechanicalAdjustments: [
+        '使用水平尺校准坐垫：将坐垫表面调整至完全水平（0°）或仅微斜 -0.5°。',
+        '坐上后尝试双手轻触车把，若上身重心能依靠核心自持且不向前栽倒，则平衡良好。',
+        '手变头倾角调整：手握手变头时小臂、手腕与手背必须连成平顺直线，消除手腕背折角。'
+      ],
+      ridingAdjustments: [
+        '双手手掌掌心轻放车把，禁止以「撑伏地挺身」的姿势死压车把。',
+        '重量大部分分配在脚踏和坐垫上，双手仅负责方向指引与轻微平衡。'
+      ],
+      stretchExercises: [
+        { name: '前臂屈肌腕掌反拉伸展', target: '旋前圆肌与腕屈肌群', instructions: '单臂向前伸直掌心向前手指向下，另一手握住手指往回轻拉，感受小臂内侧拉伸。', duration: '每侧 30 秒 x 3 组' },
+        { name: '双手合十祈祷式拉伸', target: '腕关节掌侧韧带', instructions: '双手掌心相对合十于胸前，手掌缓慢向下压，手肘向外展开保持掌根贴合。', duration: '每次 30 秒 x 2 组' }
+      ]
+    },
+    fatigue_endurance: {
+      diagnosis: '路面连续高频微震引起尺神经与正中神经微循环缺血（手麻综合征）',
+      mechanism: '长时间抓握车把，地面微震持续敲击手掌掌根小鱼际（尺管 Guyon 管），导致小指与无名指麻木、触觉变钝甚至无力握拢刹车。',
+      mechanicalAdjustments: [
+        '升级厚度在 2.5mm~3.2mm 的高缓震聚氨酯凝胶把带（如 Supacaz Sticky Kush 或 Lizardskin DSP）。',
+        '佩戴专业带大鱼际/小鱼际凝胶减震衬垫的短指/长指骑行手套。',
+        '胎压适度微降 3~5 PSI，利用轮胎形变过滤 80% 的路面高频微震。'
+      ],
+      ridingAdjustments: [
+        '骑行中每 10 分钟单手脱把向下自然下垂甩动 10 秒，恢复手掌末梢神经血液供应。',
+        '在平路横把、手变头上握、掌托外缘轮流切换支撑点。'
+      ],
+      stretchExercises: [
+        { name: '神经滑动训练（尺神经滑车）', target: '尺神经沿臂丛至小指的顺应性', instructions: '手臂向侧方展开屈肘，拇指与食指捏合做「OK」手势倒扣在眼睛旁成眼镜状，再缓慢展开。', duration: '每侧 10 次 x 2 组' },
+        { name: '手掌与手指反向伸张', target: '蚓状肌与骨间肌', instructions: '用力张开五指维持 5 秒，再用力握紧拳头，快速交替促进末梢血液回流。', duration: '重复 20 次' }
+      ]
+    },
+    high_torque_climb: {
+      diagnosis: '爬坡重踏死捏把套，腕关节长时间处于极限背伸与侧偏',
+      mechanism: '陡坡抓握手变头用力后拉时，手腕往往出现向小指侧的过度偏斜（尺偏），使腕掌关节间隙受挤变窄。',
+      mechanicalAdjustments: [
+        '检查弯把把横部分形状：若扁平破风把横太薄导致抓握掌心悬空，可加裹一层缓震内衬胶。',
+        '微调手变头安装位置，使手腕在握持手变头发力时处于中立解剖位。'
+      ],
+      ridingAdjustments: [
+        '爬坡时改握把横（横把位），让前臂呈自然旋前中立姿态，卸掉手腕剪切角。',
+        '手掌均匀受力，不要把所有爆发力全部压在掌根一点。'
+      ],
+      stretchExercises: [
+        { name: '手腕八字环绕运动', target: '腕关节囊与滑膜', instructions: '双手十指交叉相扣，轻柔画 8 字连续转动手腕，消除关节腔内的酸胀粘连感。', duration: '持续 40 秒' },
+        { name: '手背反向牵伸（腕伸肌拉伸）', target: '前臂外侧伸肌群', instructions: '手臂向前伸直，手心向内，另一手按压手背向身体方向缓慢折曲。', duration: '每侧 30 秒 x 2 组' }
+      ]
+    },
+    aero_drop_posture: {
+      diagnosis: '握下把位弯角过陡，手腕背伸角度剧烈增加导致正中神经管受挤',
+      mechanism: '弯把下把弧度（Reach/Drop 曲线）与手变头落差不匹配，导致抓握下把时为了勾住刹车杆，手腕必须过度向上折起，诱发腕管综合征。',
+      mechanicalAdjustments: [
+        '选用浅下把人体工学弯把（Compact 压缩弯把，Drop 仅 120~125mm）。',
+        '利用刹车调节螺栓将刹车手柄向弯把方向调近 5~10mm，让手指自然搭住刹把。'
+      ],
+      ridingAdjustments: [
+        '下把位握持握在下把平直段，仅在需要紧急制动时将食指中指自然搭上刹车。',
+        '手腕与前臂尽量维持平直水平力线。'
+      ],
+      stretchExercises: [
+        { name: '前臂前侧筋膜泡沫轴滚动', target: '旋前肌与前臂筋膜', instructions: '将前臂放在桌上或瑜伽垫上，用网球或小筋膜球从小臂内侧推压至手掌。', duration: '每侧 60 秒' },
+        { name: '指尖对推手指张力放松', target: '指浅屈肌腱', instructions: '双手十指指尖相对推压形成穹顶，掌心分离，感受指根与手掌肌腱张力。', duration: '每次 20 秒 x 2 组' }
+      ]
+    }
+  },
+  buttock: {
+    early_ride: {
+      diagnosis: '坐垫宽度与骨盆坐骨间距严重脱节，或实心坐垫压迫会阴神经血管束',
+      mechanism: '若坐垫太窄（如坐骨间距 125mm 却选用 130mm 坐垫），两颗坚硬的坐骨结节悬空无支撑，身体重量全由中间柔软的会阴部、阴部神经与海绵体承担，起骑 10 分钟即剧痛麻木。',
+      mechanicalAdjustments: [
+        '精准测量坐骨宽度：坐在瓦楞纸上测凹陷中心距离，坐垫宽度通常需比坐骨宽 20~25mm（常见 143mm / 155mm）。',
+        '选用具备全通中空大减压槽（Cut-out）或短鼻宽翼设计的专业坐垫。',
+        '校准坐垫水平：用手机水平仪测量坐垫前中 1/3 区域，保持 0° 水平或鼻头向下 1°。'
+      ],
+      ridingAdjustments: [
+        '坐上坐车时主动将臀部向后挪动，确保坐骨稳稳落座在坐垫后部宽翼支撑区。',
+        '绝对禁止在骑行裤内穿任何普通内裤，内裤接缝是磨破皮肤的主要元凶！'
+      ],
+      stretchExercises: [
+        { name: '坐姿 4 字形梨状肌拉伸', target: '梨状肌与臀深层外旋肌', instructions: '坐在椅子上，将一侧脚踝架在另一侧膝盖上成 4 字形，挺胸上身向前缓缓下压。', duration: '每侧 35 秒 x 3 组' },
+        { name: '卧姿抱膝骨盆正位放松', target: '骶髂关节与臀大肌下部', instructions: '仰卧双腿微屈，双手抱住单膝向同侧胸口收缩，感受臀部下边缘舒展。', duration: '每侧 30 秒 x 2 组' }
+      ]
+    },
+    fatigue_endurance: {
+      diagnosis: '坐垫高度过高导致踩踏到底骨盆左右剧烈摇摆，撕扯会阴皮肤',
+      mechanism: '坐垫设定哪怕偏高 5mm，长途每分钟转动 90 圈、每小时 5000 多次踩踏到底时，双侧骨盆就会像跷跷板一样来回倾斜，与坐垫皮面形成高达数千次的严重摩擦剪切。',
+      mechanicalAdjustments: [
+        '坐垫高度立即降低 3~5mm：消除脚踏到底时的膝盖过度超伸与骨盆代偿晃动。',
+        '升级具备高回弹多密度海绵（或 3D 打印蜂窝网格）的顶级背带骑行裤。',
+        '骑行前在会阴与腹股沟处大面积涂抹专业抗摩擦护臀霜（Chamois Cream）。'
+      ],
+      ridingAdjustments: [
+        '养成「规律站姿排空习惯」：每骑行 15 分钟主动离开坐垫站立踩踏 15~20 秒，瞬间恢复会阴部毛细血管微循环。',
+        '骑行中感知骨盆是否平稳，若感觉屁股在左右摩擦挪动，立即检查坐垫高度。'
+      ],
+      stretchExercises: [
+        { name: '仰卧蝴蝶式骨盆与腹股沟放松', target: '内收肌群与会阴浅层筋膜', instructions: '仰卧脚心相对双膝自然下垂打开，双手平放身体两侧，深呼吸放松盆底肌。', duration: '保持 60 秒' },
+        { name: '低位臀桥盆底肌微激活', target: '盆底肌张力平衡与臀肌激活', instructions: '仰卧屈膝慢推骨盆至半高，保持收腹微夹臀，感受骨盆承重均匀。', duration: '12 次 x 2 组' }
+      ]
+    },
+    high_torque_climb: {
+      diagnosis: '爬陡坡时坐姿下意识前移，坐骨脱离后翼支撑面坐上窄鼻头',
+      mechanism: '爬坡时为了克服重心后仰，很多车手不自觉地向前滑到坐垫最前端的窄鼻头上，窄鼻头宽度仅 35~40mm，坐骨完全无法着力，会阴软组织承受数倍高压。',
+      mechanicalAdjustments: [
+        '坐垫整体微向前滑动 3~5mm，使得即使在爬坡前倾身体时，坐骨依然能够贴在宽翼有效承重区。',
+        '换用现代短鼻坐垫（长度约 240~250mm，鼻头较宽且平）。'
+      ],
+      ridingAdjustments: [
+        '爬坡时有意识提醒自己将骨盆留在坐垫后部宽处，上身通过手肘微屈和胸腔前倾来调节重心。',
+        '遇到 10% 以上陡峭拐弯，果断起身摇车攻坚，卸除坐垫对臀部的压迫。'
+      ],
+      stretchExercises: [
+        { name: '深蹲式骨盆底舒展拉伸', target: '臀下肌群与髋臼深度活动', instructions: '双脚略宽于肩做全蹲，双肘顶在双膝内侧双手合十，挺胸深呼吸下沉骨盆。', duration: '保持 40 秒' },
+        { name: '大腿内收肌仰卧开合', target: '内收长肌与耻骨肌', instructions: '仰卧双腿垂直向上举起，向两侧平稳缓慢打开至极限再匀速合拢。', duration: '15 次 x 2 组' }
+      ]
+    },
+    aero_drop_posture: {
+      diagnosis: '伏把低趴使骨盆深度前倾，耻骨联合直接顶死坐垫前端',
+      mechanism: '激进气动姿势要求骨盆大幅向前翻转，传统长鼻坐垫前部凸起会像硬木棍一样狠狠顶住耻骨结节与尿道海绵体，引发刺痛甚至暂时性麻木。',
+      mechanicalAdjustments: [
+        '必须选用短鼻中空坐垫（如 Specialized Power / Prologo Dimension / Shimano Stealth）。',
+        '将坐垫鼻头角度微调向下倾斜 1.5°~2.5°，为前倾的耻骨留出充裕的物理间隙。'
+      ],
+      ridingAdjustments: [
+        '前倾俯身时注意收缩下腹核心，骨盆自然前倾但不要瘫在坐垫前端。',
+        '在下把位破风 5~10 分钟后，切回手变头位让会阴部重获减压。'
+      ],
+      stretchExercises: [
+        { name: '猫牛式骨盆前倾后倾自由滑动', target: '骨盆灵活性与盆底肌肉张力', instructions: '四足跪姿，专注于带动骨盆做主动前倾与后倾的顺畅切换，感知坐骨开合。', duration: '慢速 12 次 x 2 组' },
+        { name: '仰卧提膝单侧拉伸', target: '臀大肌与股方肌', instructions: '仰卧单腿抱膝贴胸，对侧腿完全贴地伸展，深呼吸保持下背部平贴地面。', duration: '每侧 30 秒 x 2 组' }
+      ]
+    }
+  },
+  foot: {
+    early_ride: {
+      diagnosis: '锁鞋鞋楦过窄横向挤压跖骨，或 BOA 旋钮起骑时拧得太紧',
+      mechanism: '骑行 15 分钟内前脚掌即出现麻木刺痛、发热（灼热足），几乎 90% 是鞋楦宽度不够。欧洲标准鞋楦偏窄，亚洲脚型前掌普遍偏宽偏扁，双侧被硬碳底紧紧箍住阻断足底微循环。',
+      mechanicalAdjustments: [
+        '换用亚洲宽楦（Wide / Mega 版）专业锁鞋（如 Shimano Wide 或 Lake 宽版）。',
+        '起骑前 BOA 旋钮切勿拧死！体温上升后足部会充血胀大约半码，应留有两指微动余量。',
+        '锁片向后滑动 5~8mm，减轻对第 1~5 跖骨头下神经束的直接冲击压强。'
+      ],
+      ridingAdjustments: [
+        '蹬踏时五趾自然舒展平放，切记不要下意识用脚趾死抠鞋底。',
+        '踏频保持 85~90 RPM 轻快转动，避免沉重大力压榨脚掌。'
+      ],
+      stretchExercises: [
+        { name: '网球/高尔夫球足底筋膜滚压', target: '足底腱膜与跖侧肌群', instructions: '坐姿或站姿将脚踩在网球上，从前脚掌向足跟反复滚动按压，痛点按压深呼吸。', duration: '每侧 60 秒' },
+        { name: '脚趾主动屈伸与抓毛巾训练', target: '足内肌力量与足横弓弹性', instructions: '用脚趾反复抓紧地面的毛巾再用力张开五指，唤醒足底深层微循环。', duration: '每侧 15 次 x 2 组' }
+      ]
+    },
+    fatigue_endurance: {
+      diagnosis: '长途疲劳足弓塌陷，平底鞋垫无法支撑导致足底筋膜产生剪切应力',
+      mechanism: '随着骑行里程突破 80~100 公里，支撑足弓的胫后肌力竭，足弓在每次踩踏时扁平塌陷，足底筋膜被反复机械拉扯，诱发足底筋膜炎与足跟骨刺前驱酸痛。',
+      mechanicalAdjustments: [
+        '淘汰原厂纸片状平底鞋垫，定制或换用带高/中足弓立体支撑的专业骑行鞋垫（如 Specialized Body Geometry 或 Solestar）。',
+        '若存在明显前足内翻，在锁片内侧垫入 1°~2° 倾角斜垫片，使踩踏力线垂直贯穿鞋底。'
+      ],
+      ridingAdjustments: [
+        '长途平路中在踩踏抬脚上死点时有意识放松小腿与脚踝，不要全程绷紧。',
+        '遇红绿灯或休息站停车时脱掉锁鞋让脚掌自然踩地通风散热。'
+      ],
+      stretchExercises: [
+        { name: '阶梯台阶小腿与足跟下沉拉伸', target: '腓肠肌、比目鱼肌与跟腱', instructions: '前脚掌站在台阶边缘，脚后跟缓慢向下沉至水平面以下，感受小腿后侧与足跟深层拉伸。', duration: '每侧 35 秒 x 3 组' },
+        { name: '脚踝顺逆时针大画圈', target: '距下关节与踝关节滑液循环', instructions: '抬起单脚做脚尖大幅度画圈，顺时针 15 圈再逆时针 15 圈，放松小腿各肌腱束。', duration: '每侧 40 秒' }
+      ]
+    },
+    high_torque_climb: {
+      diagnosis: '前掌杠杆力臂过长，爬坡大扭矩使跟腱与小腿三头肌过早衰竭',
+      mechanism: '若锁片安装过于靠前（顶在脚尖下方），爬坡用力蹬踏时脚掌力臂极大，小腿腓肠肌必须付出双倍力量保持脚踝稳定，引发足掌高压灼热与小腿抽筋。',
+      mechanicalAdjustments: [
+        '锁片整体向后平移 8~10mm（对齐第 1 跖骨与第 5 跖骨两点连线的中后方）。后移锁片能极大缩短力臂，显著降低足底压强与小腿肌耗。',
+        '选用刚度指数更高的全碳纤维大底锁鞋（鞋底刚性 10+），防止鞋底在重踏时弯曲变软夹脚。'
+      ],
+      ridingAdjustments: [
+        '爬坡时不要刻意垫起脚尖重踏，下死点保持脚后跟微下沉或水平，让大腿肌群接管动力输出。',
+        '保持平滑踩踏圆周，避免在 2~4 点钟方向猛力顿挫踹踏。'
+      ],
+      stretchExercises: [
+        { name: '推墙弓步小腿后侧深度拉伸', target: '比目鱼肌与腓肠肌深层', instructions: '面对墙双手推墙，前腿弓后腿直，后脚跟完全踩死地面，髋骨向前推进拉伸小腿肚。', duration: '每侧 30 秒 x 3 组' },
+        { name: '跟腱抗震微回弹练习', target: '跟腱弹性储能与耐疲劳度', instructions: '双手扶扶手，双脚做轻快平顺的提踵与下落，增强跟腱微弹性。', duration: '20 次 x 2 组' }
+      ]
+    },
+    aero_drop_posture: {
+      diagnosis: '低趴姿势导致踩踏到底时踝关节过度下探，小脚趾侧边缘受力剪切',
+      mechanism: '伏把低趴时为了弥补髋关节开度不足，许多骑手在踩踏下死点下意识将脚尖朝下用力扎（垫脚尖），造成足前掌外侧与鞋底产生旋转剪切摩擦。',
+      mechanicalAdjustments: [
+        '坐垫高度微降 2~4mm：让下死点蹬踏脚掌自然平实，杜绝下探脚尖。',
+        '检查锁片旋转角度（Q-Factor 与左右对齐），使双脚在趴伏时保持最符合骨盆宽度的间距。'
+      ],
+      ridingAdjustments: [
+        '关注踩踏下死点的踝关节姿态，使脚底板与地面基本保持平行。',
+        '低趴伏把时多动脚趾保持神经兴奋度。'
+      ],
+      stretchExercises: [
+        { name: '跪姿足背与胫骨前肌伸展', target: '胫骨前肌与足背伸肌腱', instructions: '双膝跪在软垫上，脚背贴地慢慢把臀部坐向脚后跟，感受脚背与小腿前侧拉伸。', duration: '保持 30 秒 x 2 组' },
+        { name: '足底滚压冷敷舒缓', target: '微血管收缩与灼热神经镇定', instructions: '用冰镇饮料罐或冷敷滚筒在足底轻轻滚动，迅速消除灼热麻木感。', duration: '持续 2~3 分钟' }
+      ]
+    }
+  }
+};
+
+export function getPainPrescription(areaId: string, timing: PainTimingScenario): AreaTimingPrescription {
+  const areaPrescriptions = AREA_TIMING_PRESCRIPTIONS[areaId] || AREA_TIMING_PRESCRIPTIONS.knee;
+  return areaPrescriptions[timing] || areaPrescriptions.early_ride;
+}
+

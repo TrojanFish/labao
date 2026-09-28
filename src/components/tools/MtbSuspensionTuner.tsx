@@ -26,6 +26,7 @@ import { useToast } from '../../context/ToastContext';
 import { useRiderProfile } from '../../context/RiderProfileContext';
 import { ShareCardModal } from '../common/ShareCardModal';
 import { generateSuspensionPoster } from '../../utils/shareCardGenerators';
+import { calculateSuspensionSetup } from '../../utils/suspensionEngine';
 
 export const MtbSuspensionTuner: React.FC = () => {
   const { language, unitSystem } = useLanguageAndUnit();
@@ -38,6 +39,9 @@ export const MtbSuspensionTuner: React.FC = () => {
   const [gearWeightKg, setGearWeightKg] = useState<number>(4.5); // Helmet, pads, shoes, hydration pack
   const totalRiderWeightKg = baseWeightKg + gearWeightKg;
   const totalRiderWeightLbs = totalRiderWeightKg * 2.20462;
+
+  // Vehicle Powertrain Type
+  const [isEmtb, setIsEmtb] = useState<boolean>(false);
 
   // Discipline & Riding Style
   const [discipline, setDiscipline] = useState<'xc' | 'trail' | 'enduro' | 'dh'>('enduro');
@@ -139,159 +143,42 @@ export const MtbSuspensionTuner: React.FC = () => {
     }
   };
 
-  // Calculations
+  // Calculations using pure suspensionEngine
   const calc = useMemo(() => {
-    // 1. Target SAG Percentages
-    let targetForkSagPct = 20;
-    let targetShockSagPct = 25;
-
-    if (discipline === 'xc') {
-      targetForkSagPct = ridingStyle === 'firm' ? 15 : ridingStyle === 'plush' ? 22 : 18;
-      targetShockSagPct = ridingStyle === 'firm' ? 20 : ridingStyle === 'plush' ? 26 : 22;
-    } else if (discipline === 'trail') {
-      targetForkSagPct = ridingStyle === 'firm' ? 20 : ridingStyle === 'plush' ? 26 : 23;
-      targetShockSagPct = ridingStyle === 'firm' ? 25 : ridingStyle === 'plush' ? 30 : 27;
-    } else if (discipline === 'enduro') {
-      targetForkSagPct = ridingStyle === 'firm' ? 24 : ridingStyle === 'plush' ? 30 : 27;
-      targetShockSagPct = ridingStyle === 'firm' ? 28 : ridingStyle === 'plush' ? 33 : 30;
-    } else { // dh
-      targetForkSagPct = ridingStyle === 'firm' ? 28 : ridingStyle === 'plush' ? 35 : 31;
-      targetShockSagPct = ridingStyle === 'firm' ? 30 : ridingStyle === 'plush' ? 36 : 33;
-    }
-
-    const targetForkSagMm = Math.round((forkTravelMm * targetForkSagPct) / 100);
-    const targetShockSagMm = Math.round(((shockStrokeMm * targetShockSagPct) / 100) * 10) / 10;
-
-    // 2. Fork Pressure Calculation (empirical model calibrated against Fox & RS official charts)
-    // Rider weight in lbs is standard reference in suspension tuning
-    const wLbs = totalRiderWeightLbs;
-    let baseForkPsi = 0;
-
-    if (forkBrand === 'fox') {
-      if (forkStanchionMm <= 32) {
-        baseForkPsi = wLbs * 0.72 + 10;
-      } else if (forkStanchionMm === 34) {
-        baseForkPsi = wLbs * 0.78 + 8;
-      } else if (forkStanchionMm === 36) {
-        baseForkPsi = wLbs * 0.82 + 5;
-      } else if (forkStanchionMm === 38) {
-        baseForkPsi = wLbs * 0.92 + 2;
-      } else { // 40
-        baseForkPsi = wLbs * 0.70 + 8;
-      }
-    } else if (forkBrand === 'rockshox') {
-      if (forkStanchionMm <= 32) {
-        baseForkPsi = wLbs * 0.85 + 5;
-      } else if (forkStanchionMm === 35) {
-        baseForkPsi = wLbs * 0.92;
-      } else if (forkStanchionMm === 38) {
-        baseForkPsi = wLbs * 0.98 - 3;
-      } else { // 40 (Boxxer)
-        baseForkPsi = wLbs * 0.80 + 4;
-      }
-    } else {
-      baseForkPsi = wLbs * 0.85;
-    }
-
-    // Riding style compensation
-    if (ridingStyle === 'firm') baseForkPsi += 6;
-    if (ridingStyle === 'plush') baseForkPsi -= 6;
-    const finalForkPsi = Math.round(baseForkPsi + forkPsiOffset);
-
-    // Fork Damping Clicks (counted from FULLY CLOSED / Clockwise)
-    // Typically: heavier rider -> slower rebound (fewer clicks out / closer to closed) to control higher spring force
-    const reboundClicksOut = Math.max(2, Math.min(16, Math.round(18 - (wLbs / 220) * 10)));
-    const lscClicksOut = Math.max(3, Math.min(18, Math.round(16 - (wLbs / 220) * 7)));
-    const hscClicksOut = Math.max(2, Math.min(8, Math.round(7 - (wLbs / 220) * 3)));
-    const hsrClicksOut = Math.max(2, Math.min(8, Math.round(8 - (wLbs / 220) * 4)));
-
-    // Volume Spacer recommendation
-    let recommendedForkTokens = 1;
-    if (wLbs < 145) recommendedForkTokens = 0;
-    else if (wLbs < 185) recommendedForkTokens = 1;
-    else if (wLbs < 215) recommendedForkTokens = 2;
-    else recommendedForkTokens = 3;
-    if (ridingStyle === 'plush') recommendedForkTokens = Math.max(0, recommendedForkTokens - 1);
-    if (ridingStyle === 'firm') recommendedForkTokens += 1;
-
-    // 3. Rear Shock Calculations
-    const leverageRatio = shockStrokeMm > 0 ? frameRearTravelMm / shockStrokeMm : 2.5;
-    const rearWeightDistrib = discipline === 'dh' ? 0.65 : discipline === 'enduro' ? 0.62 : 0.60;
-
-    // For Air Shock:
-    // Base air shock psi = Rider Lbs * Leverage Ratio * progressivity_factor
-    let progFactor = 1.0;
-    if (linkageProgressivity === 'linear') progFactor = 1.15; // needs more air pressure/volume reduction
-    else if (linkageProgressivity === 'progressive') progFactor = 1.02;
-    else progFactor = 0.92;
-
-    let baseShockPsi = wLbs * leverageRatio * 0.64 * progFactor;
-    if (ridingStyle === 'firm') baseShockPsi += 10;
-    if (ridingStyle === 'plush') baseShockPsi -= 10;
-    const finalShockPsi = Math.round(baseShockPsi + shockPsiOffset);
-
-    const shockReboundClicks = Math.max(2, Math.min(16, Math.round(16 - (wLbs / 220) * 9)));
-    const shockLscClicks = Math.max(2, Math.min(14, Math.round(12 - (wLbs / 220) * 5)));
-
-    // For Coil Shock (TFTuned / Push spring rate formula):
-    // Spring Rate (lbs/in) = (Weight_lbs * rear_distrib * Leverage_Ratio) / (Shock_Stroke_Inches * (Sag_Pct / 100) * progressivity_comp)
-    const strokeInches = shockStrokeMm / 25.4;
-    const sagDecimal = targetShockSagPct / 100;
-    const coilProgComp = linkageProgressivity === 'linear' ? 1.0 : linkageProgressivity === 'progressive' ? 0.92 : 0.86;
-    const rawSpringRate = (wLbs * rearWeightDistrib * leverageRatio) / (strokeInches * sagDecimal * coilProgComp);
-    // standard coil springs come in 25 or 50 lbs increments (300, 325, 350, 375, 400, 425, 450, 475, 500, 550, 600)
-    const exactSpringRate = Math.round(rawSpringRate);
-    const closestSpringRate = Math.round(exactSpringRate / 25) * 25;
-
-    // Measured SAG Status
-    const actualForkSagPct = Math.round((measuredForkSagMm / forkTravelMm) * 100);
-    const actualShockSagPct = Math.round((measuredShockSagMm / shockStrokeMm) * 100);
-
-    const forkSagDelta = actualForkSagPct - targetForkSagPct;
-    let forkSagDiagnosis: 'optimal' | 'too_soft' | 'too_stiff' = 'optimal';
-    if (forkSagDelta > 3) forkSagDiagnosis = 'too_soft';
-    else if (forkSagDelta < -3) forkSagDiagnosis = 'too_stiff';
-
-    const shockSagDelta = actualShockSagPct - targetShockSagPct;
-    let shockSagDiagnosis: 'optimal' | 'too_soft' | 'too_stiff' = 'optimal';
-    if (shockSagDelta > 3) shockSagDiagnosis = 'too_soft';
-    else if (shockSagDelta < -3) shockSagDiagnosis = 'too_stiff';
-
-    return {
-      targetForkSagPct,
-      targetShockSagPct,
-      targetForkSagMm,
-      targetShockSagMm,
-      finalForkPsi,
-      reboundClicksOut,
-      lscClicksOut,
-      hscClicksOut,
-      hsrClicksOut,
-      recommendedForkTokens,
-      leverageRatio: Math.round(leverageRatio * 100) / 100,
-      finalShockPsi,
-      shockReboundClicks,
-      shockLscClicks,
-      exactSpringRate,
-      closestSpringRate,
-      actualForkSagPct,
-      actualShockSagPct,
-      forkSagDiagnosis,
-      shockSagDiagnosis
-    };
+    return calculateSuspensionSetup({
+      riderWeightKg: baseWeightKg,
+      gearWeightKg,
+      isEmtb,
+      discipline,
+      ridingStyle,
+      forkBrand,
+      forkStanchionMm,
+      forkTravelMm,
+      forkPsiOffset,
+      measuredForkSagMm,
+      shockType,
+      frameRearTravelMm,
+      shockStrokeMm,
+      linkageProgressivity,
+      shockPsiOffset,
+      measuredShockSagMm
+    });
   }, [
-    totalRiderWeightLbs,
+    baseWeightKg,
+    gearWeightKg,
+    isEmtb,
     discipline,
     ridingStyle,
     forkBrand,
     forkStanchionMm,
     forkTravelMm,
     forkPsiOffset,
-    shockStrokeMm,
+    measuredForkSagMm,
+    shockType,
     frameRearTravelMm,
+    shockStrokeMm,
     linkageProgressivity,
     shockPsiOffset,
-    measuredForkSagMm,
     measuredShockSagMm
   ]);
 
@@ -304,7 +191,7 @@ export const MtbSuspensionTuner: React.FC = () => {
       const url = await generateSuspensionPoster({
         riderName: activeRider?.name || 'Rider',
         totalWeightKg: Math.round(totalRiderWeightKg * 10) / 10,
-        discipline: discipline.toUpperCase() + ' 越野',
+        discipline: (isEmtb ? 'E-MTB ' : '') + discipline.toUpperCase() + ' 越野',
         forkModel: forkBrand.toUpperCase() + ' ' + forkStanchionMm + 'mm',
         forkTravel: forkTravelMm,
         forkPsi: calc.finalForkPsi,
@@ -448,13 +335,50 @@ export const MtbSuspensionTuner: React.FC = () => {
               </div>
             </div>
 
+            <div>
+              <label className="text-xs text-slate-600 dark:text-slate-400 mb-1.5 block">
+                {language === 'zh-TW' ? '車輛動力形式' : '车辆动力形式'}
+              </label>
+              <IOSSegmentedControl
+                options={[
+                  {
+                    value: 'acoustic',
+                    label: (
+                      <>
+                        <span className="sm:hidden">人力</span>
+                        <span className="hidden sm:inline">{language === 'zh-TW' ? '傳統人力' : '传统人力'}</span>
+                      </>
+                    )
+                  },
+                  {
+                    value: 'emtb',
+                    label: (
+                      <>
+                        <span className="sm:hidden">E-MTB</span>
+                        <span className="hidden sm:inline">E-MTB (+10~15kg)</span>
+                      </>
+                    )
+                  }
+                ]}
+                value={isEmtb ? 'emtb' : 'acoustic'}
+                onChange={(v) => setIsEmtb(v === 'emtb')}
+              />
+            </div>
+
             <div className="p-3 rounded-xl bg-ios-blue/10 border border-ios-blue/20 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
                 {language === 'zh-TW' ? '避震計算總負重' : '避震计算总负重'}
               </span>
-              <span className="text-base font-bold font-mono text-ios-blue">
-                {Math.round(totalRiderWeightKg * 10) / 10} kg ({Math.round(totalRiderWeightLbs)} lbs)
-              </span>
+              <div className="text-right">
+                <span className="text-base font-bold font-mono text-ios-blue">
+                  {Math.round(totalRiderWeightKg * 10) / 10} kg ({Math.round(totalRiderWeightLbs)} lbs)
+                </span>
+                {isEmtb && (
+                  <span className="block text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                    + E-MTB 电机电池重车身补偿
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </IOSCard>
@@ -642,6 +566,29 @@ export const MtbSuspensionTuner: React.FC = () => {
         </IOSCard>
       </div>
 
+      {/* E-MTB Compensation Active Banner */}
+      {isEmtb && calc.emtbAdvisory && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-start gap-2.5">
+            <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>E-MTB 重车架气室气压与回弹阻尼代偿已激活</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-bold">
+                  E-BIKE TUNED
+                </span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                {calc.emtbAdvisory.pressureSummaryZh} · {calc.emtbAdvisory.dampingSummaryZh}
+              </p>
+            </div>
+          </div>
+          <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/15 px-3 py-1.5 rounded-xl shrink-0 self-start sm:self-center">
+            {calc.emtbAdvisory.spacerSummaryZh}
+          </div>
+        </div>
+      )}
+
       {/* Main Suspension Tuning Hub: 2 Columns (Fork vs Rear Shock) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {/* LEFT: FRONT FORK */}
@@ -721,6 +668,11 @@ export const MtbSuspensionTuner: React.FC = () => {
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">
                     微调偏移: {forkPsiOffset > 0 ? `+${forkPsiOffset}` : forkPsiOffset} PSI
+                    {isEmtb && (
+                      <span className="ml-1 text-amber-600 dark:text-amber-400 font-semibold">
+                        (含 E-MTB +{calc.emtbForkPsiBonus})
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -791,7 +743,9 @@ export const MtbSuspensionTuner: React.FC = () => {
                     <div className="font-mono font-bold text-slate-900 dark:text-white text-base mt-0.5">
                       {calc.recommendedForkTokens}
                     </div>
-                    <div className="text-[11px] text-slate-400">枚</div>
+                    <div className="text-[11px] text-slate-400">
+                      {isEmtb ? '枚 (+1 E-MTB)' : '枚'}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -898,6 +852,11 @@ export const MtbSuspensionTuner: React.FC = () => {
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
                         杠杆比 {calc.leverageRatio}:1 补偿修正
+                        {isEmtb && (
+                          <span className="ml-1 text-amber-600 dark:text-amber-400 font-semibold">
+                            (含 E-MTB +{calc.emtbShockPsiBonus} PSI)
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -949,6 +908,11 @@ export const MtbSuspensionTuner: React.FC = () => {
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                         精确理论计算: {calc.exactSpringRate} lbs/in
+                        {isEmtb && (
+                          <span className="ml-1 text-amber-600 dark:text-amber-400 font-sans font-semibold">
+                            (含 E-MTB +{calc.emtbCoilRateBonus} lbs)
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -1183,6 +1147,19 @@ export const MtbSuspensionTuner: React.FC = () => {
               <strong>对策</strong>：顺时针拧入 2~3 格<strong>低速压缩阻尼</strong>，增强中段平台支撑性。
             </p>
           </div>
+
+          {isEmtb && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-1.5 sm:col-span-3">
+              <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                <Zap className="w-4 h-4" />
+                E-MTB 重车身入弯制动与电机扭矩防泄力指南
+              </div>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                <strong>重车身制动点头</strong>：E-MTB 整车重比传统山地车多 10~15kg，入弯重刹时动能显著增加。前叉务必收紧低速压缩（LSC）1~2 格，防止车头过度压缩导致头管角度变陡。<br />
+                <strong>出弯大扭矩蹲坑</strong>：电机瞬间大扭矩介入时易压迫后避震。建议后避震保持推荐气压（含 E-MTB 代偿），切勿盲目降低后胆气压追求软度。
+              </p>
+            </div>
+          )}
         </div>
       </IOSCard>
 

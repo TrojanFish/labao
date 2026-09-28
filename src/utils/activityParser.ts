@@ -76,6 +76,11 @@ export interface SensorDiagnostics {
   detectedNotes: string[];
 }
 
+export interface LeftRightBalance {
+  leftPercent: number;
+  rightPercent: number;
+}
+
 export interface ActivityAnalysis {
   fileName: string;
   fileType: 'fit' | 'gpx' | 'tcx' | 'demo' | 'strava';
@@ -99,6 +104,7 @@ export interface ActivityAnalysis {
   avgCadence?: number;
   maxCadence?: number;
   pedalingPercent?: number;
+  leftRightBalance?: LeftRightBalance;
   avgSpeedKmh: number;
   maxSpeedKmh: number;
   timeInPowerZones: PowerZoneDistribution[];
@@ -459,6 +465,7 @@ export function analyzePoints(
     shiftingEvents?: ElectronicShiftingEvent[];
     recordedCalories?: number;
     rawPoints?: ActivityPoint[];
+    leftRightBalance?: LeftRightBalance;
   }
 ): ActivityAnalysis {
   if (rawPoints.length === 0) {
@@ -724,7 +731,8 @@ export function analyzePoints(
     shiftingEvents: options?.shiftingEvents,
     shiftCount: options?.shiftingEvents?.length,
     recordedCalories: options?.recordedCalories,
-    rawPoints: options?.rawPoints ?? rawPoints
+    rawPoints: options?.rawPoints ?? rawPoints,
+    leftRightBalance: options?.leftRightBalance
   };
 }
 
@@ -772,6 +780,7 @@ export async function parseFitFile(
   }
 
   const points: ActivityPoint[] = [];
+  const lrSamples: number[] = [];
   let baseTimestamp: number | null = null;
   let maxRecordedCalories = 0;
 
@@ -830,6 +839,27 @@ export async function parseFitFile(
 
     if (r.calories !== undefined && typeof r.calories === 'number' && r.calories > maxRecordedCalories) {
       maxRecordedCalories = Math.round(r.calories);
+    }
+
+    // Left-Right Balance decoding (Garmin FIT protocol native field)
+    const rawLr = r.leftRightBalance ?? r.left_right_balance;
+    if (rawLr !== undefined && rawLr !== null && typeof rawLr === 'number') {
+      let isRight = false;
+      let rightPct = 50;
+      if (rawLr > 1000) {
+        // 16-bit 0.01%
+        isRight = (rawLr & 0x8000) !== 0;
+        const val = (rawLr & 0x7FFF) / 100;
+        rightPct = isRight ? val : 100 - val;
+      } else {
+        // 8-bit standard FIT
+        isRight = (rawLr & 0x80) !== 0;
+        const val = rawLr & 0x7F;
+        rightPct = isRight ? val : 100 - val;
+      }
+      if (rightPct >= 10 && rightPct <= 90) {
+        lrSamples.push(rightPct);
+      }
     }
 
     points.push({
@@ -949,12 +979,29 @@ export async function parseFitFile(
   const sessionCalories = messages?.sessionMesgs?.[0]?.totalCalories;
   const recordedCalories = sessionCalories && sessionCalories > 0 ? sessionCalories : (maxRecordedCalories > 0 ? maxRecordedCalories : undefined);
 
+  let leftRightBalance: LeftRightBalance | undefined = undefined;
+  const rawSessionLr = messages?.sessionMesgs?.[0]?.leftRightBalance ?? (messages?.sessionMesgs?.[0] as any)?.avg_left_right_balance;
+  if (rawSessionLr !== undefined && typeof rawSessionLr === 'number') {
+    const isRight = rawSessionLr > 1000 ? (rawSessionLr & 0x8000) !== 0 : (rawSessionLr & 0x80) !== 0;
+    const val = rawSessionLr > 1000 ? (rawSessionLr & 0x7FFF) / 100 : (rawSessionLr & 0x7F);
+    const rPct = Math.round(isRight ? val : 100 - val);
+    if (rPct >= 10 && rPct <= 90) {
+      leftRightBalance = { leftPercent: 100 - rPct, rightPercent: rPct };
+    }
+  } else if (lrSamples.length > 0) {
+    const avgR = Math.round(lrSamples.reduce((a, b) => a + b, 0) / lrSamples.length);
+    if (avgR >= 10 && avgR <= 90) {
+      leftRightBalance = { leftPercent: 100 - avgR, rightPercent: avgR };
+    }
+  }
+
   return analyzePoints(points, file.name, 'fit', ftpWatts, weightKg, maxHr, {
     isEstimatedPower: false,
     sensorDiagnostics,
     shiftingEvents,
     recordedCalories,
-    rawPoints: points
+    rawPoints: points,
+    leftRightBalance
   });
 }
 
@@ -1229,6 +1276,9 @@ export function generateRealisticDemoRide(
     'demo',
     ftpWatts,
     weightKg,
-    maxHr
+    maxHr,
+    {
+      leftRightBalance: { leftPercent: 49, rightPercent: 51 }
+    }
   );
 }

@@ -19,7 +19,8 @@ import {
   FileCode,
   RotateCcw,
   Sliders,
-  Award
+  Award,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { useRiderProfile } from '../../context/RiderProfileContext';
 import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
@@ -28,10 +29,20 @@ import { IOSCard, IOSMetricTile } from '../common/IOSCard';
 import { IOSToolHeader } from '../common/IOSToolHeader';
 import { IOSSegmentedControl } from '../common/IOSSegmentedControl';
 import { NumberStepper } from '../common/NumberStepper';
-import { consumePendingTransfer } from '../../hooks/useToolDraftState';
+import { consumePendingTransfer, setPendingTransfer } from '../../hooks/useToolDraftState';
 import { Tooltip } from '../common/Tooltip';
 import { ShareCardModal } from '../common/ShareCardModal';
 import { generateWorkoutPoster } from '../../utils/shareCardGenerators';
+import {
+  PlannedWorkout,
+  loadPlannedWorkouts,
+  savePlannedWorkouts,
+  formatDateYMD
+} from '../../utils/periodizationEngine';
+
+export interface WorkoutBuilderProps {
+  onNavigateTool?: (toolId: string) => void;
+}
 
 export type SegmentType = 'warmup' | 'steady' | 'interval' | 'cooldown' | 'ramp';
 
@@ -189,7 +200,7 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
   }
 ];
 
-export const WorkoutBuilder: React.FC = () => {
+export const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({ onNavigateTool }) => {
   const { profile } = useRiderProfile();
   const { language, t } = useLanguageAndUnit();
   const { showToast } = useToast();
@@ -198,6 +209,14 @@ export const WorkoutBuilder: React.FC = () => {
   const [riderWeightKg, setRiderWeightKg] = useState<number>(profile.weightKg || 68);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('ronnestad_30_15');
   const [workoutTitle, setWorkoutTitle] = useState<string>('Rønnestad 30/15s 微间歇课表');
+
+  // Schedule to Calendar State
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState<boolean>(false);
+  const [scheduleDate, setScheduleDate] = useState<string>(() => {
+    const tmr = new Date();
+    tmr.setDate(tmr.getDate() + 1);
+    return formatDateYMD(tmr);
+  });
 
   // Share Poster State
   const [sharePosterUrl, setSharePosterUrl] = useState<string | null>(null);
@@ -497,6 +516,43 @@ export const WorkoutBuilder: React.FC = () => {
     setIsShareModalOpen(true);
   };
 
+  const handleScheduleToCalendar = () => {
+    if (!scheduleDate) return;
+    const tmplCategory = selectedTemplateId ? WORKOUT_TEMPLATES.find(t => t.id === selectedTemplateId)?.category : undefined;
+    let workoutCategory: PlannedWorkout['category'] = 'threshold';
+    if (tmplCategory === 'vo2max') workoutCategory = 'vo2max';
+    else if (tmplCategory === 'anaerobic') workoutCategory = 'anaerobic';
+    else if (tmplCategory === 'endurance') workoutCategory = 'endurance';
+
+    const newWorkout: PlannedWorkout = {
+      id: `w_custom_${Date.now()}`,
+      date: scheduleDate,
+      title: workoutTitle,
+      targetTss: workoutMetrics.tss,
+      durationMin: workoutMetrics.totalMinutes,
+      category: workoutCategory,
+      templateId: selectedTemplateId || undefined,
+      notes: `由间歇课表工坊定制：${workoutMetrics.formattedDuration} · 预估 NP ${workoutMetrics.np}W · TSS ${workoutMetrics.tss}`
+    };
+
+    const currentList = loadPlannedWorkouts();
+    const updatedList = [...currentList, newWorkout];
+    savePlannedWorkouts(updatedList);
+
+    setPendingTransfer('solorider_pending_calendar_workout', newWorkout);
+    setIsScheduleModalOpen(false);
+    showToast(
+      language === 'zh-TW'
+        ? `已將課表「${workoutTitle}」排入 ${scheduleDate} 訓練賽歷！`
+        : `已将课表「${workoutTitle}」排入 ${scheduleDate} 训练赛历！`,
+      'success'
+    );
+
+    if (onNavigateTool) {
+      onNavigateTool('training-calendar');
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* Standard Apple HIG Tool Header */}
@@ -509,14 +565,25 @@ export const WorkoutBuilder: React.FC = () => {
         onShare={handleGeneratePoster}
         shareTitle="生成社交分享课表海报"
         actions={
-          <button
-            type="button"
-            onClick={() => setExportModalOpen(true)}
-            className="apple-touch h-9 px-3.5 sm:px-4 rounded-xl bg-ios-red hover:bg-ios-red/90 text-white font-semibold text-xs shadow-ios-sm flex items-center justify-center gap-1.5 transition whitespace-nowrap shrink-0"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>导出课表</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="apple-touch h-9 px-3 sm:px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 font-semibold text-xs shadow-ios-sm flex items-center justify-center gap-1.5 transition whitespace-nowrap shrink-0"
+              title="将当前课表排入训练赛历日程"
+            >
+              <CalendarIcon className="w-3.5 h-3.5 text-ios-red shrink-0" />
+              <span>{language === 'zh-TW' ? '排入賽歷' : '排入赛历'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setExportModalOpen(true)}
+              className="apple-touch h-9 px-3.5 sm:px-4 rounded-xl bg-ios-red hover:bg-ios-red/90 text-white font-semibold text-xs shadow-ios-sm flex items-center justify-center gap-1.5 transition whitespace-nowrap shrink-0"
+            >
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span>{language === 'zh-TW' ? '匯出課表' : '导出课表'}</span>
+            </button>
+          </div>
         }
       />
 
@@ -1038,6 +1105,136 @@ export const WorkoutBuilder: React.FC = () => {
               >
                 <Download className="w-4 h-4" />
                 <span>下载 .{exportFormat} 文件</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule to Calendar Modal */}
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="ios-card p-4 sm:p-5 rounded-2xl max-w-md w-full border border-slate-200/80 dark:border-white/10 shadow-ios-popover space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-ios-red/10 flex items-center justify-center text-ios-red">
+                  <CalendarIcon className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">
+                    {language === 'zh-TW' ? '排入訓練賽歷' : '排入训练赛历'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {language === 'zh-TW' ? '設定執行日期並自動同步至 ATP 週期排程' : '设定执行日期并自动同步至 ATP 周期排程'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Workout Summary Preview */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 space-y-2">
+              <div className="font-bold text-xs text-slate-800 dark:text-white">
+                {workoutTitle}
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2 rounded-lg bg-white dark:bg-black/20 border border-slate-100 dark:border-white/5">
+                  <div className="text-[10px] text-slate-400">时长</div>
+                  <div className="font-bold tabular-nums text-slate-700 dark:text-slate-300">{workoutMetrics.formattedDuration}</div>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-black/20 border border-slate-100 dark:border-white/5">
+                  <div className="text-[10px] text-slate-400">预估 TSS</div>
+                  <div className="font-bold tabular-nums text-ios-orange">{workoutMetrics.tss}</div>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-black/20 border border-slate-100 dark:border-white/5">
+                  <div className="text-[10px] text-slate-400">预估 NP</div>
+                  <div className="font-bold tabular-nums text-ios-blue">{workoutMetrics.np}W</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Target Date Picker */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {language === 'zh-TW' ? '排定訓練日期' : '排定训练日期'}
+              </label>
+              <input
+                type="date"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-[#2C2C2E] text-slate-800 dark:text-white text-xs tabular-nums focus:outline-none focus:ring-2 focus:ring-ios-red/40"
+              />
+              {/* Quick Preset Date Pills */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setScheduleDate(formatDateYMD(new Date()))}
+                  className="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-ios-red/10 hover:text-ios-red transition apple-touch"
+                >
+                  今天
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 1);
+                    setScheduleDate(formatDateYMD(d));
+                  }}
+                  className="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-ios-red/10 hover:text-ios-red transition apple-touch"
+                >
+                  明天
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    const day = d.getDay();
+                    const daysUntilSat = (6 - day + 7) % 7 || 7;
+                    d.setDate(d.getDate() + daysUntilSat);
+                    setScheduleDate(formatDateYMD(d));
+                  }}
+                  className="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-ios-red/10 hover:text-ios-red transition apple-touch"
+                >
+                  本周六
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    const day = d.getDay();
+                    const daysUntilSun = (7 - day) % 7 || 7;
+                    d.setDate(d.getDate() + daysUntilSun);
+                    setScheduleDate(formatDateYMD(d));
+                  }}
+                  className="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 hover:bg-ios-red/10 hover:text-ios-red transition apple-touch"
+                >
+                  本周日
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="apple-touch h-9 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 font-semibold text-xs transition"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleScheduleToCalendar}
+                className="apple-touch h-9 px-4.5 rounded-xl bg-ios-red hover:bg-ios-red/90 text-white font-semibold text-xs shadow-ios-sm flex items-center gap-1.5 transition"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>确认排入赛历</span>
               </button>
             </div>
           </div>

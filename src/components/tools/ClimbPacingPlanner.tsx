@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Mountain, Activity, Zap, Play, Plus, Trash2, Clock, ArrowUpRight, Flame, ShieldAlert, Award, CheckCircle2, TrendingUp, Upload, Search, ExternalLink, X, ChevronRight, Star } from 'lucide-react';
+import { Mountain, Activity, Zap, Play, Plus, Trash2, Clock, ArrowUpRight, Flame, ShieldAlert, Award, CheckCircle2, TrendingUp, Upload, Search, ExternalLink, X, ChevronRight, Star, BookOpen } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -25,6 +25,7 @@ import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 import { useStrava } from '../../context/StravaContext';
 import { StravaSegmentItem } from '../../services/stravaService';
 import { consumePendingTransfer } from '../../hooks/useToolDraftState';
+import { calculateLapseRateAirDensity, calculateCorneringCentrifugalLimit } from '../../utils/routePacingEngine';
 
 ChartJS.register(
   CategoryScale,
@@ -106,7 +107,11 @@ const segmentizePoints = (rawPoints: { lat: number; lon: number; ele: number }[]
   return generatedSegments;
 };
 
-export const ClimbPacingPlanner: React.FC = () => {
+interface ClimbPacingPlannerProps {
+  onNavigateTool?: (toolId: string) => void;
+}
+
+export const ClimbPacingPlanner: React.FC<ClimbPacingPlannerProps> = ({ onNavigateTool }) => {
   const { profile } = useRiderProfile();
   const { unitSystem, language } = useLanguageAndUnit();
   const { showToast } = useToast();
@@ -448,6 +453,10 @@ export const ClimbPacingPlanner: React.FC = () => {
       const eleGain = seg.distanceKm * 1000 * (seg.gradePct / 100);
       accumulatedElevationM += eleGain;
 
+      // Scientific altitude lapse rate: temperature decreases ~0.65°C / 100m climb
+      const midElevation = Math.max(0, accumulatedElevationM - eleGain / 2);
+      const { localTempC, airDensityRho: rho } = calculateLapseRateAirDensity(midElevation, 0, 22);
+
       // Smart Gradient Pacing: on steep slopes (>7%), slightly increase power up to +6%, on gentle slopes (<4%), save energy
       let slopePacingMod = 1.0;
       if (seg.gradePct >= 8) slopePacingMod = 1.05;
@@ -484,6 +493,19 @@ export const ClimbPacingPlanner: React.FC = () => {
 
       accumulatedDistanceKm += seg.distanceKm;
 
+      // Descent and hairpin centrifugal safety check
+      const isSwitchbackOrDescent = seg.gradePct < 0 || seg.name.includes('发卡') || seg.name.includes('连续弯') || seg.name.includes('盘山');
+      let cornerLimitKmh: number | undefined = undefined;
+      let cornerWarning: string | undefined = undefined;
+      if (isSwitchbackOrDescent) {
+        const radius = seg.name.includes('发卡') ? 14 : 26;
+        const lim = calculateCorneringCentrifugalLimit(radius, 'dry');
+        cornerLimitKmh = lim.maxSpeedKmh;
+        if (speedKmh > cornerLimitKmh || seg.gradePct < 0) {
+          cornerWarning = lim.warning;
+        }
+      }
+
       // Cadence calculation under compact 34-34T ratio (~2.15m rollout)
       const estimatedCadenceRpm = Math.max(30, Math.round((speedKmh * 1000 / 60) / 2.15));
       const isSteepTorqueHazard = seg.gradePct >= 11 && estimatedCadenceRpm < 65;
@@ -498,6 +520,10 @@ export const ClimbPacingPlanner: React.FC = () => {
         segSeconds,
         timeStr,
         vam,
+        localTempC,
+        airDensityRho: rho,
+        cornerLimitKmh,
+        cornerWarning,
         estimatedCadenceRpm,
         isSteepTorqueHazard,
         isOverThreshold: targetFtpPct > 102
@@ -647,6 +673,18 @@ export const ClimbPacingPlanner: React.FC = () => {
         shareTitle={language === 'zh-TW' ? '生成名山爬坡攻堅海報' : '生成名山爬坡攻坚海报'}
         actions={
           <>
+            {onNavigateTool && (
+              <button
+                type="button"
+                onClick={() => onNavigateTool('roadbook')}
+                className="apple-touch h-9 px-3.5 sm:px-4 rounded-xl bg-white/80 dark:bg-white/10 hover:bg-white dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200/80 dark:border-white/10 transition shadow-ios-sm flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+                title="打开路书库挑选路线"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-ios-teal shrink-0" />
+                <span>{language === 'zh-TW' ? '路書庫' : '路书库'}</span>
+              </button>
+            )}
+
             <button
               onClick={handleOpenStravaSegments}
               className="apple-touch h-9 px-3.5 sm:px-4 rounded-xl bg-[#FC4C02]/10 hover:bg-[#FC4C02]/20 text-[#FC4C02] text-xs font-semibold border border-[#FC4C02]/25 transition shadow-ios-sm flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
@@ -982,6 +1020,26 @@ export const ClimbPacingPlanner: React.FC = () => {
             </div>
           )}
 
+          {/* Descent & Hairpin Cornering Centrifugal Safety Alert */}
+          {planResults.segmentOutputs.some(s => s.cornerWarning) && (
+            <div className="ios-card p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3 shadow-ios-card">
+              <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-1 text-xs">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{language === 'zh-TW' ? '下坡與連續發卡彎離心制動安全預警' : '下坡与连续发卡弯离心制动安全预警'}</span>
+                  <span className="font-mono px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full text-[11px] font-bold">
+                    离心限速
+                  </span>
+                </div>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {language === 'zh-TW'
+                    ? '路線包含急彎或下坡分段！受輪胎地面側向附著力與離心力物理極限限制，入彎速度切勿超標。下坡進發卡彎前必須提前減速，彎中嚴禁猛捏前剎以防側滑失控。'
+                    : '路线包含急弯或下坡分段！受轮胎地面侧向附着力与离心力物理极限限制，入弯速度切勿超标。下坡进发卡弯前必须提前减速，弯中严禁猛捏前刹以防侧滑失控。'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Segment Details Table */}
           <IOSCard variant="default" className="p-4 sm:p-5 space-y-3">
             <IOSCardHeader
@@ -1006,10 +1064,24 @@ export const ClimbPacingPlanner: React.FC = () => {
                 <tbody className="divide-y divide-slate-200/80 dark:divide-white/5 font-mono text-slate-700 dark:text-slate-300">
                   {planResults.segmentOutputs.map((s, idx) => (
                     <tr key={idx} className="hover:bg-black/5 dark:hover:bg-white/5 transition">
-                      <td className="py-2.5 font-sans font-semibold text-slate-900 dark:text-white">{s.name}</td>
+                      <td className="py-2.5 font-sans font-semibold text-slate-900 dark:text-white">
+                        <div className="flex flex-col gap-1">
+                          <span>{s.name}</span>
+                          {s.cornerWarning && (
+                            <span className="inline-flex items-center w-fit px-1.5 py-0.5 rounded-md text-[10px] font-sans font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                              过弯限速 {s.cornerLimitKmh} km/h
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td>
-                        {s.distanceKm}km {isImperial ? `(${(s.distanceKm * 0.621371).toFixed(1)}mi)` : ''} /{' '}
-                        <span className="text-ios-orange font-bold">{s.gradePct}%</span>
+                        <div>
+                          {s.distanceKm}km {isImperial ? `(${(s.distanceKm * 0.621371).toFixed(1)}mi)` : ''} /{' '}
+                          <span className="text-ios-orange font-bold">{s.gradePct}%</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-sans tabular-nums block">
+                          {s.localTempC}°C · ρ {s.airDensityRho}
+                        </span>
                       </td>
                       <td className="text-ios-blue font-bold">{s.targetWatts} W</td>
                       <td>{s.targetWkg} W/kg ({s.targetFtpPct}%)</td>
