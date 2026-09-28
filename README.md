@@ -265,24 +265,26 @@ npm run build
 
 ## 🌐 Production Deployment / 生产部署与投放指南
 
-本项目为基于 **React 18 + TypeScript + Vite** 的 SPA，采用 **Local-First（本地优先）** 架构。普通工具仍可作为静态站点部署；但启用 Strava OAuth 时必须同时部署项目中的 `/api/strava/*` 服务端接口，用于保护 Client Secret 并签发 HttpOnly Session Cookie。
+本项目为基于 **React 18 + TypeScript + Vite** 的现代 SPA，采用 **Local-First（本地优先）** 架构。所有 21 款核心科学计算器、人体工学 Fitting、GPX 路线工坊、离线时序数据库（IndexedDB）与地图瓦片缓存均在浏览器本地高精度运行，零云端数据库依赖。
+
+当需要启用 **Strava 骑行数据罗盘** 的云端授权同步时，需配合配套的 `/api/strava/*` 服务端代理（保护 Client Secret 并签发 HttpOnly Session Cookie）。平台提供三种主流部署路径：
 
 ---
 
-### 方案 1：Cloudflare Pages 部署 (官方推荐 · 全球极速 Anycast 边缘 CDN)
+### 方案 1：Cloudflare Pages 部署 (极速全球 CDN · 静态优先推荐)
 
-本项目已在 `public/` 内置专用的 `_redirects`（SPA 路由防 404）与 `_headers`（1 年长效静态资源缓存与安全标头），与 Cloudflare Pages 100% 原生适配。
+适合将 LaBao 作为全功能骑行科学工坊与路书平台使用（21 款核心工具、离线数据库、PWA 离线底图缓存 100% 独立可用）：
 
 #### 1. 控制台一键导入
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)；
 2. 进入 **Workers & Pages** -> 点击 **Create application** -> 切换至 **Pages** 选项卡；
-3. 点击 **Connect to Git**（连接到 Git），授权访问并选中您的 GitHub 仓库；
+3. 点击 **Connect to Git**，授权访问并选中您的 GitHub 仓库；
 4. 点击 **Begin setup**。
 
 #### 2. 构建与输出参数配置 (Build settings)
 | 配置项 | 推荐填入值 | 说明 |
 | :--- | :--- | :--- |
-| **Project name** | `cycling-tools` (或自定义) | 生成的二级域名为 `*.pages.dev` |
+| **Project name** | `labao` (或自定义) | 生成的二级域名为 `*.pages.dev` |
 | **Production branch** | `main` | 触发自动部署的主分支 |
 | **Framework preset** | `Vite` | 自动配置 Vite 构建预设 |
 | **Build command** | `npm run build` | 执行 TypeScript 严格检查与 Vite 生产构建 |
@@ -292,69 +294,111 @@ npm run build
 #### 3. 环境变量配置 (Environment variables)
 在下方展开 **Environment variables** 填入：
 - `NODE_VERSION`: `20` (推荐 Node.js 20 LTS 运行时)
-- `VITE_STRAVA_CLIENT_ID`: 平台统一 Strava App 的 Client ID
-- `STRAVA_CLIENT_ID`: 同上，供 Serverless Function 使用
-- `STRAVA_CLIENT_SECRET`: Strava App 的 Client Secret（仅服务端）
-- `STRAVA_SESSION_SECRET`: 随机长密钥，用于加密 HttpOnly Session Cookie
+- `VITE_STRAVA_CLIENT_ID`: （可选）平台统一 Strava App 的 Client ID
 
 #### 4. 完成部署与自动化 CI/CD
-- 点击 **Save and Deploy**，Cloudflare 将在 1~2 分钟内完成全自动化全球部署并分配免费的 HTTPS 域名（例如 `https://cycling-tools.pages.dev`）。
-- **自动化持续集成**：后续每次向 `main` 分支执行 `git push`，Cloudflare Pages 会自动拉取最新代码并触发增量构建与全球热更新。
+- 点击 **Save and Deploy**，Cloudflare 将在 1~2 分钟内完成全自动化全球部署并分配免费的 HTTPS 域名（例如 `https://labao.pages.dev`）。
+- **静态规则与缓存**：本项目 `public/` 目录下已预置 `_redirects`（SPA 路由防 404）和 `_headers`（1 年长效静态资源强缓存与安全标头），与 Cloudflare Pages 100% 原生适配。
 - **自定义域名**：可在 Pages 项目的 **Custom domains** 页面随时绑定个人独立域名，Cloudflare 自动颁发权威 SSL/TLS 证书。
 
+> ⚠️ **关于 Strava OAuth 的特别说明**：  
+> Cloudflare Pages 默认承载静态站点。本项目中的 `/api/strava/*` 服务端接口采用 Node.js Serverless 规范。若在 Cloudflare Pages 上需要使用 Strava 登录，请在 `public/_redirects` 中将 `/api/*` 反向代理至外部运行的 Node.js API 服务（如 Fly.io、Render 或自建 VPS），或者直接选用下方的 **方案 2 (Vercel)**。
+
 ---
 
-### 方案 2：Vercel 部署 (零配置即开即用)
-本项目根目录已内置经过严格校验的 `vercel.json`，包含了单页应用 (SPA) 重定向规则与安全标头：
+### 方案 2：Vercel 部署 (全功能推荐 · 前端 + Strava Serverless 零配置)
+
+若需使用 Strava 数据罗盘云端同步，Vercel 是最简单、零运维的官方推荐方案。Vercel 会自动将根目录下的 `api/strava/` 编译为 Serverless Functions，并与前端静态页面同域运行：
+
+#### 1. 控制台导入与项目配置
 1. 将本仓库推送到 GitHub；
-2. 登录 [Vercel](https://vercel.com)，点击 **Add New...** -> **Project** 并导入该仓库；
-3. Vercel 会自动识别 Vite 框架并执行 `npm run build`，几十秒内全球 Anycast CDN 自动化上线。
-4. 在 **Settings → Environment Variables** 添加 `VITE_STRAVA_CLIENT_ID`、`STRAVA_CLIENT_ID`、`STRAVA_CLIENT_SECRET` 和 `STRAVA_SESSION_SECRET`，然后重新部署。
-5. 在 Strava 应用设置中，将 **Authorization Callback Domain** 配置为 Vercel 自定义域名（只填域名，不包含 `https://` 或路径）。
+2. 登录 [Vercel Dashboard](https://vercel.com)，点击 **Add New...** -> **Project** 并导入该仓库；
+3. **Framework Preset** 选择 `Vite`，**Root Directory** 保持默认根目录 `./`；
+4. 构建命令保持默认 `npm run build`，输出目录保持默认 `dist`。
 
-Vercel 是当前推荐的 Strava 部署方式，因为它会自动部署根目录下的 `api/strava/` Serverless Functions。不要把 `STRAVA_CLIENT_SECRET` 或 `STRAVA_SESSION_SECRET` 写入前端 `.env` 或提交到仓库。
+#### 2. 环境变量配置 (Environment Variables)
+在 **Settings → Environment Variables** 填入以下 4 项环境变量：
+| 变量名 | 类型 | 说明与示例 |
+| :--- | :--- | :--- |
+| `VITE_STRAVA_CLIENT_ID` | 前端公开 | 你的 Strava API 应用程序 Client ID (如 `123456`) |
+| `STRAVA_CLIENT_ID` | 服务端私有 | 同上，供 `api/strava` Serverless 函数使用 |
+| `STRAVA_CLIENT_SECRET` | 服务端私有 | 你的 Strava API Client Secret (绝密，切勿泄露) |
+| `STRAVA_SESSION_SECRET` | 服务端私有 | 随机生成的 32 位以上安全字符串，用于加密 HttpOnly Cookie |
 
-> Cloudflare Pages 和纯 Nginx 静态部署只能承载前端静态文件，不能直接执行本项目的 `/api/strava/*` 接口。若使用这些平台，需额外部署同等功能的 Node/Serverless API，并将 `/api/strava/*` 反向代理到该 API；否则 Strava 授权不可用。
+> 🔒 **安全保障**：`STRAVA_CLIENT_SECRET` 与 `STRAVA_SESSION_SECRET` 绝不会打包进前端代码，前端仅接触无敏感信息的 HttpOnly Session 凭据。
+
+#### 3. 配置 Strava 开发者后台回调域名
+1. 登录 [Strava API Settings](https://www.strava.com/settings/api)；
+2. 找到 **Authorization Callback Domain**；
+3. 填入你分配到的 Vercel 域名或自定义域名（例如 `labao.vercel.app` 或 `labao.app`）；
+4. **注意**：此处**严禁**包含协议头 `https://`、端口号或末尾斜杠，只需纯域名！
+
+#### 4. 完成上线
+- 点击 **Deploy**，几十秒内全球 Anycast CDN 与 Serverless 接口同步上线。
+- 本项目已预置 `vercel.json`，配置了精准排除 `/api/` 的单页应用重写规则（`"source": "/((?!api/).*)"`）与银行级 Content-Security-Policy 安全响应标头。
 
 ---
 
-### 方案 3：Docker / Nginx 容器化私有部署
-若希望在自有服务器、家庭 NAS 或局域网私有化运行，可使用以下轻量级多阶段构建：
+### 方案 3：VPS / 私有服务器企业级部署 (Docker Compose + Nginx + Let's Encrypt 自动化)
 
-```dockerfile
-# 阶段一：源码构建
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+若希望在自有云服务器 (Ubuntu/Debian/CentOS)、家庭 NAS 或局域网私有化运行，本项目在 `deploy/` 目录内置了全套经过生产验证的企业级部署套件。
 
-# 阶段二：Nginx 高性能静态托管
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-# 配置 try_files 支持 SPA 刷新防 404
-RUN echo 'server { \
-    listen 80; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html index.htm; \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location /assets/ { \
-        root /usr/share/nginx/html; \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
+#### 1. 架构编排全景
+- **`deploy/Dockerfile`**：Node 20 Alpine 多阶段构建，产物精简，集成健康检查与安全非 root Nginx 容器；
+- **`deploy/nginx.conf`**：生产级 Nginx 配置，包含 HTTP/2、Let's Encrypt SSL、静态资源 1 年不可变强缓存、防撞库速率限制、CSP 安全标头与预置的 `/api/` 反向代理；
+- **`deploy/docker-compose.yml`**：编排前端容器与 `certbot` 容器，后台每 12 小时自动探测并无缝续签 SSL 证书；
+- **`deploy/deploy.sh`**：一键自动化部署与平滑热更新脚本。
+
+#### 2. 前置准备
+1. 准备一台云服务器 (1核1G 内存以上即可顺畅运行)；
+2. 安装 Docker 与 Docker Compose：
+   ```bash
+   curl -fsSL https://get.docker.com | bash
+   apt-get install -y docker-compose-plugin # Debian/Ubuntu
+   ```
+3. 在域名解析控制台添加两条 **A 记录** 指向 VPS 的公网 IP：
+   - `@` (或二级域名 `labao.yourdomain.com`)
+   - `www` (如使用主域名)
+
+#### 3. 首次一键初始化部署 (包含 SSL 申请与容器编排)
 ```bash
-# 启动容器
-docker build -t labao-app .
-docker run -d -p 8080:80 --name labao labao-app
+# 1. 克隆代码仓库至生产目录
+git clone https://github.com/TrojanFish/CyclingTools.git /opt/labao
+cd /opt/labao
+
+# 2. 赋予脚本执行权限
+chmod +x deploy/deploy.sh
+
+# 3. 执行首次全自动初始化部署
+./deploy/deploy.sh --init --domain=yourdomain.com --email=admin@yourdomain.com
 ```
+执行过程中脚本将自动：
+- 校验系统环境与 Docker 依赖；
+- 启动临时 Web 容器完成 Let's Encrypt ACME 域名校验并颁发权威 SSL 证书；
+- 构建并启动 `labao_app` 与 `labao_certbot` 容器集群；
+- 验证生产路由与健康检查探测端点。
+
+#### 4. 日常平滑热更新与维护
+后续当代码仓库有新提交时，只需在服务器执行：
+```bash
+cd /opt/labao
+./deploy/deploy.sh --update
+```
+脚本将自动拉取最新 Git 代码，重新多阶段构建前端镜像，并执行 `docker-compose up -d` 零停机平滑切换。
+
+#### 5. VPS 上启用 Strava OAuth 服务端代理（可选）
+若在 VPS 私有化部署中需要使用 Strava 登录功能：
+1. 在服务器上使用 Node.js（推荐 PM2 管理）运行 `api/` 目录服务，监听 `3001` 端口；
+2. `deploy/nginx.conf` 中已预置好标准的反向代理规则：
+   ```nginx
+   location /api/ {
+       proxy_pass http://127.0.0.1:3001;
+       proxy_http_version 1.1;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+   }
+   ```
+3. 纯前端离线功能（21 款科学工具、离线路书、瓦片缓存、PWA）则完全无需配置后端，开箱即用。
 
 ---
 
