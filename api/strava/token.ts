@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 const COOKIE_NAME = 'yolocycling_strava_session';
 const key = () => crypto.createHash('sha256').update(process.env.STRAVA_SESSION_SECRET || 'yolocycling_strava_salt').digest();
