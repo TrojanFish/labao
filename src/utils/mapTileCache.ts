@@ -320,6 +320,33 @@ export async function clearTileCache(): Promise<void> {
 }
 
 /**
+ * Purge any obsolete CartoDB watermark tiles from IndexedDB
+ */
+export async function purgeStaleCartoTiles(): Promise<void> {
+  try {
+    const db = await getTileDb();
+    const tx = db.transaction([MAP_TILES_STORE], 'readwrite');
+    const store = tx.objectStore(MAP_TILES_STORE);
+    const req = store.getAllKeys();
+    req.onsuccess = () => {
+      const keys = (req.result as string[]) || [];
+      for (const k of keys) {
+        if (typeof k === 'string' && k.includes('cartocdn')) {
+          store.delete(k);
+        }
+      }
+    };
+  } catch {
+    // Ignore error
+  }
+}
+
+// Auto-clean obsolete watermarked tiles on startup
+if (typeof window !== 'undefined') {
+  purgeStaleCartoTiles().catch(() => {});
+}
+
+/**
  * Reset DB connection (primarily for testing and mock reset)
  */
 export function resetTileDb(): void {

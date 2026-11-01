@@ -214,31 +214,34 @@ export const RoadbookLibrary: React.FC<RoadbookLibraryProps> = ({ onNavigateTool
         zoomControl: true
       });
 
-      const voyagerLayer = createCachedTileLayer(L, 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 20,
-        detectRetina: true,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      const osmLayer = createCachedTileLayer(L, 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      });
+
+      const topoLayer = createCachedTileLayer(L, 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, USGS'
       });
 
       const satelliteLayer = createCachedTileLayer(L, 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Earthstar Geographics'
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
       });
 
-      const positronLayer = createCachedTileLayer(L, 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 20,
-        detectRetina: true,
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      const openTopoLayer = createCachedTileLayer(L, 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        subdomains: 'abc',
+        maxZoom: 17,
+        attribution: 'Map data &copy; OpenStreetMap contributors, SRTM | Map style &copy; OpenTopoMap'
       });
 
-      voyagerLayer.addTo(map);
+      osmLayer.addTo(map);
 
       L.control.layers({
-        '高清骑行': voyagerLayer,
+        '标准路网 (OSM)': osmLayer,
+        '地形等高 (Esri)': topoLayer,
         '卫星实景': satelliteLayer,
-        '极简底图': positronLayer,
+        '户外等高': openTopoLayer,
       }, undefined, { position: 'topright' }).addTo(map);
 
       markersLayerRef.current = L.layerGroup().addTo(map);
@@ -317,19 +320,40 @@ export const RoadbookLibrary: React.FC<RoadbookLibraryProps> = ({ onNavigateTool
           .addTo(markersLayerRef.current);
       }
 
-      // Add intermediate waypoint dots
+      // Add intermediate waypoint markers
+      const isDenseTrack = waypoints.length > 20;
+
       for (let i = 1; i < waypoints.length - 1; i++) {
         const wp = waypoints[i];
         if (!wp) continue;
-        const dotIcon = L.divIcon({
-          className: 'custom-map-icon',
-          html: `<div style="background-color: #0284c7; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; border: 1.5px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">${i + 1}</div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9]
-        });
-        L.marker([wp.lat, wp.lng], { icon: dotIcon })
-          .bindPopup(`<b>${wp.name || ''}</b><br/>海拔: ${convertElevation(wp.elevation || 0).formatted}`)
-          .addTo(markersLayerRef.current);
+
+        const isKeyLandmark = wp.name && !wp.name.startsWith('航点 #') && !wp.name.startsWith('Point #');
+
+        // For dense GPS tracks, only display markers for named key landmarks/summits
+        if (isDenseTrack && !isKeyLandmark) continue;
+
+        if (isKeyLandmark) {
+          const milestoneIcon = L.divIcon({
+            className: 'custom-map-icon',
+            html: `<div style="background-color: #0A84FF; color: white; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.35);"><div style="width: 4px; height: 4px; border-radius: 50%; background: white;"></div></div>`,
+            iconSize: [14, 14],
+            iconAnchor: [7, 7]
+          });
+          L.marker([wp.lat, wp.lng], { icon: milestoneIcon })
+            .bindPopup(`<b>📍 ${wp.name}</b><br/>${language === 'zh-TW' ? '海拔' : '海拔'}: ${convertElevation(wp.elevation || 0).formatted}`)
+            .addTo(markersLayerRef.current);
+        } else {
+          // Manual short route with <= 20 waypoints: show numbered dots
+          const dotIcon = L.divIcon({
+            className: 'custom-map-icon',
+            html: `<div style="background-color: #0284c7; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; border: 1.5px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">${i + 1}</div>`,
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+          });
+          L.marker([wp.lat, wp.lng], { icon: dotIcon })
+            .bindPopup(`<b>${wp.name || ''}</b><br/>${language === 'zh-TW' ? '海拔' : '海拔'}: ${convertElevation(wp.elevation || 0).formatted}`)
+            .addTo(markersLayerRef.current);
+        }
       }
     }
 
@@ -1111,14 +1135,26 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
               <span className="text-slate-400 text-[11px] shrink-0 font-medium">
                 {'途经断面:'}
               </span>
-              {(activeRoute?.waypoints || []).map((wp, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-0.5 rounded-full bg-white/70 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shrink-0 text-[11px]"
-                >
-                  {idx + 1}. {wp.name ? wp.name.split(' ')[0] : `点${idx + 1}`} ({convertElevation(wp.elevation || 0).formatted})
-                </span>
-              ))}
+              {(() => {
+                const allWps = activeRoute?.waypoints || [];
+                const filtered = allWps.length <= 20
+                  ? allWps.map((wp, idx) => ({ wp, displayIndex: idx + 1 }))
+                  : allWps
+                      .map((wp, idx) => ({ wp, displayIndex: idx + 1 }))
+                      .filter(({ wp, displayIndex }) =>
+                        displayIndex === 1 ||
+                        displayIndex === allWps.length ||
+                        (wp.name && !wp.name.startsWith('航点 #') && !wp.name.startsWith('Point #'))
+                      );
+                return filtered.map(({ wp, displayIndex }) => (
+                  <span
+                    key={displayIndex}
+                    className="px-2.5 py-0.5 rounded-full bg-white/70 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shrink-0 text-[11px]"
+                  >
+                    {displayIndex}. {wp.name ? wp.name.split(' ')[0] : `点${displayIndex}`} ({convertElevation(wp.elevation || 0).formatted})
+                  </span>
+                ));
+              })()}
             </div>
           </div>
 

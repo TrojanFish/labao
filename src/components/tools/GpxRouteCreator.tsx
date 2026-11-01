@@ -109,31 +109,34 @@ export const GpxRouteCreator: React.FC = () => {
       zoom: 12,
     });
 
-    const voyagerLayer = createCachedTileLayer(L, 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 20,
-      detectRetina: true,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    const osmLayer = createCachedTileLayer(L, 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+
+    const topoLayer = createCachedTileLayer(L, 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, USGS'
     });
 
     const satelliteLayer = createCachedTileLayer(L, 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Earthstar Geographics'
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
     });
 
-    const positronLayer = createCachedTileLayer(L, 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 20,
-      detectRetina: true,
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    const openTopoLayer = createCachedTileLayer(L, 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      subdomains: 'abc',
+      maxZoom: 17,
+      attribution: 'Map data &copy; OpenStreetMap contributors, SRTM | Map style &copy; OpenTopoMap'
     });
 
-    voyagerLayer.addTo(map);
+    osmLayer.addTo(map);
 
     L.control.layers({
-      '高清骑行': voyagerLayer,
+      '标准路网 (OSM)': osmLayer,
+      '地形等高 (Esri)': topoLayer,
       '卫星实景': satelliteLayer,
-      '极简底图': positronLayer,
+      '户外等高': openTopoLayer,
     }, undefined, { position: 'topright' }).addTo(map);
 
     map.on('click', async (e: L.LeafletMouseEvent) => {
