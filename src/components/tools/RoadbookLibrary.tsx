@@ -433,7 +433,7 @@ export const RoadbookLibrary: React.FC<RoadbookLibraryProps> = ({ onNavigateTool
     if (!activeRoute) return;
 
     const gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="LaBao - ${activeRoute.name}" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="YoloCycling - ${activeRoute.name}" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>${activeRoute.name}</name>
     <desc>${activeRoute.description} [来源: ${activeRoute.sourceCode}]</desc>
@@ -530,9 +530,14 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
         let maxAlt = sampled[0].elevation;
 
         for (let i = 1; i < sampled.length; i++) {
-          totalDist += distanceHaversine(sampled[i - 1].lat, sampled[i - 1].lng, sampled[i].lat, sampled[i].lng);
+          const legDistKm = distanceHaversine(sampled[i - 1].lat, sampled[i - 1].lng, sampled[i].lat, sampled[i].lng);
+          totalDist += legDistKm;
           const diff = sampled[i].elevation - sampled[i - 1].elevation;
-          if (diff > 0) totalEleGain += diff;
+          // Apply Coastline Paradox & GPS sensor deadband filter (>= 1.0m deadband and realistic road gradient <= 35%)
+          const legDistM = legDistKm * 1000;
+          if (diff >= 1.0 && (legDistM <= 0 || (diff / legDistM) <= 0.35)) {
+            totalEleGain += diff;
+          }
           if (sampled[i].elevation > maxAlt) maxAlt = sampled[i].elevation;
         }
 
@@ -593,7 +598,7 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `LaBao_个人路书备份_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `YoloCycling_个人路书备份_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast(`已成功导出 ${personalRoutes.length} 条个人路书备份！`, 'success');
@@ -1433,7 +1438,7 @@ ${activeRoute.waypoints.map(wp => `      <trkpt lat="${wp.lat}" lon="${wp.lng}">
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title={language === 'zh-TW' ? '經典路書打卡海報' : '经典路书打卡海报'}
-        downloadFileName={`LaBao_经典路书_${activeRoute?.name?.replace(/\s+/g, '_') || 'route'}.png`}
+        downloadFileName={`YoloCycling_经典路书_${activeRoute?.name?.replace(/\s+/g, '_') || 'route'}.png`}
       />
     </div>
   );

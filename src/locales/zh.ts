@@ -1,9 +1,9 @@
 export const zh = {
   // Brand
-  brandName: 'LaBao',
-  brandSuffix: '拉爆',
+  brandName: 'Yolo',
+  brandSuffix: 'Cycling',
   brandPro: 'PRO',
-  slogan: '拉爆 · 骑行科学工坊',
+  slogan: 'YoloCycling · 骑行科学工坊',
   
   // Navigation & Search
   searchPlaceholder: '全局快捷搜索科学计算工具 (按 / 聚焦)...',
@@ -52,7 +52,7 @@ export const zh = {
   footerClose: '关闭浮层',
   footerPrint: '打印工单',
   footerDisclaimerTitle: '运动科学与医疗免责声明',
-  footerDisclaimerText: 'LaBao 所提供的力学仿真、Fitting 计算与疼痛排查仅供运动科学与骑行调车参考，不可替代执业医师诊断或专业医疗机构的治疗。',
+  footerDisclaimerText: 'YoloCycling 所提供的力学仿真、Fitting 计算与疼痛排查仅供运动科学与骑行调车参考，不可替代执业医师诊断或专业医疗机构的治疗。',
   footerPrivacyTitle: '隐私政策 (GDPR 合规)',
   footerPrivacyText: '本应用采用 100% 纯客户端本地计算架构，不收集、不出售任何个人隐私数据，所有设置与路书文件均保存在您的本地浏览器中。',
 

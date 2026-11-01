@@ -1,5 +1,5 @@
-const CACHE_NAME = 'labao-cache-v1';
-const TILE_CACHE_NAME = 'labao-tiles-v1';
+const CACHE_NAME = 'yolocycling-cache-v1';
+const TILE_CACHE_NAME = 'yolocycling-tiles-v1';
 const MAX_CACHED_TILES = 150;
 
 const STATIC_ASSETS = [

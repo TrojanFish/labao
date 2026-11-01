@@ -501,7 +501,7 @@ export const ChainLengthCalculator: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title="技师截链规范卡"
-        downloadFileName={`LaBao_截链规范_${result.recommendedLinks}节.png`}
+        downloadFileName={`YoloCycling_截链规范_${result.recommendedLinks}节.png`}
       />
     </div>
   );

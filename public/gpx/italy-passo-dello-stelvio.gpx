@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>意大利斯泰尔维奥山口 48 弯天路</name>
+    <desc>环意自行车赛最高荣誉 Cima Coppi 象征！从普拉托出发攀登 48 个整齐排列如拉链般的发卡弯，直插海拔 2758 米的雪山垭口。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>意大利斯泰尔维奥山口 48 弯天路</name>
+    <trkseg>
+      <trkpt lat="46.61788" lon="10.58973"><ele>912</ele><name>普拉托起点 (Prato allo Stelvio)</name></trkpt>
+      <trkpt lat="46.61468" lon="10.58714"><ele>918</ele><name>航点 #2</name></trkpt>
+      <trkpt lat="46.61013" lon="10.57438"><ele>973</ele><name>航点 #3</name></trkpt>
+      <trkpt lat="46.60625" lon="10.56545"><ele>1011</ele><name>航点 #4</name></trkpt>
+      <trkpt lat="46.60372" lon="10.55996"><ele>1048</ele><name>航点 #5</name></trkpt>
+      <trkpt lat="46.60129" lon="10.55697"><ele>1054</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="46.59735" lon="10.55468"><ele>1086</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="46.59425" lon="10.55189"><ele>1116</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="46.58964" lon="10.54868"><ele>1173</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="46.58454" lon="10.54691"><ele>1217</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="46.57592" lon="10.54049"><ele>1314</ele><name>航点 #11</name></trkpt>
+      <trkpt lat="46.58046" lon="10.54046"><ele>1395</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="46.5845" lon="10.53929"><ele>1415</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="46.58565" lon="10.53508"><ele>1443</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="46.58528" lon="10.52976"><ele>1487</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="46.58451" lon="10.52729"><ele>1527</ele><name>特劳福伊村 (Trafoi)</name></trkpt>
+      <trkpt lat="46.5856" lon="10.53128"><ele>1481</ele><name>航点 #17</name></trkpt>
+      <trkpt lat="46.58543" lon="10.53697"><ele>1420</ele><name>航点 #18</name></trkpt>
+      <trkpt lat="46.58346" lon="10.53972"><ele>1424</ele><name>航点 #19</name></trkpt>
+      <trkpt lat="46.57677" lon="10.53998"><ele>1394</ele><name>航点 #20</name></trkpt>
+      <trkpt lat="46.57278" lon="10.5335"><ele>1327</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="46.56689" lon="10.52227"><ele>1431</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="46.56369" lon="10.51926"><ele>1418</ele><name>航点 #23</name></trkpt>
+      <trkpt lat="46.55782" lon="10.51477"><ele>1488</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="46.55526" lon="10.51275"><ele>1516</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="46.55276" lon="10.511"><ele>1527</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="46.55112" lon="10.50971"><ele>1565</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="46.55192" lon="10.50959"><ele>1576</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="46.55048" lon="10.5084"><ele>1579</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="46.54797" lon="10.5055"><ele>1614</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="46.54328" lon="10.50496"><ele>1694</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="46.5432" lon="10.50476"><ele>1694</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="46.5451" lon="10.50498"><ele>1711</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="46.54489" lon="10.50488"><ele>1711</ele><name>航点 #34</name></trkpt>
+      <trkpt lat="46.54283" lon="10.50374"><ele>1742</ele><name>航点 #35</name></trkpt>
+      <trkpt lat="46.54151" lon="10.50341"><ele>1699</ele><name>航点 #36</name></trkpt>
+      <trkpt lat="46.54028" lon="10.50295"><ele>1753</ele><name>航点 #37</name></trkpt>
+      <trkpt lat="46.54118" lon="10.50324"><ele>1711</ele><name>航点 #38</name></trkpt>
+      <trkpt lat="46.54136" lon="10.50201"><ele>1729</ele><name>航点 #39</name></trkpt>
+      <trkpt lat="46.54106" lon="10.50299"><ele>1711</ele><name>航点 #40</name></trkpt>
+      <trkpt lat="46.54123" lon="10.50184"><ele>1729</ele><name>航点 #41</name></trkpt>
+      <trkpt lat="46.54133" lon="10.50106"><ele>1750</ele><name>航点 #42</name></trkpt>
+      <trkpt lat="46.54088" lon="10.50232"><ele>1729</ele><name>航点 #43</name></trkpt>
+      <trkpt lat="46.54097" lon="10.50121"><ele>1750</ele><name>航点 #44</name></trkpt>
+      <trkpt lat="46.54088" lon="10.50108"><ele>1750</ele><name>航点 #45</name></trkpt>
+      <trkpt lat="46.54068" lon="10.50207"><ele>1769</ele><name>航点 #46</name></trkpt>
+      <trkpt lat="46.54096" lon="10.50036"><ele>1774</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="46.54244" lon="10.49909"><ele>1831</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="46.54481" lon="10.49961"><ele>1909</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="46.54179" lon="10.49835"><ele>1831</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="46.53927" lon="10.5"><ele>1852</ele><name>航点 #51</name></trkpt>
+      <trkpt lat="46.53709" lon="10.50025"><ele>1908</ele><name>航点 #52</name></trkpt>
+      <trkpt lat="46.53565" lon="10.49737"><ele>1943</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="46.53327" lon="10.49212"><ele>1966</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="46.53285" lon="10.49055"><ele>2017</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="46.53193" lon="10.48765"><ele>2038</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="46.53207" lon="10.48772"><ele>2038</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="46.53379" lon="10.49045"><ele>2061</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="46.5333" lon="10.48901"><ele>2060</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="46.53236" lon="10.48549"><ele>2086</ele><name>航点 #60</name></trkpt>
+      <trkpt lat="46.53313" lon="10.48708"><ele>2105</ele><name>航点 #61</name></trkpt>
+      <trkpt lat="46.53392" lon="10.48832"><ele>2110</ele><name>航点 #62</name></trkpt>
+      <trkpt lat="46.53318" lon="10.4861"><ele>2130</ele><name>航点 #63</name></trkpt>
+      <trkpt lat="46.53297" lon="10.48509"><ele>2149</ele><name>航点 #64</name></trkpt>
+      <trkpt lat="46.53375" lon="10.48683"><ele>2171</ele><name>航点 #65</name></trkpt>
+      <trkpt lat="46.53369" lon="10.4865"><ele>2208</ele><name>航点 #66</name></trkpt>
+      <trkpt lat="46.5328" lon="10.48255"><ele>2197</ele><name>航点 #67</name></trkpt>
+      <trkpt lat="46.53281" lon="10.48218"><ele>2206</ele><name>航点 #68</name></trkpt>
+      <trkpt lat="46.53324" lon="10.48335"><ele>2183</ele><name>航点 #69</name></trkpt>
+      <trkpt lat="46.53309" lon="10.48186"><ele>2206</ele><name>航点 #70</name></trkpt>
+      <trkpt lat="46.53337" lon="10.48247"><ele>2268</ele><name>航点 #71</name></trkpt>
+      <trkpt lat="46.53333" lon="10.48034"><ele>2289</ele><name>航点 #72</name></trkpt>
+      <trkpt lat="46.53341" lon="10.47724"><ele>2329</ele><name>航点 #73</name></trkpt>
+      <trkpt lat="46.53351" lon="10.47663"><ele>2338</ele><name>航点 #74</name></trkpt>
+      <trkpt lat="46.5335" lon="10.47438"><ele>2360</ele><name>航点 #75</name></trkpt>
+      <trkpt lat="46.53333" lon="10.47294"><ele>2426</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="46.53281" lon="10.4692"><ele>2424</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="46.53186" lon="10.46342"><ele>2467</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="46.532" lon="10.46275"><ele>2489</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="46.53223" lon="10.4623"><ele>2512</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="46.53252" lon="10.4621"><ele>2583</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="46.53039" lon="10.45937"><ele>2555</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="46.53308" lon="10.46129"><ele>2601</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="46.5352" lon="10.46431"><ele>2649</ele><name>第15发卡弯绝壁群</name></trkpt>
+      <trkpt lat="46.53514" lon="10.46399"><ele>2660</ele><name>第15发卡弯绝壁群</name></trkpt>
+      <trkpt lat="46.53315" lon="10.46155"><ele>2601</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="46.53149" lon="10.45889"><ele>2621</ele><name>航点 #87</name></trkpt>
+      <trkpt lat="46.531" lon="10.45802"><ele>2671</ele><name>航点 #88</name></trkpt>
+      <trkpt lat="46.53025" lon="10.45664"><ele>2701</ele><name>斯泰尔维奥山口顶峰 (Passo dello Stelvio)</name></trkpt>
+      <trkpt lat="46.53124" lon="10.45749"><ele>2707</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="46.52943" lon="10.4557"><ele>2716</ele><name>斯泰尔维奥山口顶峰 (Passo dello Stelvio)</name></trkpt>
+      <trkpt lat="46.52943" lon="10.45538"><ele>2716</ele><name>斯泰尔维奥山口顶峰 (Passo dello Stelvio)</name></trkpt>
+      <trkpt lat="46.53155" lon="10.45645"><ele>2735</ele><name>航点 #93</name></trkpt>
+      <trkpt lat="46.5292" lon="10.45434"><ele>2763</ele><name>斯泰尔维奥山口顶峰 (Passo dello Stelvio)</name></trkpt>
+      <trkpt lat="46.52893" lon="10.45314"><ele>2757</ele><name>斯泰尔维奥山口顶峰 (Passo dello Stelvio)</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

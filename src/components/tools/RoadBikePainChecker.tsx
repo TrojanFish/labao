@@ -27,6 +27,7 @@ import {
   GENERAL_RECOVERY_TIPS,
   TIMING_SCENARIOS,
   getPainPrescription,
+  CLINICAL_RED_FLAGS,
   PainTimingScenario
 } from '../../data/painCheckerData';
 import { BodyPainDiagram } from '../common/BodyPainDiagram';
@@ -455,6 +456,27 @@ export const RoadBikePainChecker: React.FC = () => {
                 </div>
               </IOSCard>
 
+              {/* Clinical Red Flag Warning Card */}
+              {CLINICAL_RED_FLAGS[selectedAreaId] && (
+                <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 space-y-1.5 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span className="text-xs font-bold text-rose-800 dark:text-rose-200">
+                      {CLINICAL_RED_FLAGS[selectedAreaId].titleZh}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                      临床转诊指引
+                    </span>
+                  </div>
+                  <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+                    {CLINICAL_RED_FLAGS[selectedAreaId].conditionZh}
+                  </p>
+                  <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                    💡 建议动作：{CLINICAL_RED_FLAGS[selectedAreaId].triageActionZh}
+                  </p>
+                </div>
+              )}
+
               {/* Diagnosis & Biomechanics Mechanism */}
               <IOSCard variant="default" className="p-4 sm:p-5 space-y-3">
                 <IOSCardHeader
@@ -827,7 +849,7 @@ export const RoadBikePainChecker: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title="骑行疼痛自诊处方卡"
-        downloadFileName={`LaBao_疼痛自诊_${activeArea.title.split(' ')[0]}.png`}
+        downloadFileName={`YoloCycling_疼痛自诊_${activeArea.title.split(' ')[0]}.png`}
       />
     </div>
   );

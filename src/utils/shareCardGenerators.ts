@@ -74,7 +74,7 @@ function drawHeader(
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '1.5px';
-  ctx.fillText('LABAO PRO · 骑行科学工坊', 40, 52);
+  ctx.fillText('YOLOCYCLING PRO · 骑行科学工坊', 40, 52);
 
   // Category Badge
   ctx.save();
@@ -167,12 +167,12 @@ function drawFooter(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const now = new Date();
   const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-  ctx.fillText(`LaBao · 纯前端科学骑行计算引擎 · ${dateStr}`, 40, y + 36);
+  ctx.fillText(`YoloCycling · 纯前端科学骑行计算引擎 · ${dateStr}`, 40, y + 36);
 
   // Right tag
   ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
   ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const rightTag = 'labao.app';
+  const rightTag = 'yolocycling.app';
   const rightWidth = ctx.measureText(rightTag).width;
   ctx.fillText(rightTag, w - 40 - rightWidth, y + 36);
 }
@@ -1821,7 +1821,7 @@ export async function generateStravaCockpitPoster(data: StravaCockpitPosterData)
     w,
     'STRAVA 骑行数据罗盘战报',
     data.periodLabel || '年度全景总览',
-    `${data.athleteName || 'LaBao 车手'} · 战力画像: ${data.riderPattern}`,
+    `${data.athleteName || 'YoloCycling 车手'} · 战力画像: ${data.riderPattern}`,
     '#007AFF'
   );
 
@@ -2032,7 +2032,7 @@ async function generateConquerorPoster(data: LatestRidePosterData): Promise<stri
   ctx.fillStyle = '#D4AF37';
   ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '2.5px';
-  ctx.fillText('LABAO EXPEDITION · 地形征服与高度日志', 65, 78);
+  ctx.fillText('YOLOCYCLING EXPEDITION · 地形征服与高度日志', 65, 78);
 
   // Expedition Spec Badge (Right)
   const specText = 'ELEVATION SPEC · GRADE A';
@@ -2265,7 +2265,7 @@ async function generateConquerorPoster(data: LatestRidePosterData): Promise<stri
   ctx.fillStyle = '#D4AF37';
   ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('LABAO', sealCx, sealCy - 20);
+  ctx.fillText('YOLOCYCLING', sealCx, sealCy - 20);
   ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillText('CONQUERED', sealCx, sealCy);
   ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -2324,7 +2324,7 @@ async function generateConquerorPoster(data: LatestRidePosterData): Promise<stri
 
   ctx.fillStyle = 'rgba(212, 175, 55, 0.5)';
   ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('LABAO PRO · 征服者手稿 · 1080×1440 HD (3:4)', 65, footerY + 32);
+  ctx.fillText('YOLOCYCLING PRO · 征服者手稿 · 1080×1440 HD (3:4)', 65, footerY + 32);
 
   const rightTag = 'SUMMIT CERTIFIED';
   ctx.fillStyle = '#D4AF37';
@@ -2389,7 +2389,7 @@ async function generateNeonDawnPoster(data: LatestRidePosterData): Promise<strin
   ctx.fillStyle = '#00F2FE';
   ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '2px';
-  ctx.fillText('LABAO CITY RIDE · 破晓晨刷档案', 65, 80);
+  ctx.fillText('YOLOCYCLING CITY RIDE · 破晓晨刷档案', 65, 80);
 
   // Top Right Badge Capsule
   const pillText = 'DAWN CHASER · 晨光追风者';
@@ -2589,7 +2589,7 @@ async function generateNeonDawnPoster(data: LatestRidePosterData): Promise<strin
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('LABAO NEON DAWN · 破晓晨刷 · 1080×1440 HD (3:4)', 65, footerY + 32);
+  ctx.fillText('YOLOCYCLING NEON DAWN · 破晓晨刷 · 1080×1440 HD (3:4)', 65, footerY + 32);
 
   const rightTag = 'CITY RIDE VERIFIED';
   ctx.fillStyle = '#00F2FE';
@@ -2642,7 +2642,7 @@ async function generateRacingDashboardPoster(data: LatestRidePosterData): Promis
   ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
   ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '2px';
-  ctx.fillText('LABAO RACING TELEMETRY · 赛事级功率仪表盘', 65, 78);
+  ctx.fillText('YOLOCYCLING RACING TELEMETRY · 赛事级功率仪表盘', 65, 78);
 
   const specLabel = 'FORMULA COCKPIT · PRO SPEC';
   ctx.fillStyle = '#007AFF';
@@ -2880,7 +2880,7 @@ async function generateRacingDashboardPoster(data: LatestRidePosterData): Promis
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
   ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('LABAO RACING TELEMETRY · 1080×1440 HD (3:4)', 65, footerY + 32);
+  ctx.fillText('YOLOCYCLING RACING TELEMETRY · 1080×1440 HD (3:4)', 65, footerY + 32);
 
   const rightTag = 'F1 PRO SPEC VERIFIED';
   ctx.fillStyle = '#007AFF';

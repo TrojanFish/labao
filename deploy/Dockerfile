@@ -1,5 +1,5 @@
 # ============================================================
-# LaBao — Multi-stage Docker Build
+# YoloCycling — Multi-stage Docker Build
 # Stage 1: Node 20 Alpine — build React/Vite app
 # Stage 2: Nginx Alpine — serve static files
 # ============================================================
@@ -25,12 +25,12 @@ FROM nginx:1.27-alpine AS production
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy built assets
-COPY --from=builder /app/dist /var/www/labao/dist
+COPY --from=builder /app/dist /var/www/yolocycling/dist
 
 # Copy nginx config
-COPY deploy/nginx.conf /etc/nginx/sites-available/labao.app
+COPY deploy/nginx.conf /etc/nginx/sites-available/yolocycling.app
 RUN mkdir -p /etc/nginx/sites-enabled && \
-    ln -s /etc/nginx/sites-available/labao.app /etc/nginx/sites-enabled/labao.app && \
+    ln -s /etc/nginx/sites-available/yolocycling.app /etc/nginx/sites-enabled/yolocycling.app && \
     nginx -t
 
 # Healthcheck

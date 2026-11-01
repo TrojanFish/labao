@@ -4,7 +4,8 @@ import {
   solveFrameFromHandlebar,
   solveSpacersForTargetDrop,
   calculateStemDelta,
-  calculateSaddleHeightFromBB
+  calculateSaddleHeightFromBB,
+  calculateDynamicBioCompensation
 } from '../bikeFitGeometry';
 
 describe('bikeFitGeometry (Apple HIG & Biomechanics Standard)', () => {
@@ -112,5 +113,21 @@ describe('bikeFitGeometry (Apple HIG & Biomechanics Standard)', () => {
 
     expect(fit.fitStatus).toBe('unreachable_too_low');
     expect(fit.message).toContain('所需垫圈超过 45mm 安全极限');
+  });
+
+  it('calculates dynamic bio-compensation for toe-down and rearward cleats', () => {
+    const bio = calculateDynamicBioCompensation({
+      baseSaddleHeightMm: 720,
+      anklingStyle: 'toe_down',
+      cleatPosition: 'rearward_midfoot',
+      flexibility: 'high'
+    });
+
+    expect(bio.anklingOffsetMm).toBe(5);
+    expect(bio.cleatOffsetMm).toBe(-4);
+    expect(bio.effectiveDynamicSaddleHeightMm).toBe(721);
+    expect(bio.targetKneeAngleMinDeg).toBe(30);
+    expect(bio.targetKneeAngleMaxDeg).toBe(35);
+    expect(bio.recommendationZh).toContain('脚尖下踩提踵');
   });
 });

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # =============================================================
-# LaBao VPS Deployment Script
+# YoloCycling VPS Deployment Script
 # Usage:
-#   First deploy:   ./deploy/deploy.sh --init --domain labao.app --email admin@labao.app
+#   First deploy:   ./deploy/deploy.sh --init --domain yolocycling.app --email admin@yolocycling.app
 #   Update deploy:  ./deploy/deploy.sh --update
 # =============================================================
 set -euo pipefail
 
-DOMAIN="${DOMAIN:-labao.app}"
-EMAIL="${EMAIL:-admin@labao.app}"
-DEPLOY_DIR="/opt/labao"
+DOMAIN="${DOMAIN:-yolocycling.app}"
+EMAIL="${EMAIL:-admin@yolocycling.app}"
+DEPLOY_DIR="/opt/yolocycling"
 REPO_URL="${REPO_URL:-}"
 
 RED='\033[0;31m'
@@ -63,7 +63,7 @@ init_ssl() {
 
 # ── Build & deploy ───────────────────────────────────────────
 deploy() {
-  log "Deploying LaBao to ${DEPLOY_DIR}..."
+  log "Deploying YoloCycling to ${DEPLOY_DIR}..."
 
   mkdir -p "${DEPLOY_DIR}"
 

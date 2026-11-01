@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>西班牙马略卡岛·萨卡洛布拉天路</name>
+    <desc>欧洲职业车队冬季冬训圣地！从地中海幽静峡湾港口出发，穿越鬼斧神工的石灰岩峡谷，以 7% 持续均坡攀登至 Coll dels Reis 垭口。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>西班牙马略卡岛·萨卡洛布拉天路</name>
+    <trkseg>
+      <trkpt lat="39.85098" lon="2.79907"><ele>125</ele><name>萨卡洛布拉港湾起点 (Port de Sa Calobra)</name></trkpt>
+      <trkpt lat="39.84891" lon="2.7987"><ele>74</ele><name>萨卡洛布拉港湾起点 (Port de Sa Calobra)</name></trkpt>
+      <trkpt lat="39.84738" lon="2.79774"><ele>68</ele><name>航点 #3</name></trkpt>
+      <trkpt lat="39.84552" lon="2.79678"><ele>77</ele><name>航点 #4</name></trkpt>
+      <trkpt lat="39.84503" lon="2.79515"><ele>102</ele><name>航点 #5</name></trkpt>
+      <trkpt lat="39.84448" lon="2.79414"><ele>101</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="39.84349" lon="2.79528"><ele>95</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="39.84282" lon="2.79585"><ele>90</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="39.84186" lon="2.79531"><ele>117</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="39.84003" lon="2.79569"><ele>140</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="39.83848" lon="2.79733"><ele>136</ele><name>航点 #11</name></trkpt>
+      <trkpt lat="39.83799" lon="2.79829"><ele>146</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="39.83882" lon="2.79914"><ele>122</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="39.8411" lon="2.79881"><ele>149</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="39.84275" lon="2.79884"><ele>153</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="39.84409" lon="2.79919"><ele>200</ele><name>航点 #16</name></trkpt>
+      <trkpt lat="39.84544" lon="2.79995"><ele>120</ele><name>航点 #17</name></trkpt>
+      <trkpt lat="39.84501" lon="2.80005"><ele>172</ele><name>航点 #18</name></trkpt>
+      <trkpt lat="39.84557" lon="2.80149"><ele>199</ele><name>航点 #19</name></trkpt>
+      <trkpt lat="39.84532" lon="2.8029"><ele>222</ele><name>航点 #20</name></trkpt>
+      <trkpt lat="39.84406" lon="2.80441"><ele>243</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="39.84352" lon="2.80366"><ele>241</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="39.8419" lon="2.80504"><ele>276</ele><name>岩壁峡谷发卡弯</name></trkpt>
+      <trkpt lat="39.83922" lon="2.80559"><ele>274</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="39.83722" lon="2.80667"><ele>313</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="39.83427" lon="2.80666"><ele>320</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="39.83523" lon="2.804"><ele>353</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="39.83541" lon="2.80256"><ele>358</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="39.8341" lon="2.80401"><ele>372</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="39.83291" lon="2.80381"><ele>363</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="39.83105" lon="2.80475"><ele>402</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="39.83063" lon="2.80517"><ele>412</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="39.82934" lon="2.80301"><ele>404</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="39.82939" lon="2.8036"><ele>397</ele><name>航点 #34</name></trkpt>
+      <trkpt lat="39.83058" lon="2.80598"><ele>434</ele><name>航点 #35</name></trkpt>
+      <trkpt lat="39.83099" lon="2.80679"><ele>396</ele><name>航点 #36</name></trkpt>
+      <trkpt lat="39.83061" lon="2.80624"><ele>434</ele><name>航点 #37</name></trkpt>
+      <trkpt lat="39.83064" lon="2.80672"><ele>446</ele><name>航点 #38</name></trkpt>
+      <trkpt lat="39.83093" lon="2.80829"><ele>397</ele><name>航点 #39</name></trkpt>
+      <trkpt lat="39.83055" lon="2.80729"><ele>446</ele><name>航点 #40</name></trkpt>
+      <trkpt lat="39.83069" lon="2.80829"><ele>453</ele><name>航点 #41</name></trkpt>
+      <trkpt lat="39.83096" lon="2.8102"><ele>467</ele><name>航点 #42</name></trkpt>
+      <trkpt lat="39.8321" lon="2.81093"><ele>492</ele><name>航点 #43</name></trkpt>
+      <trkpt lat="39.83264" lon="2.8125"><ele>555</ele><name>航点 #44</name></trkpt>
+      <trkpt lat="39.83232" lon="2.81301"><ele>520</ele><name>航点 #45</name></trkpt>
+      <trkpt lat="39.83215" lon="2.81244"><ele>507</ele><name>航点 #46</name></trkpt>
+      <trkpt lat="39.83188" lon="2.8132"><ele>520</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="39.83173" lon="2.81385"><ele>536</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="39.8328" lon="2.81344"><ele>575</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="39.83351" lon="2.81189"><ele>595</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="39.8326" lon="2.81433"><ele>603</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83115" lon="2.81449"><ele>557</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83049" lon="2.81411"><ele>593</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="39.83022" lon="2.81395"><ele>593</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="39.83029" lon="2.81361"><ele>593</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="39.8298" lon="2.81466"><ele>607</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="39.82982" lon="2.814"><ele>638</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="39.82966" lon="2.81387"><ele>638</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="39.82925" lon="2.81466"><ele>607</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="39.83024" lon="2.8151"><ele>619</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83029" lon="2.81578"><ele>619</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83073" lon="2.81606"><ele>651</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83193" lon="2.81585"><ele>666</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83225" lon="2.81614"><ele>666</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83251" lon="2.81588"><ele>666</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83216" lon="2.81579"><ele>636</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.83063" lon="2.81667"><ele>693</ele><name>中段盘山折返线</name></trkpt>
+      <trkpt lat="39.82869" lon="2.8172"><ele>691</ele><name>航点 #68</name></trkpt>
+      <trkpt lat="39.82737" lon="2.81802"><ele>727</ele><name>航点 #69</name></trkpt>
+      <trkpt lat="39.82673" lon="2.81747"><ele>730</ele><name>航点 #70</name></trkpt>
+      <trkpt lat="39.82602" lon="2.81729"><ele>735</ele><name>航点 #71</name></trkpt>
+      <trkpt lat="39.82522" lon="2.81615"><ele>720</ele><name>航点 #72</name></trkpt>
+      <trkpt lat="39.82496" lon="2.81539"><ele>694</ele><name>航点 #73</name></trkpt>
+      <trkpt lat="39.82485" lon="2.81468"><ele>697</ele><name>航点 #74</name></trkpt>
+      <trkpt lat="39.82375" lon="2.81571"><ele>687</ele><name>航点 #75</name></trkpt>
+      <trkpt lat="39.82238" lon="2.81504"><ele>670</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="39.82187" lon="2.81457"><ele>691</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="39.82073" lon="2.81428"><ele>657</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="39.82068" lon="2.81461"><ele>657</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="39.82164" lon="2.81501"><ele>638</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="39.82121" lon="2.81512"><ele>638</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="39.82004" lon="2.8161"><ele>611</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="39.81908" lon="2.81516"><ele>610</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="39.81864" lon="2.8163"><ele>596</ele><name>航点 #84</name></trkpt>
+      <trkpt lat="39.8173" lon="2.82099"><ele>566</ele><name>航点 #85</name></trkpt>
+      <trkpt lat="39.81569" lon="2.82196"><ele>578</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="39.81522" lon="2.8227"><ele>558</ele><name>航点 #87</name></trkpt>
+      <trkpt lat="39.81605" lon="2.82405"><ele>544</ele><name>航点 #88</name></trkpt>
+      <trkpt lat="39.81547" lon="2.82524"><ele>560</ele><name>航点 #89</name></trkpt>
+      <trkpt lat="39.81577" lon="2.8274"><ele>523</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="39.81662" lon="2.82983"><ele>529</ele><name>航点 #91</name></trkpt>
+      <trkpt lat="39.81842" lon="2.82975"><ele>541</ele><name>航点 #92</name></trkpt>
+      <trkpt lat="39.8195" lon="2.82987"><ele>547</ele><name>航点 #93</name></trkpt>
+      <trkpt lat="39.82103" lon="2.82884"><ele>567</ele><name>航点 #94</name></trkpt>
+      <trkpt lat="39.82178" lon="2.82765"><ele>570</ele><name>Coll dels Reis 垭口顶峰</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

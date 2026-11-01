@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://labao.app/sitemap.xml
+Sitemap: https://yolocycling.app/sitemap.xml

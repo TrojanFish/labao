@@ -83,7 +83,7 @@ export const BackgroundMusicControl: React.FC = () => {
             <div className="truncate max-w-[170px]">
               <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">{currentTrack?.name || '骑行踏频电台'}</span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate block">
-                {currentTrack?.artist || 'LaBao Studio'}
+                {currentTrack?.artist || 'YoloCycling Studio'}
               </span>
             </div>
 

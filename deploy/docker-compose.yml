@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  # ─── LaBao App (Nginx serving built SPA) ───────────────────
-  labao:
+  # ─── YoloCycling App (Nginx serving built SPA) ───────────────────
+  yolocycling:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    container_name: labao_app
+    container_name: yolocycling_app
     restart: unless-stopped
     ports:
       - "80:80"
@@ -17,7 +17,7 @@ services:
       # Certbot webroot for ACME challenges
       - certbot_www:/var/www/certbot:ro
     networks:
-      - labao_net
+      - yolocycling_net
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/robots.txt"]
       interval: 30s
@@ -28,7 +28,7 @@ services:
   # ─── Certbot (Let's Encrypt SSL auto-renewal) ───────────────
   certbot:
     image: certbot/certbot:latest
-    container_name: labao_certbot
+    container_name: yolocycling_certbot
     restart: unless-stopped
     volumes:
       - certbot_certs:/etc/letsencrypt
@@ -41,7 +41,7 @@ services:
                sleep 43200 & wait $${!};
              done"
     networks:
-      - labao_net
+      - yolocycling_net
 
 volumes:
   certbot_certs:
@@ -50,5 +50,5 @@ volumes:
     driver: local
 
 networks:
-  labao_net:
+  yolocycling_net:
     driver: bridge

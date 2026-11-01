@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X, Settings, PanelLeft, Heart } from 'lucide-react';
-import { LaBaoLogo } from './common/LaBaoLogo';
+import { YoloCyclingLogo } from './common/YoloCyclingLogo';
 import { BackgroundMusicControl } from './BackgroundMusicControl';
 import { RiderProfileModal } from './common/RiderProfileModal';
 import { useRiderProfile } from '../context/RiderProfileContext';
@@ -117,12 +117,14 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none shrink-0 group apple-touch" onClick={onNavigateHome}>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-ios-red to-ios-orange flex items-center justify-center text-white shadow-sm shadow-ios-red/30 group-hover:scale-105 transition-transform duration-200 shrink-0">
-                <LaBaoLogo className="w-5 h-5 text-white" />
+                <YoloCyclingLogo className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-1 sm:gap-1.5 font-sans">
                   <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white">{t('brandName')}</span>
-                  <span className="text-xs font-bold text-ios-red dark:text-ios-orange tracking-tight">{t('brandSuffix')}</span>
+                  {t('brandSuffix') && (
+                    <span className="text-xs font-bold text-ios-red dark:text-ios-orange tracking-tight">{t('brandSuffix')}</span>
+                  )}
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-ios-red/10 dark:bg-ios-red/20 text-ios-red dark:text-ios-orange font-mono font-bold tracking-tight">{t('brandPro')}</span>
                 </div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400 tracking-normal hidden xl:block">

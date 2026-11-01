@@ -757,7 +757,7 @@ export const UpgradeRoiCalculator: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title="改装升级省瓦战报"
-        downloadFileName={`LaBao_改装省瓦_${analysis.activeCount}项_${analysis.totalWeightSaveG}g.png`}
+        downloadFileName={`YoloCycling_改装省瓦_${analysis.activeCount}项_${analysis.totalWeightSaveG}g.png`}
       />
     </div>
   );

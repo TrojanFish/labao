@@ -12,6 +12,7 @@ import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 interface RoutePoint {
   lat: number;
   lng: number;
+  elevation?: number;
   name?: string;
 }
 
@@ -45,7 +46,7 @@ export const CyclingWeatherAdvisor: React.FC = () => {
 
   const [customRouteName, setCustomRouteName] = useState<string>('西湖龙井起伏路线');
   const [routePoints, setRoutePoints] = useState<RoutePoint[]>(
-    ZHEJIANG_XINGZHE_ROUTES[0].waypoints.map(w => ({ lat: w.lat, lng: w.lng, name: w.name }))
+    ZHEJIANG_XINGZHE_ROUTES[0].waypoints.map(w => ({ lat: w.lat, lng: w.lng, elevation: w.elevation, name: w.name }))
   );
 
   const [departureTime, setDepartureTime] = useState<string>('07:30');
@@ -283,13 +284,29 @@ export const CyclingWeatherAdvisor: React.FC = () => {
           const hourly = data.hourly;
 
           if (hourly && hourly.temperature_2m) {
-            const temp = Math.round(hourly.temperature_2m[arrivalHour] ?? 22);
-            const feelsLike = Math.round(hourly.apparent_temperature[arrivalHour] ?? temp);
+            let temp = Math.round(hourly.temperature_2m[arrivalHour] ?? 22);
+            let feelsLike = Math.round(hourly.apparent_temperature[arrivalHour] ?? temp);
             const precipProb = Math.round(hourly.precipitation_probability[arrivalHour] ?? 0);
             const humidity = Math.round(hourly.relative_humidity_2m[arrivalHour] ?? 60);
-            const windSpeedKmh = Math.round(hourly.wind_speed_10m[arrivalHour] ?? 12);
+            let windSpeedKmh = Math.round(hourly.wind_speed_10m[arrivalHour] ?? 12);
             const windDirectionDeg = Math.round(hourly.wind_direction_10m[arrivalHour] ?? 90);
             const uvIndex = Math.round(hourly.uv_index[arrivalHour] ?? 4);
+
+            // Micro-climate Topographic Lapse Rate & Pass Venturi Correction:
+            if (seg.pt.elevation !== undefined && data.elevation !== undefined) {
+              const eleDeltaM = seg.pt.elevation - data.elevation;
+              if (Math.abs(eleDeltaM) > 30) {
+                // ISA lapse rate: -6.5°C per 1000m
+                const tempOffset = -0.0065 * eleDeltaM;
+                temp = Math.round(temp + tempOffset);
+                feelsLike = Math.round(feelsLike + tempOffset);
+              }
+              if (eleDeltaM > 100) {
+                // Exposed ridge / mountain pass wind amplification
+                const windFactor = Math.min(1.35, 1 + eleDeltaM / 1000);
+                windSpeedKmh = Math.round(windSpeedKmh * windFactor);
+              }
+            }
 
             const windRel = getWindRelation(seg.bearing, windDirectionDeg);
 
@@ -347,7 +364,7 @@ export const CyclingWeatherAdvisor: React.FC = () => {
     if (found) {
       setSelectedRouteId(found.id);
       setCustomRouteName(found.name);
-      setRoutePoints(found.waypoints.map(w => ({ lat: w.lat, lng: w.lng, name: w.name })));
+      setRoutePoints(found.waypoints.map(w => ({ lat: w.lat, lng: w.lng, elevation: w.elevation, name: w.name })));
       showToast(`已载入路书: ${found.name}`, 'info');
     }
   };

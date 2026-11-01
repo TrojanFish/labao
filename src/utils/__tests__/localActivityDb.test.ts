@@ -353,7 +353,7 @@ describe('Local-First Activity IndexedDB Storage Suite', () => {
     });
 
     const backupJson = await exportActivitiesBackup();
-    expect(backupJson).toContain('LaBao Pro');
+    expect(backupJson).toContain('YoloCycling Pro');
     expect(backupJson).toContain('backup_test_01');
 
     // Clear DB

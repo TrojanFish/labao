@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>北京门头沟妙峰山经典爬坡线</name>
+    <desc>北京公路车车手的“大考圣地”！从担礼村金顶妙峰山牌坊出发，20.5公里持续爬升至山顶娘娘庙，坡度均匀，测试 FTP 与爬坡功率的最佳考场。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>北京门头沟妙峰山经典爬坡线</name>
+    <trkseg>
+      <trkpt lat="39.98527" lon="116.03473"><ele>147</ele><name>妙峰山牌坊起点</name></trkpt>
+      <trkpt lat="39.98721" lon="116.03566"><ele>155</ele><name>妙峰山牌坊起点</name></trkpt>
+      <trkpt lat="39.9875" lon="116.03587"><ele>191</ele><name>妙峰山牌坊起点</name></trkpt>
+      <trkpt lat="39.98702" lon="116.03618"><ele>204</ele><name>妙峰山牌坊起点</name></trkpt>
+      <trkpt lat="39.98735" lon="116.03751"><ele>232</ele><name>妙峰山牌坊起点</name></trkpt>
+      <trkpt lat="39.98849" lon="116.03806"><ele>261</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="39.98911" lon="116.03972"><ele>228</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="39.98975" lon="116.03953"><ele>236</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="39.98982" lon="116.04154"><ele>243</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="39.98989" lon="116.04376"><ele>201</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="39.98907" lon="116.04549"><ele>180</ele><name>航点 #11</name></trkpt>
+      <trkpt lat="39.9914" lon="116.04401"><ele>169</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="39.99435" lon="116.04384"><ele>174</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="39.99693" lon="116.04425"><ele>179</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="39.99829" lon="116.04495"><ele>185</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="40.00212" lon="116.04555"><ele>200</ele><name>航点 #16</name></trkpt>
+      <trkpt lat="40.00266" lon="116.04739"><ele>208</ele><name>航点 #17</name></trkpt>
+      <trkpt lat="40.00231" lon="116.04998"><ele>204</ele><name>航点 #18</name></trkpt>
+      <trkpt lat="40.00331" lon="116.04992"><ele>217</ele><name>航点 #19</name></trkpt>
+      <trkpt lat="40.00518" lon="116.04551"><ele>218</ele><name>航点 #20</name></trkpt>
+      <trkpt lat="40.00665" lon="116.04552"><ele>231</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="40.00562" lon="116.04892"><ele>216</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="40.00715" lon="116.05149"><ele>223</ele><name>航点 #23</name></trkpt>
+      <trkpt lat="40.00759" lon="116.04809"><ele>227</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="40.00852" lon="116.04734"><ele>255</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="40.0122" lon="116.0468"><ele>238</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="40.01342" lon="116.04684"><ele>252</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="40.01436" lon="116.04909"><ele>253</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="40.01638" lon="116.04969"><ele>248</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="40.01691" lon="116.0466"><ele>253</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="40.01852" lon="116.04499"><ele>265</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="40.02056" lon="116.04311"><ele>275</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="40.02309" lon="116.04375"><ele>271</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="40.02566" lon="116.04094"><ele>285</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02755" lon="116.0397"><ele>293</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.0279" lon="116.03753"><ele>299</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02675" lon="116.03873"><ele>306</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02559" lon="116.04009"><ele>311</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.0247" lon="116.04019"><ele>339</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02447" lon="116.03869"><ele>415</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02511" lon="116.03815"><ele>388</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02451" lon="116.03889"><ele>415</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02473" lon="116.04035"><ele>339</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.0257" lon="116.04002"><ele>311</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02677" lon="116.0385"><ele>306</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02792" lon="116.03695"><ele>312</ele><name>桃园村水库</name></trkpt>
+      <trkpt lat="40.02957" lon="116.03557"><ele>311</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="40.0305" lon="116.0322"><ele>341</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="40.03194" lon="116.02819"><ele>345</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="40.03515" lon="116.02625"><ele>416</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="40.03766" lon="116.0222"><ele>450</ele><name>航点 #51</name></trkpt>
+      <trkpt lat="40.03899" lon="116.02134"><ele>473</ele><name>航点 #52</name></trkpt>
+      <trkpt lat="40.03947" lon="116.02169"><ele>507</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="40.04139" lon="116.02073"><ele>605</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="40.04248" lon="116.01968"><ele>631</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="40.04414" lon="116.01847"><ele>699</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="40.04556" lon="116.01823"><ele>709</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="40.04667" lon="116.0184"><ele>738</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="40.0478" lon="116.01953"><ele>772</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="40.04904" lon="116.02016"><ele>834</ele><name>航点 #60</name></trkpt>
+      <trkpt lat="40.05016" lon="116.02147"><ele>881</ele><name>航点 #61</name></trkpt>
+      <trkpt lat="40.05098" lon="116.02221"><ele>863</ele><name>涧沟村补给驿站</name></trkpt>
+      <trkpt lat="40.05119" lon="116.0181"><ele>947</ele><name>航点 #63</name></trkpt>
+      <trkpt lat="40.0536" lon="116.0144"><ele>1036</ele><name>航点 #64</name></trkpt>
+      <trkpt lat="40.05642" lon="116.01453"><ele>1061</ele><name>航点 #65</name></trkpt>
+      <trkpt lat="40.05996" lon="116.01497"><ele>1055</ele><name>航点 #66</name></trkpt>
+      <trkpt lat="40.06376" lon="116.01659"><ele>1131</ele><name>航点 #67</name></trkpt>
+      <trkpt lat="40.06575" lon="116.01392"><ele>1170</ele><name>航点 #68</name></trkpt>
+      <trkpt lat="40.06752" lon="116.01244"><ele>1206</ele><name>航点 #69</name></trkpt>
+      <trkpt lat="40.07093" lon="116.01305"><ele>1228</ele><name>航点 #70</name></trkpt>
+      <trkpt lat="40.07382" lon="116.01514"><ele>1251</ele><name>玫瑰谷观景台</name></trkpt>
+      <trkpt lat="40.07438" lon="116.01739"><ele>1231</ele><name>玫瑰谷观景台</name></trkpt>
+      <trkpt lat="40.07405" lon="116.01877"><ele>1219</ele><name>玫瑰谷观景台</name></trkpt>
+      <trkpt lat="40.07478" lon="116.02181"><ele>1159</ele><name>航点 #74</name></trkpt>
+      <trkpt lat="40.07673" lon="116.02334"><ele>1059</ele><name>航点 #75</name></trkpt>
+      <trkpt lat="40.07816" lon="116.0227"><ele>994</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="40.07947" lon="116.02194"><ele>910</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="40.08116" lon="116.02201"><ele>839</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="40.08274" lon="116.02082"><ele>801</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="40.08338" lon="116.01994"><ele>785</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="40.08295" lon="116.01884"><ele>793</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="40.08263" lon="116.01771"><ele>796</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="40.08342" lon="116.01647"><ele>827</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="40.0836" lon="116.01485"><ele>779</ele><name>航点 #84</name></trkpt>
+      <trkpt lat="40.08307" lon="116.01408"><ele>754</ele><name>航点 #85</name></trkpt>
+      <trkpt lat="40.08126" lon="116.01411"><ele>818</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="40.08182" lon="116.01254"><ele>821</ele><name>金顶妙峰山娘娘庙终点</name></trkpt>
+      <trkpt lat="40.08309" lon="116.01154"><ele>784</ele><name>金顶妙峰山娘娘庙终点</name></trkpt>
+      <trkpt lat="40.08398" lon="116.01215"><ele>725</ele><name>金顶妙峰山娘娘庙终点</name></trkpt>
+      <trkpt lat="40.08527" lon="116.01231"><ele>674</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="40.08636" lon="116.0109"><ele>650</ele><name>航点 #91</name></trkpt>
+      <trkpt lat="40.08595" lon="116.01053"><ele>656</ele><name>航点 #92</name></trkpt>
+      <trkpt lat="40.08479" lon="116.0104"><ele>756</ele><name>金顶妙峰山娘娘庙终点</name></trkpt>
+      <trkpt lat="40.08359" lon="116.00982"><ele>796</ele><name>金顶妙峰山娘娘庙终点</name></trkpt>
+      <trkpt lat="40.082" lon="116.01"><ele>833</ele><name>金顶妙峰山娘娘庙终点</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

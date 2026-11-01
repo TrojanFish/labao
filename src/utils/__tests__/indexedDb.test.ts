@@ -95,14 +95,18 @@ describe('indexedDb - Strava Local-First Storage & Health', () => {
     originalIndexedDB = (globalThis as any).indexedDB;
     (globalThis as any).indexedDB = createMockIndexedDB();
     (globalThis as any).window = globalThis;
-    (globalThis as any).navigator = {
-      storage: {
-        estimate: vi.fn().mockResolvedValue({
-          quota: 10 * 1024 * 1024 * 1024, // 10 GB
-          usage: 50 * 1024 * 1024 // 50 MB
-        })
-      }
-    };
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        storage: {
+          estimate: vi.fn().mockResolvedValue({
+            quota: 10 * 1024 * 1024 * 1024, // 10 GB
+            usage: 50 * 1024 * 1024 // 50 MB
+          })
+        }
+      },
+      configurable: true,
+      writable: true
+    });
   });
 
   afterEach(() => {

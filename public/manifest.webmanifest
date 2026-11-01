@@ -1,7 +1,7 @@
 {
-  "name": "LaBao 拉爆 - 骑行科学工坊",
-  "short_name": "LaBao",
-  "description": "LaBao 拉爆 · 现代公路车运动科学与性能工坊，拥有21款高精度骑行计算与仿真模拟引擎。",
+  "name": "YoloCycling - 骑行科学工坊",
+  "short_name": "YoloCycling",
+  "description": "YoloCycling · 现代公路车运动科学与性能工坊，拥有21款高精度骑行计算与仿真模拟引擎。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

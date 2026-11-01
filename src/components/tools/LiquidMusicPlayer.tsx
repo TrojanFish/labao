@@ -197,7 +197,7 @@ export const LiquidMusicPlayer: React.FC<{ isStandalonePage?: boolean }> = ({ is
 
               <div>
                 <h2 className="text-base sm:text-lg font-bold font-display text-slate-900 dark:text-white">{currentTrack?.name || '未播放'}</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{currentTrack?.artist || 'LaBao Audio Station'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{currentTrack?.artist || 'YoloCycling Audio Station'}</p>
               </div>
 
               {/* Progress Bar */}

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Printer, Check, User, Wrench, Bike, FileText, Award, Compass } from 'lucide-react';
-import { LaBaoLogo } from '../common/LaBaoLogo';
+import { YoloCyclingLogo } from '../common/YoloCyclingLogo';
 import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss';
 
 export interface FittingWorkOrderModalProps {
@@ -60,11 +60,11 @@ const FittingSheetContent: React.FC<FittingSheetContentProps> = ({
       <div className="flex items-start justify-between border-b border-slate-900 pb-2">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <LaBaoLogo className="w-4 h-4 text-white" />
+            <YoloCyclingLogo className="w-4 h-4 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-mono font-bold text-xs tracking-wider text-slate-900">LABAO PRO</span>
+              <span className="font-mono font-bold text-xs tracking-wider text-slate-900">YOLOCYCLING PRO</span>
               <span className="text-[8px] font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-300">
                 CAD SPECIFICATION
               </span>
@@ -359,7 +359,7 @@ const FittingSheetContent: React.FC<FittingSheetContentProps> = ({
 
         {/* Circular Engineering Seal */}
         <div className="w-16 h-16 rounded-full border-2 border-slate-800 flex flex-col items-center justify-center text-center p-1 relative rotate-[-6deg] shrink-0 opacity-85">
-          <div className="text-[6px] font-bold tracking-tighter text-slate-700 uppercase">LABAO PRO</div>
+          <div className="text-[6px] font-bold tracking-tighter text-slate-700 uppercase">YOLOCYCLING PRO</div>
           <Award className="w-4 h-4 text-slate-900 my-0.5" />
           <div className="text-[5px] font-mono tracking-widest text-slate-600">VERIFIED FIT</div>
           <div className="text-[5px] text-slate-500 font-mono">2026</div>
@@ -368,7 +368,7 @@ const FittingSheetContent: React.FC<FittingSheetContentProps> = ({
 
       {/* 8. Micro Footer Watermark */}
       <div className="text-center pt-1 text-[8px] text-slate-400 font-mono tracking-wider border-t border-slate-100">
-        LABAO PRO BIOMECHANICAL SUITE · COMPUTED VIA SCIENTIFIC CAD MOTOR DYNAMICS · ALL RIGHTS RESERVED
+        YOLOCYCLING PRO BIOMECHANICAL SUITE · COMPUTED VIA SCIENTIFIC CAD MOTOR DYNAMICS · ALL RIGHTS RESERVED
       </div>
     </div>
   );
@@ -383,10 +383,10 @@ export const FittingWorkOrderModal: React.FC<FittingWorkOrderModalProps> = ({
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
   const [riderName, setRiderName] = useState<string>(initialRiderName);
-  const [fitterName, setFitterName] = useState<string>('LaBao 认证 Fitter');
+  const [fitterName, setFitterName] = useState<string>('YoloCycling 认证 Fitter');
   const [bikeModel, setBikeModel] = useState<string>(initialBikeModel);
   const [orderDate, setOrderDate] = useState<string>(todayStr);
-  const [orderNo] = useState<string>(() => `SPEC-LBO-${Date.now().toString().slice(-6)}`);
+  const [orderNo] = useState<string>(() => `SPEC-YLC-${Date.now().toString().slice(-6)}`);
 
   React.useEffect(() => {
     if (initialBikeModel) setBikeModel(initialBikeModel);

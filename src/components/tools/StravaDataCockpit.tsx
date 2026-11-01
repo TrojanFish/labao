@@ -637,7 +637,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
   const handleGeneratePoster = async () => {
     showToast('正在渲染 Retina 高清车手战报海报...', 'info');
     try {
-      const athleteName = athlete ? `${athlete.firstname} ${athlete.lastname}` : profile.name || 'LaBao 车手';
+      const athleteName = athlete ? `${athlete.firstname} ${athlete.lastname}` : profile.name || 'YoloCycling 车手';
       const posterUrl = await generateStravaCockpitPoster({
         periodLabel: selectedPeriod === 'all-time' ? '全生涯历史总览' : selectedPeriod === 'ytd' ? '本年度骑行战报' : selectedPeriod === '30d' ? '近30天体能速报' : '近7天周报',
         athleteName,
@@ -1303,8 +1303,8 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
               </p>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs">
                 {language === 'zh-TW'
-                  ? 'Strava 最新開發者條款對非付費會員帳號及自建應用的活動拉取實施了嚴格限制，API 接口常因會員權限或隱私設定返回 0 筆雲端記錄。無需開通 Strava 付費會員！點擊上方「匯入碼表」，將 Garmin / Wahoo / 邁金 / iGPSport / 高馳的原始 FIT/GPX 檔拖入，LaBao 100% 本地離線引擎即可為您呈現無損精度的 PMC 體能模型、功率曲線與生理診斷。'
-                  : 'Strava 最新开发者条款对非付费会员账号及自建应用的活动拉取实施了严格限制，API 接口常因会员权限或隐私设置返回 0 条云端记录。无需开通 Strava 付费会员！点击上方「导入码表」，将 Garmin / Wahoo / 迈金 / iGPSport / 高驰的原始 FIT/GPX 文件拖入，LaBao 100% 本地离线引擎即可为您呈现无损精度的 PMC 体能模型、功率曲线与生理诊断。'}
+                  ? 'Strava 最新開發者條款對非付費會員帳號及自建應用的活動拉取實施了嚴格限制，API 接口常因會員權限或隱私設定返回 0 筆雲端記錄。無需開通 Strava 付費會員！點擊上方「匯入碼表」，將 Garmin / Wahoo / 邁金 / iGPSport / 高馳的原始 FIT/GPX 檔拖入，YoloCycling 100% 本地離線引擎即可為您呈現無損精度的 PMC 體能模型、功率曲線與生理診斷。'
+                  : 'Strava 最新开发者条款对非付费会员账号及自建应用的活动拉取实施了严格限制，API 接口常因会员权限或隐私设置返回 0 条云端记录。无需开通 Strava 付费会员！点击上方「导入码表」，将 Garmin / Wahoo / 迈金 / iGPSport / 高驰的原始 FIT/GPX 文件拖入，YoloCycling 100% 本地离线引擎即可为您呈现无损精度的 PMC 体能模型、功率曲线与生理诊断。'}
               </p>
             </div>
           </div>
@@ -2858,7 +2858,7 @@ export const StravaDataCockpit: React.FC<StravaDataCockpitProps> = ({ onNavigate
         onClose={() => setIsShareModalOpen(false)}
         posterUrl={sharePosterUrl}
         title="车手战报海报"
-        fileName={`LaBao_车手数据战报_${selectedPeriod}.png`}
+        fileName={`YoloCycling_车手数据战报_${selectedPeriod}.png`}
       />
     </div>
   );

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>宁波余姚梁弄-四明山-溪口雪窦山大穿越</name>
+    <desc>浙东第一公路天路！跨越四明山脉主峰群，途径白鹿观景台、红枫森林与溪口雪窦山大瀑布，连续高强度爬升与数十公里下坡考验综合车控力。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>宁波余姚梁弄-四明山-溪口雪窦山大穿越</name>
+    <trkseg>
+      <trkpt lat="30.01482" lon="121.08455"><ele>21</ele><name>余姚梁弄镇起点</name></trkpt>
+      <trkpt lat="29.98443" lon="121.05876"><ele>9</ele><name>航点 #2</name></trkpt>
+      <trkpt lat="29.9527" lon="121.07998"><ele>22</ele><name>航点 #3</name></trkpt>
+      <trkpt lat="29.94046" lon="121.0863"><ele>23</ele><name>航点 #4</name></trkpt>
+      <trkpt lat="29.90994" lon="121.08714"><ele>43</ele><name>航点 #5</name></trkpt>
+      <trkpt lat="29.8985" lon="121.10653"><ele>116</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="29.89869" lon="121.11249"><ele>245</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="29.8961" lon="121.11339"><ele>282</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="29.90077" lon="121.11813"><ele>339</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="29.89821" lon="121.12014"><ele>417</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="29.89364" lon="121.12751"><ele>472</ele><name>航点 #11</name></trkpt>
+      <trkpt lat="29.88975" lon="121.12311"><ele>544</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="29.88428" lon="121.12324"><ele>541</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="29.88235" lon="121.11692"><ele>590</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="29.87699" lon="121.11009"><ele>659</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="29.86936" lon="121.1097"><ele>707</ele><name>航点 #16</name></trkpt>
+      <trkpt lat="29.86778" lon="121.10832"><ele>660</ele><name>大岚茶海起伏路</name></trkpt>
+      <trkpt lat="29.86564" lon="121.11167"><ele>622</ele><name>大岚茶海起伏路</name></trkpt>
+      <trkpt lat="29.86657" lon="121.11029"><ele>595</ele><name>大岚茶海起伏路</name></trkpt>
+      <trkpt lat="29.86722" lon="121.11019"><ele>633</ele><name>大岚茶海起伏路</name></trkpt>
+      <trkpt lat="29.86851" lon="121.10737"><ele>697</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="29.87446" lon="121.11334"><ele>666</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="29.87916" lon="121.11446"><ele>660</ele><name>航点 #23</name></trkpt>
+      <trkpt lat="29.8815" lon="121.12465"><ele>554</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="29.88752" lon="121.12086"><ele>543</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="29.89236" lon="121.12653"><ele>505</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="29.89705" lon="121.12727"><ele>484</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="29.89928" lon="121.13513"><ele>387</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="29.88559" lon="121.14199"><ele>272</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="29.87395" lon="121.13648"><ele>318</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="29.8691" lon="121.13273"><ele>368</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="29.86772" lon="121.14084"><ele>473</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="29.85589" lon="121.14107"><ele>492</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="29.85205" lon="121.14756"><ele>545</ele><name>航点 #34</name></trkpt>
+      <trkpt lat="29.84603" lon="121.13916"><ele>592</ele><name>航点 #35</name></trkpt>
+      <trkpt lat="29.83792" lon="121.13202"><ele>589</ele><name>航点 #36</name></trkpt>
+      <trkpt lat="29.83815" lon="121.13084"><ele>559</ele><name>航点 #37</name></trkpt>
+      <trkpt lat="29.82559" lon="121.1291"><ele>455</ele><name>航点 #38</name></trkpt>
+      <trkpt lat="29.81948" lon="121.13209"><ele>494</ele><name>航点 #39</name></trkpt>
+      <trkpt lat="29.81541" lon="121.13136"><ele>516</ele><name>航点 #40</name></trkpt>
+      <trkpt lat="29.80689" lon="121.12994"><ele>547</ele><name>航点 #41</name></trkpt>
+      <trkpt lat="29.80307" lon="121.12705"><ele>539</ele><name>航点 #42</name></trkpt>
+      <trkpt lat="29.79769" lon="121.1225"><ele>552</ele><name>航点 #43</name></trkpt>
+      <trkpt lat="29.79255" lon="121.12186"><ele>590</ele><name>航点 #44</name></trkpt>
+      <trkpt lat="29.78699" lon="121.1201"><ele>644</ele><name>航点 #45</name></trkpt>
+      <trkpt lat="29.78454" lon="121.12452"><ele>632</ele><name>四明山镇中心天路</name></trkpt>
+      <trkpt lat="29.78433" lon="121.11808"><ele>674</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="29.7794" lon="121.11509"><ele>676</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="29.77356" lon="121.11442"><ele>648</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="29.77397" lon="121.12582"><ele>615</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="29.77708" lon="121.13108"><ele>538</ele><name>航点 #51</name></trkpt>
+      <trkpt lat="29.76938" lon="121.13936"><ele>444</ele><name>航点 #52</name></trkpt>
+      <trkpt lat="29.7601" lon="121.14106"><ele>366</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="29.76092" lon="121.14273"><ele>370</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="29.76136" lon="121.14404"><ele>405</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="29.76268" lon="121.14695"><ele>493</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="29.7579" lon="121.1475"><ele>574</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="29.75429" lon="121.14951"><ele>588</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="29.75036" lon="121.15318"><ele>664</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="29.74573" lon="121.15952"><ele>692</ele><name>航点 #60</name></trkpt>
+      <trkpt lat="29.74438" lon="121.16186"><ele>658</ele><name>航点 #61</name></trkpt>
+      <trkpt lat="29.74569" lon="121.16443"><ele>636</ele><name>航点 #62</name></trkpt>
+      <trkpt lat="29.74713" lon="121.16411"><ele>633</ele><name>航点 #63</name></trkpt>
+      <trkpt lat="29.7466" lon="121.1673"><ele>576</ele><name>航点 #64</name></trkpt>
+      <trkpt lat="29.74683" lon="121.1728"><ele>583</ele><name>航点 #65</name></trkpt>
+      <trkpt lat="29.74706" lon="121.17439"><ele>594</ele><name>航点 #66</name></trkpt>
+      <trkpt lat="29.74337" lon="121.16982"><ele>578</ele><name>航点 #67</name></trkpt>
+      <trkpt lat="29.73893" lon="121.16356"><ele>535</ele><name>航点 #68</name></trkpt>
+      <trkpt lat="29.73176" lon="121.16061"><ele>510</ele><name>航点 #69</name></trkpt>
+      <trkpt lat="29.73202" lon="121.15574"><ele>484</ele><name>航点 #70</name></trkpt>
+      <trkpt lat="29.73153" lon="121.14907"><ele>486</ele><name>航点 #71</name></trkpt>
+      <trkpt lat="29.73529" lon="121.142"><ele>452</ele><name>航点 #72</name></trkpt>
+      <trkpt lat="29.73452" lon="121.13716"><ele>446</ele><name>航点 #73</name></trkpt>
+      <trkpt lat="29.73295" lon="121.13799"><ele>463</ele><name>航点 #74</name></trkpt>
+      <trkpt lat="29.72582" lon="121.13736"><ele>467</ele><name>航点 #75</name></trkpt>
+      <trkpt lat="29.72362" lon="121.14269"><ele>502</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="29.72582" lon="121.14519"><ele>521</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="29.72293" lon="121.15071"><ele>606</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="29.71682" lon="121.14935"><ele>604</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="29.71333" lon="121.15271"><ele>655</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="29.71151" lon="121.15748"><ele>608</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="29.71156" lon="121.16031"><ele>618</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="29.70966" lon="121.16321"><ele>637</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="29.70554" lon="121.16618"><ele>550</ele><name>航点 #84</name></trkpt>
+      <trkpt lat="29.70768" lon="121.16849"><ele>553</ele><name>航点 #85</name></trkpt>
+      <trkpt lat="29.7067" lon="121.17408"><ele>492</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="29.69944" lon="121.18372"><ele>509</ele><name>航点 #87</name></trkpt>
+      <trkpt lat="29.69385" lon="121.20187"><ele>478</ele><name>航点 #88</name></trkpt>
+      <trkpt lat="29.6949" lon="121.21147"><ele>440</ele><name>航点 #89</name></trkpt>
+      <trkpt lat="29.68236" lon="121.2192"><ele>337</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="29.68273" lon="121.22401"><ele>260</ele><name>航点 #91</name></trkpt>
+      <trkpt lat="29.6887" lon="121.23558"><ele>186</ele><name>航点 #92</name></trkpt>
+      <trkpt lat="29.6863" lon="121.24024"><ele>90</ele><name>航点 #93</name></trkpt>
+      <trkpt lat="29.68498" lon="121.2663"><ele>29</ele><name>航点 #94</name></trkpt>
+      <trkpt lat="29.68001" lon="121.27497"><ele>63</ele><name>溪口古镇终点</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

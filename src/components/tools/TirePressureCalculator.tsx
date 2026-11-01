@@ -913,7 +913,7 @@ export const TirePressureCalculator: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title="科学胎压调校卡"
-        downloadFileName={`LaBao_科学胎压_${actualWidth}mm_${pressureUnit.toUpperCase()}.png`}
+        downloadFileName={`YoloCycling_科学胎压_${actualWidth}mm_${pressureUnit.toUpperCase()}.png`}
       />
     </div>
   );

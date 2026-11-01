@@ -268,7 +268,7 @@ export const exportActivitiesBackup = async (): Promise<string> => {
   const backup = {
     version: 1,
     exportDate: new Date().toISOString(),
-    appName: 'LaBao Pro',
+    appName: 'YoloCycling Pro',
     totalActivities: activities.length,
     activities
   };

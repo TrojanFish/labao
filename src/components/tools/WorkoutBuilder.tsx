@@ -384,9 +384,9 @@ export const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({ onNavigateTool }
   // Generate Zwift .ZWO (XML format)
   const zwoXmlContent = useMemo(() => {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<workout_file>\n`;
-    xml += `  <author>LaBao</author>\n`;
+    xml += `  <author>YoloCycling</author>\n`;
     xml += `  <name>${workoutTitle.replace(/[<>&]/g, '')}</name>\n`;
-    xml += `  <description>Generated via LaBao Workout Builder. Target FTP: ${ftpWatts}W, TSS: ${workoutMetrics.tss}, IF: ${workoutMetrics.ifFactor}.</description>\n`;
+    xml += `  <description>Generated via YoloCycling Workout Builder. Target FTP: ${ftpWatts}W, TSS: ${workoutMetrics.tss}, IF: ${workoutMetrics.ifFactor}.</description>\n`;
     xml += `  <sportType>bike</sportType>\n`;
     xml += `  <workout>\n`;
 
@@ -1247,7 +1247,7 @@ export const WorkoutBuilder: React.FC<WorkoutBuilderProps> = ({ onNavigateTool }
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title="科学间歇训练课表"
-        downloadFileName={`LaBao_训练课表_${workoutTitle.replace(/\s+/g, '_')}.png`}
+        downloadFileName={`YoloCycling_训练课表_${workoutTitle.replace(/\s+/g, '_')}.png`}
       />
     </div>
   );

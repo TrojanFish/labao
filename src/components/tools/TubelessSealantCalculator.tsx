@@ -223,7 +223,7 @@ PRODID:-//Yolo Cycling//Tubeless Sealant//CN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
-UID:tubeless-sealant-${Date.now()}@labao.app
+UID:tubeless-sealant-${Date.now()}@yolocycling.app
 DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
 DTSTART;VALUE=DATE:${dStr}
 DTEND;VALUE=DATE:${dStr}
@@ -242,7 +242,7 @@ END:VCALENDAR`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `LaBao_真空胎自补液维护提醒_${nextMaintenanceDateStr}.ics`;
+    a.download = `YoloCycling_真空胎自补液维护提醒_${nextMaintenanceDateStr}.ics`;
     a.click();
     URL.revokeObjectURL(url);
     showToast(language === 'zh-TW' ? '已成功匯出維護提醒日曆 (.ics)，可加入手機行事曆！' : '已成功导出维护提醒日历 (.ics)，可加入手机日历！', 'success');

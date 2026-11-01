@@ -942,7 +942,7 @@ export const CyclePowerCalculator: React.FC = () => {
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title={language === 'zh-TW' ? '騎行功率與速度戰報' : '骑行功率与速度战报'}
-        downloadFileName={`LaBao_功率速度_${result.speedKmh}kmh_${result.power}W.png`}
+        downloadFileName={`YoloCycling_功率速度_${result.speedKmh}kmh_${result.power}W.png`}
       />
     </div>
   );

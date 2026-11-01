@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>环太湖东山半岛滨湖景观超级巡航线</name>
+    <desc>华东骑友公认最惬意的太湖滨水大环线！串联太湖大桥、东山环岛公路、陆巷古村与启园，全程临湖近水，平路高速破风巡航与赏景兼备。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>环太湖东山半岛滨湖景观超级巡航线</name>
+    <trkseg>
+      <trkpt lat="31.25967" lon="120.36094"><ele>11</ele><name>太湖大桥北起点</name></trkpt>
+      <trkpt lat="31.26324" lon="120.36897"><ele>5</ele><name>航点 #2</name></trkpt>
+      <trkpt lat="31.26876" lon="120.37768"><ele>4</ele><name>航点 #3</name></trkpt>
+      <trkpt lat="31.26448" lon="120.38322"><ele>3</ele><name>航点 #4</name></trkpt>
+      <trkpt lat="31.25592" lon="120.3905"><ele>13</ele><name>航点 #5</name></trkpt>
+      <trkpt lat="31.25054" lon="120.40041"><ele>3</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="31.25095" lon="120.40524"><ele>6</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="31.24975" lon="120.40968"><ele>7</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="31.24869" lon="120.41185"><ele>10</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="31.23591" lon="120.42968"><ele>7</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="31.22741" lon="120.44814"><ele>5</ele><name>航点 #11</name></trkpt>
+      <trkpt lat="31.22157" lon="120.4618"><ele>5</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="31.22094" lon="120.47304"><ele>3</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="31.20512" lon="120.48091"><ele>4</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="31.19123" lon="120.4776"><ele>5</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="31.16632" lon="120.45933"><ele>2</ele><name>航点 #16</name></trkpt>
+      <trkpt lat="31.13668" lon="120.4322"><ele>1</ele><name>航点 #17</name></trkpt>
+      <trkpt lat="31.12596" lon="120.43253"><ele>5</ele><name>航点 #18</name></trkpt>
+      <trkpt lat="31.10493" lon="120.43717"><ele>3</ele><name>航点 #19</name></trkpt>
+      <trkpt lat="31.0946" lon="120.42236"><ele>3</ele><name>航点 #20</name></trkpt>
+      <trkpt lat="31.09728" lon="120.411"><ele>5</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="31.10126" lon="120.40763"><ele>10</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="31.10508" lon="120.40567"><ele>10</ele><name>航点 #23</name></trkpt>
+      <trkpt lat="31.10987" lon="120.40402"><ele>7</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="31.11294" lon="120.40058"><ele>4</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="31.11433" lon="120.39631"><ele>1</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="31.1139" lon="120.39165"><ele>15</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="31.11283" lon="120.3887"><ele>1</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="31.10962" lon="120.38523"><ele>6</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="31.106" lon="120.38172"><ele>4</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="31.10252" lon="120.38016"><ele>1</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="31.09787" lon="120.37875"><ele>5</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="31.09382" lon="120.37589"><ele>1</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="31.08816" lon="120.37247"><ele>1</ele><name>航点 #34</name></trkpt>
+      <trkpt lat="31.08412" lon="120.36443"><ele>3</ele><name>航点 #35</name></trkpt>
+      <trkpt lat="31.0837" lon="120.35967"><ele>1</ele><name>航点 #36</name></trkpt>
+      <trkpt lat="31.07946" lon="120.3539"><ele>5</ele><name>航点 #37</name></trkpt>
+      <trkpt lat="31.07608" lon="120.35534"><ele>5</ele><name>航点 #38</name></trkpt>
+      <trkpt lat="31.07197" lon="120.35764"><ele>3</ele><name>航点 #39</name></trkpt>
+      <trkpt lat="31.06592" lon="120.35724"><ele>2</ele><name>航点 #40</name></trkpt>
+      <trkpt lat="31.05849" lon="120.35614"><ele>7</ele><name>航点 #41</name></trkpt>
+      <trkpt lat="31.05166" lon="120.35837"><ele>13</ele><name>岱心湾大拐弯湖景段</name></trkpt>
+      <trkpt lat="31.05494" lon="120.35686"><ele>10</ele><name>航点 #43</name></trkpt>
+      <trkpt lat="31.05597" lon="120.3515"><ele>2</ele><name>航点 #44</name></trkpt>
+      <trkpt lat="31.05548" lon="120.34827"><ele>10</ele><name>航点 #45</name></trkpt>
+      <trkpt lat="31.0542" lon="120.34408"><ele>9</ele><name>航点 #46</name></trkpt>
+      <trkpt lat="31.05425" lon="120.33952"><ele>7</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="31.0597" lon="120.34516"><ele>2</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="31.06356" lon="120.35412"><ele>1</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="31.06867" lon="120.35684"><ele>4</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="31.07156" lon="120.35857"><ele>6</ele><name>航点 #51</name></trkpt>
+      <trkpt lat="31.07468" lon="120.35928"><ele>8</ele><name>航点 #52</name></trkpt>
+      <trkpt lat="31.07743" lon="120.36195"><ele>32</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="31.07572" lon="120.36558"><ele>110</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="31.07557" lon="120.37044"><ele>184</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="31.07792" lon="120.37392"><ele>151</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="31.07735" lon="120.37573"><ele>150</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="31.07779" lon="120.37804"><ele>160</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="31.08011" lon="120.37931"><ele>167</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="31.08114" lon="120.37924"><ele>143</ele><name>航点 #60</name></trkpt>
+      <trkpt lat="31.08526" lon="120.3818"><ele>148</ele><name>航点 #61</name></trkpt>
+      <trkpt lat="31.08676" lon="120.38338"><ele>123</ele><name>航点 #62</name></trkpt>
+      <trkpt lat="31.08932" lon="120.38344"><ele>106</ele><name>航点 #63</name></trkpt>
+      <trkpt lat="31.0905" lon="120.38377"><ele>99</ele><name>航点 #64</name></trkpt>
+      <trkpt lat="31.09094" lon="120.38905"><ele>60</ele><name>启园水岸长廊</name></trkpt>
+      <trkpt lat="31.08505" lon="120.38947"><ele>22</ele><name>航点 #66</name></trkpt>
+      <trkpt lat="31.08092" lon="120.39386"><ele>29</ele><name>航点 #67</name></trkpt>
+      <trkpt lat="31.08095" lon="120.39678"><ele>10</ele><name>航点 #68</name></trkpt>
+      <trkpt lat="31.08296" lon="120.39743"><ele>10</ele><name>航点 #69</name></trkpt>
+      <trkpt lat="31.0898" lon="120.4004"><ele>15</ele><name>航点 #70</name></trkpt>
+      <trkpt lat="31.09381" lon="120.40571"><ele>14</ele><name>航点 #71</name></trkpt>
+      <trkpt lat="31.0971" lon="120.40838"><ele>8</ele><name>航点 #72</name></trkpt>
+      <trkpt lat="31.0944" lon="120.42006"><ele>3</ele><name>航点 #73</name></trkpt>
+      <trkpt lat="31.10317" lon="120.43323"><ele>1</ele><name>航点 #74</name></trkpt>
+      <trkpt lat="31.11473" lon="120.43969"><ele>2</ele><name>航点 #75</name></trkpt>
+      <trkpt lat="31.13289" lon="120.43068"><ele>6</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="31.15039" lon="120.4459"><ele>4</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="31.18747" lon="120.47701"><ele>3</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="31.19749" lon="120.48102"><ele>3</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="31.21348" lon="120.47877"><ele>4</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="31.22005" lon="120.46528"><ele>3</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="31.22303" lon="120.45197"><ele>5</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="31.22446" lon="120.44906"><ele>6</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="31.22455" lon="120.44483"><ele>6</ele><name>航点 #84</name></trkpt>
+      <trkpt lat="31.22878" lon="120.43663"><ele>8</ele><name>航点 #85</name></trkpt>
+      <trkpt lat="31.23638" lon="120.42928"><ele>7</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="31.24873" lon="120.41188"><ele>10</ele><name>航点 #87</name></trkpt>
+      <trkpt lat="31.24975" lon="120.40963"><ele>7</ele><name>航点 #88</name></trkpt>
+      <trkpt lat="31.2512" lon="120.40483"><ele>6</ele><name>航点 #89</name></trkpt>
+      <trkpt lat="31.25243" lon="120.4003"><ele>4</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="31.25593" lon="120.39028"><ele>13</ele><name>航点 #91</name></trkpt>
+      <trkpt lat="31.26502" lon="120.38272"><ele>10</ele><name>航点 #92</name></trkpt>
+      <trkpt lat="31.26866" lon="120.37727"><ele>4</ele><name>航点 #93</name></trkpt>
+      <trkpt lat="31.26302" lon="120.36847"><ele>5</ele><name>航点 #94</name></trkpt>
+      <trkpt lat="31.25967" lon="120.36094"><ele>11</ele><name>太湖大桥闭环终点</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

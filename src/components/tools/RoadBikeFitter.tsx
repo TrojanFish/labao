@@ -19,7 +19,10 @@ import {
   solveFrameFromHandlebar,
   solveSpacersForTargetDrop,
   calculateStemDelta,
-  calculateSaddleHeightFromBB
+  calculateSaddleHeightFromBB,
+  calculateDynamicBioCompensation,
+  AnklingStyle,
+  CleatPosition
 } from '../../utils/bikeFitGeometry';
 
 interface BikeFitterDraft {
@@ -32,6 +35,8 @@ interface BikeFitterDraft {
   footLength: number;
   ridingStyle: 'recreational' | 'endurance' | 'racing';
   flexibility: 'low' | 'medium' | 'high';
+  anklingStyle?: AnklingStyle;
+  cleatPosition?: CleatPosition;
 }
 
 const DEFAULT_FITTER_DRAFT: BikeFitterDraft = {
@@ -44,6 +49,8 @@ const DEFAULT_FITTER_DRAFT: BikeFitterDraft = {
   footLength: 26,
   ridingStyle: 'endurance',
   flexibility: 'medium',
+  anklingStyle: 'neutral',
+  cleatPosition: 'standard',
 };
 
 export const RoadBikeFitter: React.FC = () => {
@@ -105,6 +112,14 @@ export const RoadBikeFitter: React.FC = () => {
   const flexibility = fitterDraft.flexibility;
   const setFlexibility = (val: 'low' | 'medium' | 'high') =>
     setFitterDraft(prev => ({ ...prev, flexibility: val }));
+
+  const anklingStyle = fitterDraft.anklingStyle || 'neutral';
+  const setAnklingStyle = (val: AnklingStyle) =>
+    setFitterDraft(prev => ({ ...prev, anklingStyle: val }));
+
+  const cleatPosition = fitterDraft.cleatPosition || 'standard';
+  const setCleatPosition = (val: CleatPosition) =>
+    setFitterDraft(prev => ({ ...prev, cleatPosition: val }));
 
   const [showAdvancedInputs, setShowAdvancedInputs] = useState<boolean>(false);
 
@@ -194,6 +209,14 @@ export const RoadBikeFitter: React.FC = () => {
     else if (height < 186) frameSize = 'L (55-57cm)';
     else frameSize = 'XL (58-60cm+)';
 
+    // 10. Dynamic Biomechanical Compensation (Holmes & Pruitt 3D Retül Standard)
+    const dynamicBio = calculateDynamicBioCompensation({
+      baseSaddleHeightMm: Math.round(saddleHeightLeMond * 10),
+      anklingStyle,
+      cleatPosition,
+      flexibility
+    });
+
     return {
       saddleHeight: parseFloat(saddleHeightLeMond.toFixed(1)),
       saddleHeightHamley: parseFloat(saddleHeightHamley.toFixed(1)),
@@ -208,6 +231,7 @@ export const RoadBikeFitter: React.FC = () => {
       estimatedReach,
       sittingHeightNote,
       thighLowerLegNote,
+      dynamicBio,
       generalAdvice: [
         '初次设定请以脚跟踩在脚踏最低点时膝盖完全伸直为基准，穿上锁鞋后膝关节保持 25°~35° 微屈角。',
         ridingStyle === 'racing'
@@ -215,7 +239,7 @@ export const RoadBikeFitter: React.FC = () => {
           : '耐力舒适几何：把立垫圈可适当保留 15~25mm，减少腰背及颈部长时间骑行的肌肉疲劳。'
       ]
     };
-  }, [height, inseam, torso, armLength, shoulderWidth, sittingHeight, thighLength, lowerLegLength, footLength, ridingStyle, flexibility]);
+  }, [height, inseam, torso, armLength, shoulderWidth, sittingHeight, thighLength, lowerLegLength, footLength, ridingStyle, flexibility, anklingStyle, cleatPosition]);
 
   // Cockpit Decoupling State
   const [cockpitStemAngle, setCockpitStemAngle] = useState<number>(-6);
@@ -569,6 +593,23 @@ export const RoadBikeFitter: React.FC = () => {
                     </label>
                     <NumberStepper value={footLength} onChange={setFootLength} min={20} max={35} unit="cm" />
                   </div>
+
+                  <div className="col-span-2 pt-2 border-t border-black/[0.04] dark:border-white/[0.06] space-y-2">
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center">
+                      {language === 'zh-TW' ? '踩踏踝關節動態習慣' : '踩踏踝关节动态习惯'}
+                      <Tooltip content="在曲柄蹬踏至 6 点钟下死点（BDC）时，脚踝是习惯性微提踵（脚尖下探）、沉跟还是脚掌水平踩踏。提踵踩踏会增加有效腿长，需微调坐高以保证下死点 30°~35° 黄金膝屈角。" />
+                    </label>
+                    <IOSSegmentedControl
+                      options={[
+                        { id: 'heel_down', label: language === 'zh-TW' ? '沉跟平踩' : '沉跟平踩' },
+                        { id: 'neutral', label: language === 'zh-TW' ? '自然中立' : '自然中立' },
+                        { id: 'toe_down', label: language === 'zh-TW' ? '提踵下踩' : '提踵下踩' },
+                      ]}
+                      value={anklingStyle}
+                      onChange={(val) => setAnklingStyle(val as AnklingStyle)}
+                      size="sm"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -638,6 +679,42 @@ export const RoadBikeFitter: React.FC = () => {
                 subtext="坐垫顶与车把高差"
                 accentColor="orange"
               />
+            </div>
+
+            {/* 3D Dynamic Biomechanics Calibration Card */}
+            <div className="p-3.5 rounded-2xl bg-ios-purple/10 dark:bg-ios-purple/20 border border-ios-purple/20 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-ios-purple flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {language === 'zh-TW' ? '3D 動態生物力學補償核驗（Retül 規範）' : '3D 动态生物力学补偿核验（Retül 规范）'}
+                </span>
+                <span className="text-[11px] font-mono text-ios-purple font-semibold">
+                  目标膝屈角: {result.dynamicBio.targetKneeAngleMinDeg}°~{result.dynamicBio.targetKneeAngleMaxDeg}° (最优 {result.dynamicBio.targetKneeAngleOptimalDeg}°)
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-white/60 dark:bg-white/10 p-2.5 rounded-xl">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">动态坐垫有效高度</span>
+                  <span className="text-base font-bold font-mono text-slate-800 dark:text-slate-100 tabular-nums">
+                    {(result.dynamicBio.effectiveDynamicSaddleHeightMm / 10).toFixed(1)} cm
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    {result.dynamicBio.anklingOffsetMm >= 0 ? `+${result.dynamicBio.anklingOffsetMm}` : result.dynamicBio.anklingOffsetMm}mm 踝角补偿
+                  </span>
+                </div>
+                <div className="bg-white/60 dark:bg-white/10 p-2.5 rounded-xl">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">动态膝屈角状态</span>
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                    处于黄金 33° 理想区间
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    兼顾股四头肌做功与腘绳肌保护
+                  </span>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                {result.dynamicBio.recommendationZh}
+              </p>
             </div>
 
             {/* Quick Sync Fitting to Active Bike Footer */}

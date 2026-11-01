@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>德清莫干山后坞-裸心堡经典盘山挑战</name>
+    <desc>江南名山经典骑行爬坡线！从后坞文化礼堂出发，途经大界坞竹海、裸心堡欧洲古堡风貌，登顶剑池与芦花荡公园，幽静清凉。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>德清莫干山后坞-裸心堡经典盘山挑战</name>
+    <trkseg>
+      <trkpt lat="30.57088" lon="119.82013"><ele>260</ele><name>后坞文化礼堂起点</name></trkpt>
+      <trkpt lat="30.57253" lon="119.82246"><ele>237</ele><name>航点 #2</name></trkpt>
+      <trkpt lat="30.57449" lon="119.82282"><ele>191</ele><name>航点 #3</name></trkpt>
+      <trkpt lat="30.57663" lon="119.82503"><ele>128</ele><name>航点 #4</name></trkpt>
+      <trkpt lat="30.57853" lon="119.825"><ele>101</ele><name>航点 #5</name></trkpt>
+      <trkpt lat="30.57328" lon="119.8294"><ele>107</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="30.56858" lon="119.8344"><ele>79</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="30.56511" lon="119.83813"><ele>75</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="30.56293" lon="119.83902"><ele>71</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="30.56417" lon="119.84198"><ele>104</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="30.56607" lon="119.84194"><ele>113</ele><name>航点 #11</name></trkpt>
+      <trkpt lat="30.56764" lon="119.84149"><ele>105</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="30.56908" lon="119.84244"><ele>126</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="30.57091" lon="119.84349"><ele>176</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="30.57268" lon="119.84284"><ele>225</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="30.57056" lon="119.84328"><ele>185</ele><name>航点 #16</name></trkpt>
+      <trkpt lat="30.56888" lon="119.84235"><ele>126</ele><name>航点 #17</name></trkpt>
+      <trkpt lat="30.56759" lon="119.84161"><ele>105</ele><name>航点 #18</name></trkpt>
+      <trkpt lat="30.5659" lon="119.842"><ele>113</ele><name>航点 #19</name></trkpt>
+      <trkpt lat="30.564" lon="119.84192"><ele>98</ele><name>航点 #20</name></trkpt>
+      <trkpt lat="30.56241" lon="119.83933"><ele>69</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="30.56078" lon="119.84209"><ele>69</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="30.55759" lon="119.84851"><ele>62</ele><name>航点 #23</name></trkpt>
+      <trkpt lat="30.55983" lon="119.85133"><ele>63</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="30.56436" lon="119.85815"><ele>72</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="30.57213" lon="119.85707"><ele>82</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="30.57624" lon="119.85701"><ele>88</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="30.57712" lon="119.85064"><ele>98</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="30.58026" lon="119.84926"><ele>116</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="30.58046" lon="119.85074"><ele>114</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="30.58046" lon="119.85074"><ele>114</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="30.58026" lon="119.84926"><ele>116</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="30.57712" lon="119.85064"><ele>98</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="30.58" lon="119.85923"><ele>141</ele><name>航点 #34</name></trkpt>
+      <trkpt lat="30.5848" lon="119.86345"><ele>125</ele><name>航点 #35</name></trkpt>
+      <trkpt lat="30.58746" lon="119.86192"><ele>143</ele><name>航点 #36</name></trkpt>
+      <trkpt lat="30.58992" lon="119.85841"><ele>175</ele><name>航点 #37</name></trkpt>
+      <trkpt lat="30.59128" lon="119.85683"><ele>191</ele><name>航点 #38</name></trkpt>
+      <trkpt lat="30.592" lon="119.85762"><ele>196</ele><name>航点 #39</name></trkpt>
+      <trkpt lat="30.59316" lon="119.85802"><ele>204</ele><name>航点 #40</name></trkpt>
+      <trkpt lat="30.59561" lon="119.8595"><ele>247</ele><name>航点 #41</name></trkpt>
+      <trkpt lat="30.59653" lon="119.8599"><ele>278</ele><name>剑池飞瀑岔道口</name></trkpt>
+      <trkpt lat="30.59748" lon="119.86186"><ele>308</ele><name>剑池飞瀑岔道口</name></trkpt>
+      <trkpt lat="30.59841" lon="119.86355"><ele>406</ele><name>剑池飞瀑岔道口</name></trkpt>
+      <trkpt lat="30.60053" lon="119.86384"><ele>452</ele><name>剑池飞瀑岔道口</name></trkpt>
+      <trkpt lat="30.60202" lon="119.86287"><ele>509</ele><name>航点 #46</name></trkpt>
+      <trkpt lat="30.60291" lon="119.86358"><ele>522</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="30.60335" lon="119.86497"><ele>550</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="30.60404" lon="119.86636"><ele>520</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="30.60513" lon="119.86618"><ele>529</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="30.60648" lon="119.86546"><ele>510</ele><name>航点 #51</name></trkpt>
+      <trkpt lat="30.60672" lon="119.86428"><ele>520</ele><name>航点 #52</name></trkpt>
+      <trkpt lat="30.60753" lon="119.86413"><ele>569</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="30.60823" lon="119.86405"><ele>569</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="30.60859" lon="119.86473"><ele>562</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="30.6094" lon="119.8656"><ele>544</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="30.60922" lon="119.86663"><ele>544</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="30.60985" lon="119.86791"><ele>510</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="30.6106" lon="119.86822"><ele>524</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="30.61084" lon="119.86947"><ele>526</ele><name>航点 #60</name></trkpt>
+      <trkpt lat="30.61016" lon="119.87052"><ele>491</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61042" lon="119.87127"><ele>488</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61048" lon="119.87202"><ele>459</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.611" lon="119.87197"><ele>466</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61172" lon="119.87261"><ele>414</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61051" lon="119.87317"><ele>428</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.60984" lon="119.87394"><ele>424</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61052" lon="119.87348"><ele>392</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61029" lon="119.87385"><ele>392</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.60972" lon="119.8744"><ele>384</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.60949" lon="119.87525"><ele>342</ele><name>航点 #71</name></trkpt>
+      <trkpt lat="30.60998" lon="119.87664"><ele>333</ele><name>航点 #72</name></trkpt>
+      <trkpt lat="30.60991" lon="119.87621"><ele>333</ele><name>航点 #73</name></trkpt>
+      <trkpt lat="30.61008" lon="119.87511"><ele>347</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61033" lon="119.87601"><ele>313</ele><name>荫山街核心区</name></trkpt>
+      <trkpt lat="30.61039" lon="119.87793"><ele>288</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="30.61055" lon="119.87803"><ele>288</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="30.61057" lon="119.87868"><ele>276</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="30.60962" lon="119.8796"><ele>271</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="30.6101" lon="119.87968"><ele>273</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="30.60999" lon="119.88037"><ele>241</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="30.60985" lon="119.8812"><ele>221</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="30.60946" lon="119.88134"><ele>221</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="30.60986" lon="119.88226"><ele>201</ele><name>航点 #84</name></trkpt>
+      <trkpt lat="30.60965" lon="119.88274"><ele>184</ele><name>航点 #85</name></trkpt>
+      <trkpt lat="30.60924" lon="119.88283"><ele>184</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="30.61016" lon="119.88312"><ele>162</ele><name>航点 #87</name></trkpt>
+      <trkpt lat="30.60995" lon="119.88325"><ele>184</ele><name>航点 #88</name></trkpt>
+      <trkpt lat="30.6101" lon="119.88344"><ele>142</ele><name>航点 #89</name></trkpt>
+      <trkpt lat="30.60993" lon="119.88353"><ele>154</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="30.6101" lon="119.88405"><ele>142</ele><name>航点 #91</name></trkpt>
+      <trkpt lat="30.60961" lon="119.88452"><ele>131</ele><name>航点 #92</name></trkpt>
+      <trkpt lat="30.61131" lon="119.88205"><ele>162</ele><name>航点 #93</name></trkpt>
+      <trkpt lat="30.61388" lon="119.87957"><ele>207</ele><name>莫干山顶峰气象站</name></trkpt>
+      <trkpt lat="30.61541" lon="119.87731"><ele>279</ele><name>莫干山顶峰气象站</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

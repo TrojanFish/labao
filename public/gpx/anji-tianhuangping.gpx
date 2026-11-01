@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="YoloCycling - https://yolocycling.app" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>安吉天荒坪江南天池天路极速攻坚</name>
+    <desc>长三角骑行圈最具人气的爬坡圣地！从港口村大桥入山口持续攀升近千米至江南天池抽水蓄能电站大坝，万亩竹海与九曲回肠的发卡弯极具挑战性。</desc>
+    <author><name>YoloCycling</name></author>
+  </metadata>
+  <trk>
+    <name>安吉天荒坪江南天池天路极速攻坚</name>
+    <trkseg>
+      <trkpt lat="30.47792" lon="119.58372"><ele>741</ele><name>港口村大桥入山口起点</name></trkpt>
+      <trkpt lat="30.47443" lon="119.5857"><ele>749</ele><name>航点 #2</name></trkpt>
+      <trkpt lat="30.46936" lon="119.58453"><ele>716</ele><name>航点 #3</name></trkpt>
+      <trkpt lat="30.46921" lon="119.58156"><ele>688</ele><name>航点 #4</name></trkpt>
+      <trkpt lat="30.46764" lon="119.57749"><ele>567</ele><name>大溪峡谷绿道入口</name></trkpt>
+      <trkpt lat="30.46466" lon="119.57514"><ele>412</ele><name>航点 #6</name></trkpt>
+      <trkpt lat="30.46219" lon="119.57736"><ele>458</ele><name>航点 #7</name></trkpt>
+      <trkpt lat="30.45958" lon="119.57815"><ele>491</ele><name>航点 #8</name></trkpt>
+      <trkpt lat="30.46143" lon="119.5774"><ele>478</ele><name>航点 #9</name></trkpt>
+      <trkpt lat="30.46374" lon="119.576"><ele>431</ele><name>航点 #10</name></trkpt>
+      <trkpt lat="30.46701" lon="119.57657"><ele>476</ele><name>大溪峡谷绿道入口</name></trkpt>
+      <trkpt lat="30.46912" lon="119.58083"><ele>650</ele><name>航点 #12</name></trkpt>
+      <trkpt lat="30.46944" lon="119.58426"><ele>716</ele><name>航点 #13</name></trkpt>
+      <trkpt lat="30.47424" lon="119.5856"><ele>749</ele><name>航点 #14</name></trkpt>
+      <trkpt lat="30.47046" lon="119.5875"><ele>804</ele><name>航点 #15</name></trkpt>
+      <trkpt lat="30.47384" lon="119.58819"><ele>824</ele><name>航点 #16</name></trkpt>
+      <trkpt lat="30.47088" lon="119.58886"><ele>836</ele><name>航点 #17</name></trkpt>
+      <trkpt lat="30.46402" lon="119.58867"><ele>871</ele><name>航点 #18</name></trkpt>
+      <trkpt lat="30.46232" lon="119.5915"><ele>849</ele><name>航点 #19</name></trkpt>
+      <trkpt lat="30.46247" lon="119.59365"><ele>827</ele><name>航点 #20</name></trkpt>
+      <trkpt lat="30.46539" lon="119.59433"><ele>855</ele><name>航点 #21</name></trkpt>
+      <trkpt lat="30.46685" lon="119.59737"><ele>894</ele><name>航点 #22</name></trkpt>
+      <trkpt lat="30.46714" lon="119.60044"><ele>853</ele><name>航点 #23</name></trkpt>
+      <trkpt lat="30.46524" lon="119.60311"><ele>639</ele><name>航点 #24</name></trkpt>
+      <trkpt lat="30.46754" lon="119.60444"><ele>531</ele><name>航点 #25</name></trkpt>
+      <trkpt lat="30.47077" lon="119.60387"><ele>597</ele><name>航点 #26</name></trkpt>
+      <trkpt lat="30.47479" lon="119.60393"><ele>520</ele><name>航点 #27</name></trkpt>
+      <trkpt lat="30.47786" lon="119.60423"><ele>429</ele><name>航点 #28</name></trkpt>
+      <trkpt lat="30.47995" lon="119.60304"><ele>497</ele><name>航点 #29</name></trkpt>
+      <trkpt lat="30.48402" lon="119.60174"><ele>419</ele><name>航点 #30</name></trkpt>
+      <trkpt lat="30.48345" lon="119.60342"><ele>381</ele><name>航点 #31</name></trkpt>
+      <trkpt lat="30.47916" lon="119.60503"><ele>339</ele><name>航点 #32</name></trkpt>
+      <trkpt lat="30.47517" lon="119.60586"><ele>370</ele><name>航点 #33</name></trkpt>
+      <trkpt lat="30.45955" lon="119.60607"><ele>378</ele><name>航点 #34</name></trkpt>
+      <trkpt lat="30.45338" lon="119.60475"><ele>437</ele><name>航点 #35</name></trkpt>
+      <trkpt lat="30.44532" lon="119.60265"><ele>422</ele><name>航点 #36</name></trkpt>
+      <trkpt lat="30.44178" lon="119.59701"><ele>488</ele><name>航点 #37</name></trkpt>
+      <trkpt lat="30.44029" lon="119.59265"><ele>475</ele><name>航点 #38</name></trkpt>
+      <trkpt lat="30.43796" lon="119.59921"><ele>516</ele><name>航点 #39</name></trkpt>
+      <trkpt lat="30.43999" lon="119.5962"><ele>558</ele><name>航点 #40</name></trkpt>
+      <trkpt lat="30.43846" lon="119.59233"><ele>534</ele><name>航点 #41</name></trkpt>
+      <trkpt lat="30.43375" lon="119.59084"><ele>608</ele><name>藏龙百瀑陡坡段</name></trkpt>
+      <trkpt lat="30.43556" lon="119.58731"><ele>604</ele><name>航点 #43</name></trkpt>
+      <trkpt lat="30.43374" lon="119.58096"><ele>677</ele><name>航点 #44</name></trkpt>
+      <trkpt lat="30.43139" lon="119.57613"><ele>709</ele><name>航点 #45</name></trkpt>
+      <trkpt lat="30.42704" lon="119.57049"><ele>750</ele><name>航点 #46</name></trkpt>
+      <trkpt lat="30.42455" lon="119.56609"><ele>656</ele><name>航点 #47</name></trkpt>
+      <trkpt lat="30.42934" lon="119.56303"><ele>683</ele><name>航点 #48</name></trkpt>
+      <trkpt lat="30.42894" lon="119.55827"><ele>625</ele><name>航点 #49</name></trkpt>
+      <trkpt lat="30.42761" lon="119.56299"><ele>601</ele><name>航点 #50</name></trkpt>
+      <trkpt lat="30.42235" lon="119.56602"><ele>557</ele><name>航点 #51</name></trkpt>
+      <trkpt lat="30.41748" lon="119.56782"><ele>527</ele><name>航点 #52</name></trkpt>
+      <trkpt lat="30.42054" lon="119.56576"><ele>521</ele><name>航点 #53</name></trkpt>
+      <trkpt lat="30.41479" lon="119.56475"><ele>541</ele><name>航点 #54</name></trkpt>
+      <trkpt lat="30.40851" lon="119.56332"><ele>467</ele><name>航点 #55</name></trkpt>
+      <trkpt lat="30.40269" lon="119.56183"><ele>445</ele><name>航点 #56</name></trkpt>
+      <trkpt lat="30.39296" lon="119.55906"><ele>455</ele><name>航点 #57</name></trkpt>
+      <trkpt lat="30.3839" lon="119.55762"><ele>377</ele><name>航点 #58</name></trkpt>
+      <trkpt lat="30.37992" lon="119.55771"><ele>361</ele><name>航点 #59</name></trkpt>
+      <trkpt lat="30.37572" lon="119.55813"><ele>377</ele><name>航点 #60</name></trkpt>
+      <trkpt lat="30.36659" lon="119.5655"><ele>317</ele><name>航点 #61</name></trkpt>
+      <trkpt lat="30.36204" lon="119.5636"><ele>300</ele><name>航点 #62</name></trkpt>
+      <trkpt lat="30.35506" lon="119.56899"><ele>299</ele><name>航点 #63</name></trkpt>
+      <trkpt lat="30.3524" lon="119.57386"><ele>276</ele><name>航点 #64</name></trkpt>
+      <trkpt lat="30.35431" lon="119.5769"><ele>321</ele><name>航点 #65</name></trkpt>
+      <trkpt lat="30.35334" lon="119.58221"><ele>306</ele><name>航点 #66</name></trkpt>
+      <trkpt lat="30.35202" lon="119.58619"><ele>300</ele><name>航点 #67</name></trkpt>
+      <trkpt lat="30.35201" lon="119.59129"><ele>254</ele><name>航点 #68</name></trkpt>
+      <trkpt lat="30.35646" lon="119.59022"><ele>304</ele><name>航点 #69</name></trkpt>
+      <trkpt lat="30.36027" lon="119.59491"><ele>310</ele><name>航点 #70</name></trkpt>
+      <trkpt lat="30.36273" lon="119.59206"><ele>306</ele><name>航点 #71</name></trkpt>
+      <trkpt lat="30.36668" lon="119.59401"><ele>357</ele><name>航点 #72</name></trkpt>
+      <trkpt lat="30.3696" lon="119.59614"><ele>361</ele><name>航点 #73</name></trkpt>
+      <trkpt lat="30.37237" lon="119.59621"><ele>385</ele><name>航点 #74</name></trkpt>
+      <trkpt lat="30.37549" lon="119.59723"><ele>376</ele><name>航点 #75</name></trkpt>
+      <trkpt lat="30.37722" lon="119.59511"><ele>411</ele><name>航点 #76</name></trkpt>
+      <trkpt lat="30.37985" lon="119.59702"><ele>415</ele><name>航点 #77</name></trkpt>
+      <trkpt lat="30.38285" lon="119.59316"><ele>430</ele><name>航点 #78</name></trkpt>
+      <trkpt lat="30.38619" lon="119.59261"><ele>475</ele><name>航点 #79</name></trkpt>
+      <trkpt lat="30.38818" lon="119.59616"><ele>489</ele><name>航点 #80</name></trkpt>
+      <trkpt lat="30.39123" lon="119.59496"><ele>541</ele><name>航点 #81</name></trkpt>
+      <trkpt lat="30.39443" lon="119.59589"><ele>521</ele><name>航点 #82</name></trkpt>
+      <trkpt lat="30.3967" lon="119.59137"><ele>545</ele><name>航点 #83</name></trkpt>
+      <trkpt lat="30.40068" lon="119.58996"><ele>577</ele><name>航点 #84</name></trkpt>
+      <trkpt lat="30.40654" lon="119.59035"><ele>613</ele><name>航点 #85</name></trkpt>
+      <trkpt lat="30.40985" lon="119.59087"><ele>643</ele><name>航点 #86</name></trkpt>
+      <trkpt lat="30.41186" lon="119.59189"><ele>692</ele><name>航点 #87</name></trkpt>
+      <trkpt lat="30.41534" lon="119.59266"><ele>747</ele><name>九龙峡连续发卡弯</name></trkpt>
+      <trkpt lat="30.41524" lon="119.59247"><ele>790</ele><name>九龙峡连续发卡弯</name></trkpt>
+      <trkpt lat="30.41251" lon="119.59201"><ele>714</ele><name>航点 #90</name></trkpt>
+      <trkpt lat="30.40977" lon="119.59108"><ele>643</ele><name>航点 #91</name></trkpt>
+      <trkpt lat="30.40717" lon="119.59048"><ele>623</ele><name>航点 #92</name></trkpt>
+      <trkpt lat="30.40188" lon="119.58955"><ele>605</ele><name>航点 #93</name></trkpt>
+      <trkpt lat="30.39715" lon="119.59177"><ele>551</ele><name>航点 #94</name></trkpt>
+      <trkpt lat="30.39513" lon="119.59529"><ele>549</ele><name>江南天池大坝终点</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

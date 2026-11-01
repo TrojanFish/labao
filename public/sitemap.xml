@@ -4,66 +4,66 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://labao.app/</loc>
+    <loc>https://yolocycling.app/</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://labao.app/"/>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://labao.app/"/>
-    <xhtml:link rel="alternate" hreflang="en"    href="https://labao.app/"/>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://yolocycling.app/"/>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://yolocycling.app/"/>
+    <xhtml:link rel="alternate" hreflang="en"    href="https://yolocycling.app/"/>
   </url>
 
   <!-- Dynamics & Gearing Tools -->
   <url>
-    <loc>https://labao.app/#tool-power-calc</loc>
+    <loc>https://yolocycling.app/#tool-power-calc</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-tire-pressure</loc>
+    <loc>https://yolocycling.app/#tool-tire-pressure</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-gear-calculator</loc>
+    <loc>https://yolocycling.app/#tool-gear-calculator</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-chain-calculator</loc>
+    <loc>https://yolocycling.app/#tool-chain-calculator</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-climb-pacing</loc>
+    <loc>https://yolocycling.app/#tool-climb-pacing</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-upgrade-roi</loc>
+    <loc>https://yolocycling.app/#tool-upgrade-roi</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-tubeless-sealant</loc>
+    <loc>https://yolocycling.app/#tool-tubeless-sealant</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-spoke-calculator</loc>
+    <loc>https://yolocycling.app/#tool-spoke-calculator</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-mtb-suspension</loc>
+    <loc>https://yolocycling.app/#tool-mtb-suspension</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -71,19 +71,19 @@
 
   <!-- Bike Fit & Physiology Tools -->
   <url>
-    <loc>https://labao.app/#tool-bike-fitter</loc>
+    <loc>https://yolocycling.app/#tool-bike-fitter</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-pain-checker</loc>
+    <loc>https://yolocycling.app/#tool-pain-checker</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-health-calculator</loc>
+    <loc>https://yolocycling.app/#tool-health-calculator</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -91,25 +91,25 @@
 
   <!-- Route & Navigation Tools -->
   <url>
-    <loc>https://labao.app/#tool-roadbook-library</loc>
+    <loc>https://yolocycling.app/#tool-roadbook-library</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-gpx-creator</loc>
+    <loc>https://yolocycling.app/#tool-gpx-creator</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-group-ride</loc>
+    <loc>https://yolocycling.app/#tool-group-ride</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-weather-advisor</loc>
+    <loc>https://yolocycling.app/#tool-weather-advisor</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -117,31 +117,31 @@
 
   <!-- Training & Analytics Tools -->
   <url>
-    <loc>https://labao.app/#tool-power-radar</loc>
+    <loc>https://yolocycling.app/#tool-power-radar</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-activity-analyzer</loc>
+    <loc>https://yolocycling.app/#tool-activity-analyzer</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-workout-builder</loc>
+    <loc>https://yolocycling.app/#tool-workout-builder</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-strava-cockpit</loc>
+    <loc>https://yolocycling.app/#tool-strava-cockpit</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://labao.app/#tool-training-calendar</loc>
+    <loc>https://yolocycling.app/#tool-training-calendar</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

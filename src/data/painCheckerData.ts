@@ -7,6 +7,45 @@ export interface PainArea {
   specificSelfCheck: string[];
 }
 
+export interface ClinicalRedFlag {
+  id: string;
+  severity: 'warning' | 'urgent';
+  titleZh: string;
+  conditionZh: string;
+  triageActionZh: string;
+}
+
+export const CLINICAL_RED_FLAGS: Record<string, ClinicalRedFlag> = {
+  knee: {
+    id: 'knee_red_flag',
+    severity: 'urgent',
+    titleZh: '膝关节器质性损伤红旗征警报',
+    conditionZh: '若伴随明显关节红肿发热、静息胀痛或关节弹响绞锁（Locking），可能存在半月板撕裂或严重滑膜积液，非单纯 Fitting 设定问题。',
+    triageActionZh: '立即停止高负荷骑行，建议前往医院运动医学科行膝关节核磁共振（MRI）影像确诊。'
+  },
+  lower_back: {
+    id: 'lower_back_red_flag',
+    severity: 'urgent',
+    titleZh: '腰椎神经根压迫红旗征警报',
+    conditionZh: '若疼痛沿臀部大腿向小腿足底呈放射性放电感，或伴随足背麻木无力，高度提示腰椎间盘突出压迫神经根。',
+    triageActionZh: '严禁继续大落差伏把骑行，避免久坐重负，建议前往脊柱外科行腰椎 MRI 检查。'
+  },
+  wrist_hand: {
+    id: 'hand_red_flag',
+    severity: 'warning',
+    titleZh: '尺神经 / 正中神经卡压警报',
+    conditionZh: '若小指无名指麻木持续超过 24 小时未消退，提示手掌盖氏管（Guyon\'s Canal）深支遭受压迫缺血。',
+    triageActionZh: '立即缩短车把 Reach 并换用厚掌垫手套，若持续麻木建议行肌电图（EMG）神经传导测定。'
+  },
+  buttock: {
+    id: 'buttock_red_flag',
+    severity: 'urgent',
+    titleZh: '阴部神经（Pudendal Nerve）血流阻断警报',
+    conditionZh: '若下车后会阴马鞍区持续麻木无知觉，说明坐垫过度压迫骨盆底阴部神经与动脉。',
+    triageActionZh: '绝对禁止继续使用当前无孔实心坐垫！立即换用超宽中空减压槽坐垫，并将坐垫鼻头水平或下调 1°~2°。'
+  }
+};
+
 export const PAIN_AREAS: Record<string, PainArea> = {
   knee: {
     id: 'knee',

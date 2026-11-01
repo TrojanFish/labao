@@ -1,5 +1,5 @@
 /**
- * LaBao Offline Map Tile Cache (IndexedDB)
+ * YoloCycling Offline Map Tile Cache (IndexedDB)
  * Enables seamless offline route exploration and roadbook inspection in remote/mountainous areas.
  * Caches recently viewed map tiles (CartoDB, OpenStreetMap, ArcGIS satellite) in browser IndexedDB.
  */
@@ -13,7 +13,7 @@ export interface MapTileRecord {
   size: number;       // Approximate size in bytes
 }
 
-export const MAP_TILES_DB_NAME = 'labao_map_tiles_db';
+export const MAP_TILES_DB_NAME = 'yolocycling_map_tiles_db';
 export const MAP_TILES_DB_VERSION = 1;
 export const MAP_TILES_STORE = 'tiles';
 export const MAX_CACHED_TILES = 3000;

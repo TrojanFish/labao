@@ -1037,7 +1037,7 @@ export const PowerProfileRadar: React.FC<PowerProfileRadarProps> = ({ onNavigate
         onClose={() => setIsShareModalOpen(false)}
         imageUrl={sharePosterUrl}
         title={language === 'zh-TW' ? '車手能力雷達戰報' : '车手能力雷达战报'}
-        downloadFileName={`LaBao_功率能力雷达_${analytics.phenotype}.png`}
+        downloadFileName={`YoloCycling_功率能力雷达_${analytics.phenotype}.png`}
       />
     </div>
   );

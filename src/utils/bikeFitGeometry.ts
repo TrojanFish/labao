@@ -254,3 +254,100 @@ export function calculateStemDelta(
     summaryText
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic Biomechanical Compensation Engine (Holmes & Pruitt 3D Retül Standard)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AnklingStyle = 'neutral' | 'toe_down' | 'heel_down';
+export type CleatPosition = 'standard' | 'rearward_midfoot' | 'forward_ball';
+
+export interface DynamicBioCompensation {
+  anklingOffsetMm: number;
+  cleatOffsetMm: number;
+  flexibilityDropOffsetMm: number;
+  targetKneeAngleMinDeg: number;
+  targetKneeAngleMaxDeg: number;
+  targetKneeAngleOptimalDeg: number;
+  effectiveDynamicSaddleHeightMm: number;
+  dynamicKneeDiagnosis: string;
+  recommendationZh: string;
+}
+
+/**
+ * Solves dynamic biomechanical compensations bridging 2D static formulas to 3D motion-capture standards.
+ * Accounts for:
+ * 1. Ankle plantarflexion / dorsiflexion pedal stroke habits (Toe-down vs Heel-down)
+ * 2. Cleat longitudinal fore-aft offset (Mid-foot rearward cleat vs Ball-of-foot forward cleat)
+ * 3. Pelvic rotation & hamstring flexibility limits on handlebar drop
+ * 4. Holmes & Pruitt (1994) dynamic knee flexion target at bottom dead center (30° - 35°)
+ */
+export function calculateDynamicBioCompensation(params: {
+  baseSaddleHeightMm: number;
+  anklingStyle: AnklingStyle;
+  cleatPosition?: CleatPosition;
+  flexibility?: 'low' | 'medium' | 'high';
+}): DynamicBioCompensation {
+  const {
+    baseSaddleHeightMm,
+    anklingStyle,
+    cleatPosition = 'standard',
+    flexibility = 'medium'
+  } = params;
+
+  // 1. Ankling compensation:
+  // Toe-down (plantarflexion ~20-30°) functionally lengthens leg reach by 4~7mm.
+  // Heel-down (dorsiflexion) compresses effective distance by 3~5mm.
+  let anklingOffsetMm = 0;
+  if (anklingStyle === 'toe_down') {
+    anklingOffsetMm = 5;
+  } else if (anklingStyle === 'heel_down') {
+    anklingOffsetMm = -4;
+  }
+
+  // 2. Cleat fore-aft offset:
+  // Rearward (mid-foot) cleats reduce calf moment arm and lower foot pivot, requiring 3~5mm saddle drop.
+  // Forward (ball of foot) cleats increase ankle excursion, allowing standard or slightly higher saddle.
+  let cleatOffsetMm = 0;
+  if (cleatPosition === 'rearward_midfoot') {
+    cleatOffsetMm = -4;
+  } else if (cleatPosition === 'forward_ball') {
+    cleatOffsetMm = 2;
+  }
+
+  // 3. Flexibility impact on cockpit drop
+  let flexibilityDropOffsetMm = 0;
+  if (flexibility === 'high') {
+    flexibilityDropOffsetMm = 15;
+  } else if (flexibility === 'low') {
+    flexibilityDropOffsetMm = -15;
+  }
+
+  const effectiveDynamicSaddleHeightMm = Math.round(
+    baseSaddleHeightMm + anklingOffsetMm + cleatOffsetMm
+  );
+
+  let recommendationZh = '踝关节与踩踏力线处于生理黄金中立位。';
+  if (anklingStyle === 'toe_down') {
+    recommendationZh = '检测到习惯性脚尖下踩提踵发力：建议坐垫微升 4~6mm，避免在下死点膝关节过度屈曲而压迫髌腱。';
+  } else if (anklingStyle === 'heel_down') {
+    recommendationZh = '检测到沉跟平踩发力：建议坐垫微降 3~5mm，防止在下死点膝窝过度伸展拉伤腘绳肌腱。';
+  }
+
+  if (cleatPosition === 'rearward_midfoot') {
+    recommendationZh += ' 锁片大幅后移已降低小腿腓肠肌负荷，坐垫需同步微降 4mm 以补偿有效力臂缩短。';
+  }
+
+  return {
+    anklingOffsetMm,
+    cleatOffsetMm,
+    flexibilityDropOffsetMm,
+    targetKneeAngleMinDeg: 30,
+    targetKneeAngleMaxDeg: 35,
+    targetKneeAngleOptimalDeg: 33,
+    effectiveDynamicSaddleHeightMm,
+    dynamicKneeDiagnosis: '3D 动捕标准下死点膝屈角：30°~35°（过大易致膝前痛，过小易致腘窝痛与骨盆晃动）',
+    recommendationZh
+  };
+}
+

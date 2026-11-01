@@ -131,25 +131,68 @@ export const HealthCalculator: React.FC = () => {
     return { hrr, zones };
   }, [restingHr, maxHr]);
 
-  // 3. Mifflin-St Jeor BMR & TDEE Formula
+  // 3. Deurenberg Adult Body Fat Percentage (BFP) formula:
+  // BFP = (1.20 × BMI) + (0.23 × Age) − (10.8 × gender_factor) − 5.4  (male=1, female=0)
+  const bfpResult = useMemo(() => {
+    const heightM = heightCm / 100;
+    const bmiVal = weightKg / (heightM * heightM);
+    const genderFactor = gender === 'male' ? 1 : 0;
+
+    let bfpVal = 1.2 * bmiVal + 0.23 * age - 10.8 * genderFactor - 5.4;
+    bfpVal = parseFloat(Math.max(3, Math.min(60, bfpVal)).toFixed(1));
+
+    let level = '标准';
+    let levelColor = 'text-emerald-500';
+
+    if (gender === 'male') {
+      if (bfpVal < 6) { level = '极端偏低，职业级'; levelColor = 'text-amber-500'; }
+      else if (bfpVal <= 13) { level = '竞技运动员级别'; levelColor = 'text-blue-500'; }
+      else if (bfpVal <= 17) { level = '优秀健康健美'; levelColor = 'text-emerald-500'; }
+      else if (bfpVal <= 24) { level = '正常水平'; levelColor = 'text-slate-500'; }
+      else { level = '体脂偏高'; levelColor = 'text-rose-500'; }
+    } else {
+      if (bfpVal < 14) { level = '极端偏低，职业级'; levelColor = 'text-amber-500'; }
+      else if (bfpVal <= 20) { level = '竞技运动员级别'; levelColor = 'text-blue-500'; }
+      else if (bfpVal <= 24) { level = '优秀健康健美'; levelColor = 'text-emerald-500'; }
+      else if (bfpVal <= 31) { level = '正常水平'; levelColor = 'text-slate-500'; }
+      else { level = '体脂偏高'; levelColor = 'text-rose-500'; }
+    }
+
+    return {
+      bfp: bfpVal,
+      level,
+      levelColor
+    };
+  }, [weightKg, heightCm, age, gender]);
+
+  // 4. Dual Metabolic Engine: Mifflin-St Jeor & Katch-McArdle LBM Formula
   const bmrResult = useMemo(() => {
     let bmr = 10 * weightKg + 6.25 * heightCm - 5 * age;
     bmr += gender === 'male' ? 5 : -161;
     bmr = Math.round(bmr);
 
+    const leanBodyMassKg = parseFloat((weightKg * (1 - bfpResult.bfp / 100)).toFixed(1));
+    const katchMcArdleBmr = Math.round(370 + 21.6 * leanBodyMassKg);
+    const cunninghamBmr = Math.round(500 + 22 * leanBodyMassKg);
+
     const tdee = Math.round(bmr * activityFactor);
+    const athleteTdee = Math.round(katchMcArdleBmr * activityFactor);
     const loseWeightCal = Math.round(tdee * 0.80);
     const maintainCal = tdee;
     const gainMuscleCal = Math.round(tdee * 1.15);
 
     return {
       bmr,
+      leanBodyMassKg,
+      katchMcArdleBmr,
+      cunninghamBmr,
       tdee,
+      athleteTdee,
       loseWeightCal,
       maintainCal,
       gainMuscleCal
     };
-  }, [weightKg, heightCm, age, gender, activityFactor]);
+  }, [weightKg, heightCm, age, gender, activityFactor, bfpResult.bfp]);
 
   // 4. BMI Formula: weight(kg) / [height(m)]²
   const bmiResult = useMemo(() => {
@@ -184,40 +227,6 @@ export const HealthCalculator: React.FC = () => {
       idealMax
     };
   }, [weightKg, heightCm]);
-
-  // 5. Deurenberg Adult Body Fat Percentage (BFP) formula:
-  // BFP = (1.20 × BMI) + (0.23 × Age) − (10.8 × gender_factor) − 5.4  (male=1, female=0)
-  const bfpResult = useMemo(() => {
-    const heightM = heightCm / 100;
-    const bmiVal = weightKg / (heightM * heightM);
-    const genderFactor = gender === 'male' ? 1 : 0;
-
-    let bfpVal = 1.2 * bmiVal + 0.23 * age - 10.8 * genderFactor - 5.4;
-    bfpVal = parseFloat(Math.max(3, Math.min(60, bfpVal)).toFixed(1));
-
-    let level = '标准';
-    let levelColor = 'text-emerald-500';
-
-    if (gender === 'male') {
-      if (bfpVal < 6) { level = '极端偏低，职业级'; levelColor = 'text-amber-500'; }
-      else if (bfpVal <= 13) { level = '竞技运动员级别'; levelColor = 'text-blue-500'; }
-      else if (bfpVal <= 17) { level = '优秀健康健美'; levelColor = 'text-emerald-500'; }
-      else if (bfpVal <= 24) { level = '正常水平'; levelColor = 'text-slate-500'; }
-      else { level = '体脂偏高'; levelColor = 'text-rose-500'; }
-    } else {
-      if (bfpVal < 14) { level = '极端偏低，职业级'; levelColor = 'text-amber-500'; }
-      else if (bfpVal <= 20) { level = '竞技运动员级别'; levelColor = 'text-blue-500'; }
-      else if (bfpVal <= 24) { level = '优秀健康健美'; levelColor = 'text-emerald-500'; }
-      else if (bfpVal <= 31) { level = '正常水平'; levelColor = 'text-slate-500'; }
-      else { level = '体脂偏高'; levelColor = 'text-rose-500'; }
-    }
-
-    return {
-      bfp: bfpVal,
-      level,
-      levelColor
-    };
-  }, [weightKg, heightCm, age, gender]);
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -549,6 +558,45 @@ export const HealthCalculator: React.FC = () => {
                     <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 tabular-nums">{bmrResult.gainMuscleCal} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">kcal</span></div>
                     <p className="text-[11px] text-slate-400 dark:text-slate-500">轻微盈余 15%，配合力量训练</p>
                   </div>
+                </div>
+              </IOSCard>
+
+              {/* Athlete LBM & Mechanical Work Coupling Card */}
+              <IOSCard variant="default" className="p-4 sm:p-5 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-ios-purple" />
+                    {language === 'zh-TW' ? '運動員去脂瘦體重代謝方程（Katch-McArdle）' : '运动员去脂瘦体重代谢方程（Katch-McArdle）'}
+                  </h3>
+                  <span className="text-[11px] font-mono text-ios-purple font-semibold">
+                    去脂瘦体重: {bmrResult.leanBodyMassKg} kg
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-2xl bg-ios-purple/10 border border-ios-purple/20 space-y-1">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Katch-McArdle 竞技基础代谢</span>
+                    <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 tabular-nums">
+                      {bmrResult.katchMcArdleBmr} <span className="text-xs font-normal text-slate-500">kcal/天</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                      消除常规人群体脂干扰，基于纯肌肉骨骼代谢消耗精算
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-ios-blue/10 border border-ios-blue/20 space-y-1">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Cunningham 耐力选手 BMR</span>
+                    <div className="text-xl font-bold font-mono text-slate-900 dark:text-slate-100 tabular-nums">
+                      {bmrResult.cunninghamBmr} <span className="text-xs font-normal text-slate-500">kcal/天</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                      适配高有氧训练容积，线粒体密度高激活水平
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.05] dark:border-white/[0.08] text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  💡 <b>骑行机械做功与人体代谢能耗换算定理</b>：人类踩踏毛效率（Gross Mechanical Efficiency）约为 21.5% ~ 22%。在码表上完成 <b>1 kJ</b> 机械做功，机体实际消耗热量约为 <b>1.11 kcal</b>（1 kJ / 4.184 / 0.215 ≈ 1.11 kcal）。因此骑行做功与卡路里消耗近乎 1:1.1 严格正比！
                 </div>
               </IOSCard>
             </div>

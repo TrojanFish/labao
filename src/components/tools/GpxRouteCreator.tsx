@@ -431,7 +431,7 @@ export const GpxRouteCreator: React.FC = () => {
     }
 
     const gpxXml = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="LaBao PRO Roadbook Studio" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="YoloCycling PRO Roadbook Studio" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>${routeName}</name>
     <time>${new Date().toISOString()}</time>

@@ -53,7 +53,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   };
 
   const finalImageUrl = imageUrl || posterUrl;
-  const finalFileName = downloadFileName || fileName || 'LaBao_ShareCard.png';
+  const finalFileName = downloadFileName || fileName || 'YoloCycling_ShareCard.png';
 
   if (!isOpen || !finalImageUrl) return null;
 
