@@ -29,6 +29,7 @@ import {
 import { TOOLS_LIST } from '../../data/toolsList';
 import { ToolMetadata } from '../../types';
 import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface CommandPaletteModalProps {
   isOpen: boolean;
@@ -69,7 +70,11 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguageAndUnit();
+
+  // Focus trap for keyboard navigation and Escape dismissal
+  useFocusTrap(isOpen, modalRef, onClose);
 
   // Focus input upon opening & reset query
   useEffect(() => {
@@ -158,6 +163,10 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     >
       {/* Modal Container: iOS Bottom Sheet (<640px) vs macOS Centered Panel (>=640px) */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={language === 'zh-TW' ? '命令面板' : '命令面板'}
         className="w-full sm:max-w-xl max-h-[85vh] sm:max-h-[600px] flex flex-col bg-white/95 dark:bg-[#1C1C1E]/95 border-t sm:border border-black/[0.08] dark:border-white/[0.12] rounded-t-[28px] sm:rounded-2xl shadow-ios-popover backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >

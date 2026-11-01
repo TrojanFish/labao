@@ -41,6 +41,7 @@ import {
 import { IOSSegmentedControl } from '../common/IOSSegmentedControl';
 import { useToast } from '../../context/ToastContext';
 import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ActivityArchiveModalProps {
   isOpen: boolean;
@@ -69,6 +70,10 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
   const { language, unitSystem } = useLanguageAndUnit();
   const isImperial = unitSystem === 'imperial';
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap for accessibility and Escape dismissal
+  useFocusTrap(isOpen, panelRef, onClose);
 
   const [activeTab, setActiveTab] = useState<'local' | 'strava'>('local');
   const [stravaActivities, setStravaActivities] = useState<StravaActivityRecord[]>([]);
@@ -261,11 +266,18 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    >
       <div
+        ref={panelRef}
         className="w-full sm:max-w-3xl bg-white dark:bg-[#1C1C1E] border border-slate-200/80 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl shadow-ios-popover overflow-hidden flex flex-col max-h-[90vh] animate-spring-up"
         role="dialog"
         aria-modal="true"
+        aria-label={language === 'zh-TW' ? '本地活動檔案庫' : '本地活动档案库'}
       >
         {/* iOS Drag Handle on Mobile */}
         <div className="sm:hidden pt-3 pb-1 flex justify-center">

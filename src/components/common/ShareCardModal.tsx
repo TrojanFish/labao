@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Download, Copy, Check, Sparkles, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ShareCardModalProps {
   isOpen: boolean;
@@ -29,6 +30,10 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const touchStartY = useRef<number>(0);
   const currentDragY = useRef<number>(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap for accessibility and Escape dismissal
+  useFocusTrap(isOpen, panelRef, onClose);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
@@ -73,11 +78,12 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
   const handleCopyImage = async () => {
     try {
-      if (navigator.clipboard && (window as any).ClipboardItem) {
+      const winWithClipboard = window as unknown as { ClipboardItem?: new (items: Record<string, Blob>) => unknown };
+      if (navigator.clipboard && winWithClipboard.ClipboardItem) {
         const res = await fetch(finalImageUrl);
         const blob = await res.blob();
         await navigator.clipboard.write([
-          new (window as any).ClipboardItem({ [blob.type]: blob })
+          new winWithClipboard.ClipboardItem({ [blob.type]: blob }) as unknown as ClipboardItem
         ]);
         setHasCopied(true);
         setTimeout(() => setHasCopied(false), 2500);
@@ -85,7 +91,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
         return;
       }
       throw new Error('ClipboardItem not supported');
-    } catch (err) {
+    } catch {
       handleDownload();
       showToast('已为您直接下载图片（手机端长按亦可直接存图）', 'info');
     }
@@ -99,6 +105,10 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 dark:bg-black/75 backdrop-blur-2xl animate-in fade-in duration-200"
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || '海报分享'}
         style={{
           transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
           transition: isDragging ? 'none' : 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'

@@ -23,9 +23,11 @@ export interface TsbZoneInfo {
   zone: 'overload' | 'productive' | 'neutral' | 'peak' | 'detraining';
   label: string;
   labelTw: string;
+  labelEn?: string;
   color: string;
   advice: string;
   adviceTw: string;
+  adviceEn?: string;
 }
 
 export const getTsbZoneInfo = (tsb: number): TsbZoneInfo => {
@@ -34,9 +36,11 @@ export const getTsbZoneInfo = (tsb: number): TsbZoneInfo => {
       zone: 'overload',
       label: '深度透支 / 疲劳超载',
       labelTw: '深度透支 / 疲勞超載',
+      labelEn: 'Extreme Overload / Fatigue',
       color: '#ef4444', // red
       advice: '机体处于极度疲劳与免疫抑制期，极易诱发伤病或生病。强烈建议安排 2-3 天主动恢复骑（Z1 功率 < 55% FTP）或彻底休骑。',
-      adviceTw: '機體處於極度疲勞與免疫抑制期，極易誘發傷病或生病。強烈建議安排 2-3 天主動恢復騎（Z1 功率 < 55% FTP）或徹底休騎。'
+      adviceTw: '機體處於極度疲勞與免疫抑制期，極易誘發傷病或生病。強烈建議安排 2-3 天主動恢復騎（Z1 功率 < 55% FTP）或徹底休騎。',
+      adviceEn: 'High risk of illness and overtraining. Active recovery rides or complete rest strongly advised.'
     };
   }
   if (tsb >= -30 && tsb < -10) {
@@ -44,9 +48,11 @@ export const getTsbZoneInfo = (tsb: number): TsbZoneInfo => {
       zone: 'productive',
       label: '高收益强化训练期',
       labelTw: '高收益強化訓練期',
+      labelEn: 'Productive Training Stimulus',
       color: '#00AFFF', // blue
       advice: '处于最佳超量恢复刺激区间。机体正建立深层有氧与无氧耐力适应，保证每晚 8 小时深度睡眠和高碳水补给。',
-      adviceTw: '處於最佳超量恢復刺激區間。機體正建立深層有氧與無氧耐力適應，保證每晚 8 小時深度睡眠和高碳水補給。'
+      adviceTw: '處於最佳超量恢復刺激區間。機體正建立深層有氧與無氧耐力適應，保證每晚 8 小時深度睡眠和高碳水補給。',
+      adviceEn: 'Optimal zone for building deep aerobic and anaerobic adaptations. Ensure adequate sleep and carb fueling.'
     };
   }
   if (tsb >= -10 && tsb <= 5) {
@@ -54,9 +60,11 @@ export const getTsbZoneInfo = (tsb: number): TsbZoneInfo => {
       zone: 'neutral',
       label: '负荷过渡与维持期',
       labelTw: '負荷過渡與維持期',
+      labelEn: 'Maintenance / Transition',
       color: '#10b981', // green
       advice: '体能与疲劳基本持平，适合常规周末俱乐部团骑或日常训练维持。',
-      adviceTw: '體能與疲勞基本持平，適合常規週末俱樂部團騎或日常訓練維持。'
+      adviceTw: '體能與疲勞基本持平，適合常規週末俱樂部團騎或日常訓練維持。',
+      adviceEn: 'Fitness and fatigue in equilibrium. Suitable for club group rides or steady aerobic maintenance.'
     };
   }
   if (tsb > 5 && tsb <= 25) {
@@ -64,18 +72,22 @@ export const getTsbZoneInfo = (tsb: number): TsbZoneInfo => {
       zone: 'peak',
       label: '黄金巅峰竞技状态',
       labelTw: '黃金巔峰競技狀態',
+      labelEn: 'Peak Racing Form',
       color: '#f59e0b', // amber
       advice: '绝佳比赛状态！疲劳已大部分消退，肌肉储备完全充能，踏频与心率反应敏锐，正是冲击 A 级目标赛事最佳成绩的黄金窗口！',
-      adviceTw: '絕佳比賽狀態！疲勞已大部分消退，肌肉儲備完全充能，踏頻與心率反應敏銳，正是衝擊 A 級目標賽事最佳成績的黃金窗口！'
+      adviceTw: '絕佳比賽狀態！疲勞已大部分消退，肌肉儲備完全充能，踏頻與心率反應敏銳，正是衝擊 A 級目標賽事最佳成績的黃金窗口！',
+      adviceEn: 'Peak racing sharpness! Fatigue has cleared and energy reserves are fully restored. Ideal for A-priority target races.'
     };
   }
   return {
     zone: 'detraining',
     label: '过度减量 / 体能衰退',
     labelTw: '過度減量 / 體能衰退',
+    labelEn: 'Detraining / Prolonged Rest',
     color: '#94a3b8', // slate
     advice: '休息或减量时间过长，疲劳虽为 0 但有氧血浆容量和线粒体活性开始滑坡。建议尽快重启节奏骑行或甜区刺激以保住 CTL。',
-    adviceTw: '休息或減量時間過長，疲勞雖為 0 但有氧血漿容量和線粒體活性開始滑坡。建議盡快重啟節奏騎行或甜區刺激以保住 CTL。'
+    adviceTw: '休息或減量時間過長，疲勞雖為 0 但有氧血漿容量和線粒體活性開始滑坡。建議盡快重啟節奏騎行或甜區刺激以保住 CTL。',
+    adviceEn: 'Taper prolonged too long; aerobic adaptations declining. Resume tempo or sweet spot rides to protect CTL.'
   };
 };
 
@@ -119,9 +131,30 @@ export const generatePmcSeries = (
     daysCount = 24;
   }
 
-  // If Strava activities are present and cover more days, adjust daysCount
+  // If Strava activities are present and cover more days, adjust daysCount adaptively (up to 365 days)
+  const now = new Date();
   if (stravaActivities && stravaActivities.length > 0) {
-    daysCount = Math.max(daysCount, 60);
+    let minTime = now.getTime();
+    for (const a of stravaActivities) {
+      const t = new Date(a.start_date_local || a.start_date).getTime();
+      if (!isNaN(t) && t < minTime) minTime = t;
+    }
+    const daysDiff = Math.ceil((now.getTime() - minTime) / (1000 * 60 * 60 * 24)) + 1;
+    daysCount = Math.max(daysCount, Math.min(365, daysDiff));
+  }
+
+  // Pre-index Strava activities into an O(1) day map to prevent O(daysCount * N) search bottleneck
+  const actByDateMap = new Map<string, { tss: number; names: string[] }>();
+  if (stravaActivities && stravaActivities.length > 0) {
+    for (const a of stravaActivities) {
+      const aDate = new Date(a.start_date_local || a.start_date);
+      if (isNaN(aDate.getTime())) continue;
+      const key = `${aDate.getFullYear()}-${aDate.getMonth()}-${aDate.getDate()}`;
+      const cur = actByDateMap.get(key) || { tss: 0, names: [] };
+      cur.tss += a.tss || 0;
+      if (a.name) cur.names.push(a.name);
+      actByDateMap.set(key, cur);
+    }
   }
 
   const series: PmcDayData[] = [];
@@ -130,7 +163,6 @@ export const generatePmcSeries = (
 
   const TC_CTL = 42;
   const TC_ATL = 7;
-  const now = new Date();
 
   for (let d = 1; d <= daysCount; d++) {
     let dayTss = 0;
@@ -197,19 +229,13 @@ export const generatePmcSeries = (
       }
     }
 
-    // If Strava activities are present, match activities for this specific day
+    // If Strava activities are present, match activities for this specific day via O(1) day map
     if (stravaActivities && stravaActivities.length > 0) {
-      const matchActs = stravaActivities.filter(a => {
-        const aDate = new Date(a.start_date_local || a.start_date);
-        return (
-          aDate.getFullYear() === dayYear &&
-          aDate.getMonth() === dayMonth &&
-          aDate.getDate() === dayDate
-        );
-      });
-      if (matchActs.length > 0) {
-        dayTss = matchActs.reduce((acc, a) => acc + (a.tss || 0), 0);
-        phaseName = matchActs.map(a => a.name).join(' / ');
+      const dayKey = `${dayYear}-${dayMonth}-${dayDate}`;
+      const matched = actByDateMap.get(dayKey);
+      if (matched && matched.tss > 0) {
+        dayTss = Math.round(matched.tss);
+        phaseName = matched.names.join(' / ');
       } else {
         // Rest day if no activity recorded on this day
         dayTss = 0;

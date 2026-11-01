@@ -2,36 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   LineChart as LineChartIcon,
   Upload,
-  FileSpreadsheet,
-  Activity,
-  Zap,
-  Heart,
-  Timer,
-  TrendingUp,
-  Mountain,
-  Flame,
-  Award,
   Sparkles,
-  Info,
   CheckCircle2,
-  AlertTriangle,
   RotateCcw,
-  Gauge,
-  Layers,
-  BarChart3,
   Cloud,
+  FolderArchive,
   RefreshCw,
-  Battery,
-  Sliders,
-  ArrowRight,
-  Dumbbell,
-  Cpu,
-  X,
-  FolderArchive
+  Gauge
 } from 'lucide-react';
 import { PoweredByStravaBadge } from '../common/PoweredByStravaBadge';
-import { WORKOUT_TEMPLATES, WorkoutTemplate, WorkoutSegment } from './WorkoutBuilder';
-import { Line, Bar } from 'react-chartjs-2';
+import { WORKOUT_TEMPLATES, WorkoutTemplate } from './WorkoutBuilder';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -48,7 +28,6 @@ import { useRiderProfile } from '../../context/RiderProfileContext';
 import { useLanguageAndUnit } from '../../context/LanguageAndUnitContext';
 import { useToast } from '../../context/ToastContext';
 import { setPendingTransfer, consumePendingTransfer } from '../../hooks/useToolDraftState';
-import { IOSCard, IOSMetricTile } from '../common/IOSCard';
 import { IOSToolHeader } from '../common/IOSToolHeader';
 import { IOSSegmentedControl } from '../common/IOSSegmentedControl';
 import { NumberStepper } from '../common/NumberStepper';
@@ -69,22 +48,7 @@ import {
   calculateSkibaWPrimeBalance,
   WPrimeBalanceResult
 } from '../../utils/activityParser';
-import {
-  generatePmcSeries,
-  getTsbZoneInfo,
-  predictTaperDays,
-  PmcMesocycleType,
-  PmcDayData,
-  BaselineFitnessLevel,
-  ManualTssEntry,
-  BASELINE_FITNESS_OPTIONS,
-  calculateContinuousSeasonPmc,
-  PmcTimeRange,
-  ContinuousPmcResult,
-  SeasonPmcSummary
-} from '../../utils/pmcCalculator';
 import { useStrava } from '../../context/StravaContext';
-import { StravaActivityRecord } from '../../utils/indexedDb';
 import {
   LocalActivityRecord,
   saveActivityToDb,
@@ -101,6 +65,14 @@ import {
 } from '../../utils/mmpAggregator';
 import { ActivityArchiveModal } from './ActivityArchiveModal';
 import { BatchImportModal } from './BatchImportModal';
+import { FitSensorDiagnostics } from './fit-analyzer/FitSensorDiagnostics';
+import { FitMetricsGrid } from './fit-analyzer/FitMetricsGrid';
+import { FitTrendsTab } from './fit-analyzer/FitTrendsTab';
+import { FitZonesTab } from './fit-analyzer/FitZonesTab';
+import { FitMmpTab } from './fit-analyzer/FitMmpTab';
+import { FitShiftingTab } from './fit-analyzer/FitShiftingTab';
+import { FitPmcTab } from './fit-analyzer/FitPmcTab';
+import { FitCoachingTab } from './fit-analyzer/FitCoachingTab';
 
 ChartJS.register(
   CategoryScale,
@@ -150,22 +122,6 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
   const [analysis, setAnalysis] = useState<ActivityAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'trends' | 'zones' | 'mmp' | 'shifting' | 'coaching' | 'pmc'>('trends');
-  const [smartWorkoutModalOpen, setSmartWorkoutModalOpen] = useState<boolean>(false);
-  const [selectedSmartTemplateId, setSelectedSmartTemplateId] = useState<string>('');
-  const [pmcMesocycle, setPmcMesocycle] = useState<PmcMesocycleType>('build');
-  const [targetTsbForPeak, setTargetTsbForPeak] = useState<number>(15);
-  const [baselineFitness, setBaselineFitness] = useState<BaselineFitnessLevel>('club');
-  const [manualTssEntries, setManualTssEntries] = useState<ManualTssEntry[]>(() => {
-    try {
-      const saved = localStorage.getItem('yolo_cycling_pmc_manual_tss');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [newManualTss, setNewManualTss] = useState<number>(80);
-  const [newManualTitle, setNewManualTitle] = useState<string>('');
-  const [newManualDayOffset, setNewManualDayOffset] = useState<number>(0);
 
   // Local-First Activity Database State
   const [localActivities, setLocalActivities] = useState<LocalActivityRecord[]>([]);
@@ -173,11 +129,6 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState<boolean>(false);
   const [batchProgress, setBatchProgress] = useState<BatchImportProgress | null>(null);
-
-  // PMC Real Season State
-  const [pmcDataSource, setPmcDataSource] = useState<'local_history' | 'preset_mesocycle'>('local_history');
-  const [pmcTimeRange, setPmcTimeRange] = useState<PmcTimeRange>('90d');
-  const [futureProjectionDays, setFutureProjectionDays] = useState<number>(0);
 
   // MMP Multi-Layer Envelope State
   const [mmpShowCurrent, setMmpShowCurrent] = useState<boolean>(true);
@@ -188,9 +139,6 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
     try {
       const list = await getAllLocalActivities();
       setLocalActivities(list);
-      if (list.length > 0) {
-        setPmcDataSource('local_history');
-      }
     } catch {
       // IndexedDB storage temporarily unavailable
     }
@@ -199,31 +147,6 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
   useEffect(() => {
     refreshLocalActivities();
   }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('yolo_cycling_pmc_manual_tss', JSON.stringify(manualTssEntries));
-    } catch {
-      // LocalStorage quota or access exception
-    }
-  }, [manualTssEntries]);
-
-  const handleAddManualTss = () => {
-    const entry: ManualTssEntry = {
-      id: Date.now().toString(),
-      dayOffset: newManualDayOffset,
-      tss: Math.max(1, newManualTss),
-      title: newManualTitle.trim() || (newManualDayOffset === 0 ? '今日手动训练' : newManualDayOffset === -1 ? '昨日手动训练' : '前日手动训练')
-    };
-    setManualTssEntries(prev => [...prev.filter(e => e.dayOffset !== newManualDayOffset), entry]);
-    setNewManualTitle('');
-    showToast(`已成功录入 ${entry.tss} TSS 训练负荷！`, 'success');
-  };
-
-  const handleRemoveManualTss = (id: string) => {
-    setManualTssEntries(prev => prev.filter(e => e.id !== id));
-    showToast('已移除手动训练负荷', 'info');
-  };
 
   const {
     isConnected: isStravaConnected,
@@ -283,83 +206,6 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
     }
   };
 
-  // PMC Calculation (driven by continuous Local-First IndexedDB activities or simulated template)
-  const continuousPmcResult = useMemo(() => {
-    if (pmcDataSource === 'local_history' && localActivities.length > 0) {
-      return calculateContinuousSeasonPmc(
-        localActivities,
-        pmcTimeRange,
-        baselineFitness,
-        futureProjectionDays,
-        25
-      );
-    }
-    return null;
-  }, [pmcDataSource, localActivities, pmcTimeRange, baselineFitness, futureProjectionDays]);
-
-  const simulatedPmcData = useMemo(() => {
-    return generatePmcSeries(
-      pmcMesocycle,
-      analysis?.tss,
-      baselineFitness,
-      manualTssEntries,
-      isStravaConnected ? stravaActivities : undefined
-    );
-  }, [pmcMesocycle, analysis?.tss, baselineFitness, manualTssEntries, isStravaConnected, stravaActivities]);
-
-  const pmcData = continuousPmcResult ? continuousPmcResult.series : simulatedPmcData;
-  const pmcSummary = continuousPmcResult ? continuousPmcResult.summary : null;
-
-  const latestPmcDay = pmcData[pmcData.length - 1];
-  const currentTsbVal = pmcSummary ? pmcSummary.currentTsb : (latestPmcDay ? latestPmcDay.tsb : 0);
-  const currentTsbZone = getTsbZoneInfo(currentTsbVal);
-  const currentCtlVal = pmcSummary ? pmcSummary.currentCtl : (latestPmcDay ? latestPmcDay.ctl : 50);
-  const currentAtlVal = pmcSummary ? pmcSummary.currentAtl : (latestPmcDay ? latestPmcDay.atl : 40);
-
-  const taperPrediction = predictTaperDays(
-    currentCtlVal,
-    currentAtlVal,
-    targetTsbForPeak
-  );
-
-  const pmcChartData = useMemo(() => {
-    return {
-      labels: pmcData.map(d => d.date),
-      datasets: [
-        {
-          label: language === 'zh-TW' ? '長期體能' : '长期体能',
-          data: pmcData.map(d => d.ctl),
-          borderColor: '#00AFFF',
-          backgroundColor: 'transparent',
-          borderWidth: 2.5,
-          tension: 0.3,
-          pointRadius: 1,
-          yAxisID: 'y'
-        },
-        {
-          label: language === 'zh-TW' ? '急性疲勞' : '急性疲劳',
-          data: pmcData.map(d => d.atl),
-          borderColor: '#f43f5e',
-          backgroundColor: 'transparent',
-          borderWidth: 2.5,
-          tension: 0.3,
-          pointRadius: 1,
-          yAxisID: 'y'
-        },
-        {
-          label: language === 'zh-TW' ? '競技狀態' : '竞技状态',
-          data: pmcData.map(d => d.tsb),
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.15)',
-          borderWidth: 1.5,
-          fill: true,
-          tension: 0.3,
-          pointRadius: 1,
-          yAxisID: 'y1'
-        }
-      ]
-    };
-  }, [pmcData, language]);
 
   // Chart Channel Visibility Toggles
   const [showPower, setShowPower] = useState<boolean>(true);
@@ -1172,7 +1018,7 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
   }, [analysis, weightKg, language]);
 
   const handleDispatchSmartWorkout = (targetTemplate?: WorkoutTemplate) => {
-    const tmpl = targetTemplate || (selectedSmartTemplateId ? WORKOUT_TEMPLATES.find(t => t.id === selectedSmartTemplateId) : smartWorkoutRecommendation?.template) || WORKOUT_TEMPLATES[0];
+    const tmpl = targetTemplate || smartWorkoutRecommendation?.template || WORKOUT_TEMPLATES[0];
     const payload = {
       templateId: tmpl.id,
       title: `${tmpl.name} · 专属靶向补强`,
@@ -1182,7 +1028,6 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
     const ok = setPendingTransfer('solorider_pending_workout', payload);
     if (ok) {
       showToast('已生成专属靶向补强课表，正在跳转工坊...', 'success');
-      setSmartWorkoutModalOpen(false);
       if (onNavigateTool) {
         onNavigateTool('workout-builder');
       }
@@ -1628,283 +1473,26 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
         <div className="space-y-4 sm:space-y-5">
           {/* Sensor Diagnostics Banner */}
           {analysis.sensorDiagnostics && (
-            <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-ios-blue/10 text-ios-blue flex items-center justify-center shrink-0">
-                    <Cpu className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>{language === 'zh-TW' ? '碼表傳感器接入與數據流診斷' : '码表传感器接入与数据流诊断'}</span>
-                      {analysis.isEstimatedPower && (
-                        <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-ios-amber/15 text-ios-amber border border-ios-amber/30">
-                          {language === 'zh-TW' ? '⚡ 物理動力學仿真估算中' : '⚡ 物理动力学仿真估算中'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {language === 'zh-TW'
-                        ? '深度解析 FIT 底層硬件通道配對與秒級採樣信號流'
-                        : '深度解析 FIT 底层硬件通道配对与秒级采样信号流'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Power Reconstruction Action Button when hardware power is absent */}
-                {!analysis.sensorDiagnostics.hasHardwarePower && (
-                  <button
-                    onClick={handleToggleEstimatedPower}
-                    className={`apple-touch h-9 px-3.5 rounded-xl font-semibold text-xs transition flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-ios-sm ${
-                      analysis.isEstimatedPower
-                        ? 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10'
-                        : 'bg-ios-blue hover:bg-ios-blue/90 text-white'
-                    }`}
-                  >
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>
-                      {analysis.isEstimatedPower
-                        ? (language === 'zh-TW' ? '切換回硬件原始無功率數據' : '切换回硬件原始无功率数据')
-                        : (language === 'zh-TW' ? '開啟物理動力學仿真估算功率' : '开启物理动力学仿真估算功率')}
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {/* 4-Channel Status Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {/* Heart Rate Channel */}
-                <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between ${
-                  analysis.sensorDiagnostics.hasHeartRate
-                    ? 'bg-ios-green/5 border-ios-green/20'
-                    : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200/60 dark:border-white/10'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Heart className="w-3.5 h-3.5 text-ios-red" />
-                      {language === 'zh-TW' ? '心率通道' : '心率通道'}
-                    </span>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
-                      analysis.sensorDiagnostics.hasHeartRate
-                        ? 'bg-ios-green/15 text-ios-green'
-                        : 'bg-slate-200 dark:bg-white/10 text-slate-500'
-                    }`}>
-                      {analysis.sensorDiagnostics.hasHeartRate ? (language === 'zh-TW' ? '已記錄' : '已记录') : (language === 'zh-TW' ? '無信號' : '无信号')}
-                    </span>
-                  </div>
-                  <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">
-                    {analysis.avgHeartRate ? `${analysis.avgHeartRate} bpm` : (language === 'zh-TW' ? '未連接心率帶' : '未连接心率带')}
-                  </div>
-                </div>
-
-                {/* Shifting Channel */}
-                <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between ${
-                  analysis.sensorDiagnostics.hasShifting
-                    ? 'bg-ios-purple/5 border-ios-purple/20'
-                    : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200/60 dark:border-white/10'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Layers className="w-3.5 h-3.5 text-ios-purple" />
-                      {language === 'zh-TW' ? '電子變速' : '电子变速'}
-                    </span>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
-                      analysis.sensorDiagnostics.hasShifting
-                        ? 'bg-ios-purple/15 text-ios-purple'
-                        : 'bg-slate-200 dark:bg-white/10 text-slate-500'
-                    }`}>
-                      {analysis.sensorDiagnostics.hasShifting ? (language === 'zh-TW' ? '已連接' : '已连接') : (language === 'zh-TW' ? '未連接' : '未连接')}
-                    </span>
-                  </div>
-                  <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">
-                    {analysis.shiftCount ? `${analysis.shiftCount} ${language === 'zh-TW' ? '次換擋' : '次换挡'}` : (language === 'zh-TW' ? '無變速數據' : '无变速数据')}
-                  </div>
-                </div>
-
-                {/* Power Channel */}
-                <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between ${
-                  analysis.sensorDiagnostics.hasHardwarePower
-                    ? 'bg-ios-blue/5 border-ios-blue/20'
-                    : analysis.isEstimatedPower
-                    ? 'bg-ios-amber/5 border-ios-amber/20'
-                    : 'bg-ios-orange/5 border-ios-orange/20'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Zap className="w-3.5 h-3.5 text-ios-blue" />
-                      {language === 'zh-TW' ? '功率計通道' : '功率计通道'}
-                    </span>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
-                      analysis.sensorDiagnostics.hasHardwarePower
-                        ? 'bg-ios-green/15 text-ios-green'
-                        : analysis.isEstimatedPower
-                        ? 'bg-ios-amber/15 text-ios-amber'
-                        : 'bg-ios-orange/15 text-ios-orange'
-                    }`}>
-                      {analysis.sensorDiagnostics.hasHardwarePower
-                        ? (language === 'zh-TW' ? '硬件採集' : '硬件采集')
-                        : analysis.isEstimatedPower
-                        ? (language === 'zh-TW' ? '物理估算' : '物理估算')
-                        : (language === 'zh-TW' ? '無硬件數據' : '无硬件数据')}
-                    </span>
-                  </div>
-                  <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">
-                    {analysis.sensorDiagnostics.hasHardwarePower
-                      ? `${analysis.avgPower}W · NP ${analysis.normalizedPower}W`
-                      : analysis.isEstimatedPower
-                      ? `${analysis.avgPower}W · 估算 NP ${analysis.normalizedPower}W`
-                      : (language === 'zh-TW' ? '硬件功率計離線' : '硬件功率计离线')}
-                  </div>
-                </div>
-
-                {/* Cadence Channel */}
-                <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between ${
-                  analysis.sensorDiagnostics.hasHardwareCadence
-                    ? 'bg-ios-green/5 border-ios-green/20'
-                    : 'bg-ios-orange/5 border-ios-orange/20'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <RotateCcw className="w-3.5 h-3.5 text-ios-orange" />
-                      {language === 'zh-TW' ? '踏頻傳感器' : '踏频传感器'}
-                    </span>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
-                      analysis.sensorDiagnostics.hasHardwareCadence
-                        ? 'bg-ios-green/15 text-ios-green'
-                        : 'bg-ios-orange/15 text-ios-orange'
-                    }`}>
-                      {analysis.sensorDiagnostics.hasHardwareCadence
-                        ? (language === 'zh-TW' ? '已記錄' : '已记录')
-                        : (language === 'zh-TW' ? '無硬件數據' : '无硬件数据')}
-                    </span>
-                  </div>
-                  <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">
-                    {analysis.avgCadence ? `${analysis.avgCadence} rpm` : (language === 'zh-TW' ? '踏頻計離線' : '踏频计离线')}
-                  </div>
-                </div>
-              </div>
-
-              {/* Detailed Diagnostic Notes */}
-              {analysis.sensorDiagnostics.detectedNotes.length > 0 && (
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-                  {analysis.sensorDiagnostics.detectedNotes.map((note, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <Info className="w-3.5 h-3.5 text-ios-blue shrink-0 mt-0.5" />
-                      <span>{note}</span>
-                    </div>
-                  ))}
-                  {!analysis.sensorDiagnostics.hasHardwarePower && !analysis.isEstimatedPower && (
-                    <div className="pt-1 text-[11px] text-ios-blue font-medium flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-ios-amber" />
-                      <span>
-                        {language === 'zh-TW'
-                          ? '提示：您可以點擊右上角「開啟物理動力學仿真估算功率」按鈕，基於速度、坡度與質量模型還原騎行做功、NP 與 TSS。'
-                          : '提示：您可以点击右上角「开启物理动力学仿真估算功率」按钮，基于速度、坡度与质量模型还原骑行做功、NP 与 TSS。'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <FitSensorDiagnostics
+              sensorDiagnostics={analysis.sensorDiagnostics}
+              isEstimatedPower={analysis.isEstimatedPower}
+              avgHeartRate={analysis.avgHeartRate}
+              avgPower={analysis.avgPower}
+              normalizedPower={analysis.normalizedPower}
+              avgCadence={analysis.avgCadence}
+              shiftCount={analysis.shiftingEvents?.length}
+              language={language}
+              onToggleEstimatedPower={handleToggleEstimatedPower}
+            />
           )}
 
           {/* Key Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
-            <IOSMetricTile
-              label="NP"
-              value={analysis.normalizedPower}
-              unit="W"
-              subtext={`标准化功率 · ${(analysis.normalizedPower / (weightKg || 68)).toFixed(2)} W/kg${analysis.isEstimatedPower ? ' · 物理估算' : ''}`}
-              theme={analysis.isEstimatedPower ? 'amber' : 'blue'}
-              icon={<Zap className={`w-4 h-4 ${analysis.isEstimatedPower ? 'text-ios-amber' : 'text-ios-blue'}`} />}
-            />
-            <IOSMetricTile
-              label="强度系数"
-              value={analysis.intensityFactor}
-              subtext={`${Math.round(analysis.intensityFactor * 100)}% FTP负荷${analysis.isEstimatedPower ? ' · 估算' : ''}`}
-              theme="amber"
-              icon={<Flame className="w-4 h-4 text-ios-orange" />}
-            />
-            <IOSMetricTile
-              label="训练压力"
-              value={analysis.tss}
-              subtext={analysis.tss < 150 ? '低度疲劳' : analysis.tss < 300 ? '中度疲劳' : '重度负荷'}
-              theme="purple"
-              icon={<Award className="w-4 h-4 text-ios-purple" />}
-            />
-            <IOSMetricTile
-              label="变化指数"
-              value={analysis.variabilityIndex}
-              subtext={analysis.variabilityIndex <= 1.05 ? '平稳巡航' : analysis.variabilityIndex <= 1.15 ? '起伏路段' : '高频突围'}
-              theme="blue"
-              icon={<TrendingUp className="w-4 h-4 text-ios-blue" />}
-            />
-            <IOSMetricTile
-              label="里程与净骑行"
-              value={analysis.totalDistanceKm}
-              unit="km"
-              subtext={`${formatDuration(analysis.movingTimeSec)} (${analysis.avgSpeedKmh} km/h)`}
-              theme="green"
-              icon={<Timer className="w-4 h-4 text-ios-green" />}
-            />
-            <IOSMetricTile
-              label="累计爬升与做功"
-              value={`+${analysis.elevationGainM}`}
-              unit="m"
-              subtext={`${analysis.workKj} kJ (${analysis.caloriesKcal} kcal${analysis.workKj === 0 && analysis.recordedCalories ? ' · 码表测算' : ''})`}
-              theme="mint"
-              icon={<Mountain className="w-4 h-4 text-ios-mint" />}
-            />
-          </div>
-
-          {/* Secondary Biological & Efficiency Strip */}
-          <div className="ios-card px-4 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-4 text-slate-600 dark:text-slate-300">
-              <span className="flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-ios-red" />
-                <span>{'平均心率'}: <strong className="text-slate-900 dark:text-white tabular-nums">{analysis.avgHeartRate ?? '--'} bpm</strong></span>
-                <span className="text-slate-400 text-[11px]">({'最高'} <span className="tabular-nums">{analysis.maxHeartRate ?? '--'}</span>)</span>
-              </span>
-
-              <span className="flex items-center gap-1.5">
-                <Activity className="w-4 h-4 text-ios-orange" />
-                <span>{'平均踏频'}: <strong className="text-slate-900 dark:text-white tabular-nums">{analysis.avgCadence ?? '--'} rpm</strong></span>
-                <span className="text-slate-400 text-[11px]">
-                  ({'踩踏'} <span className="tabular-nums">{analysis.pedalingPercent ?? 100}%</span> · {'滑行'} <span className="tabular-nums">{100 - (analysis.pedalingPercent ?? 100)}%</span>)
-                </span>
-              </span>
-
-              {analysis.leftRightBalance && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Sliders className="w-4 h-4 text-ios-teal" />
-                  <span>{language === 'zh-TW' ? '雙邊平衡' : '双边平衡'}: <strong className="text-slate-900 dark:text-white tabular-nums">{analysis.leftRightBalance.leftPercent}% L / {analysis.leftRightBalance.rightPercent}% R</strong></span>
-                  {Math.abs(analysis.leftRightBalance.leftPercent - 50) > 3 ? (
-                    <span className="text-ios-amber text-[11px] font-medium">({language === 'zh-TW' ? '偏重' : '偏重'} {analysis.leftRightBalance.leftPercent > 50 ? '左' : '右'})</span>
-                  ) : (
-                    <span className="text-ios-green text-[11px] font-medium">({language === 'zh-TW' ? '均衡' : '均衡'})</span>
-                  )}
-                </span>
-              )}
-
-              {analysis.efficiencyFactor && (
-                <span className="hidden sm:inline-flex items-center gap-1.5">
-                  <Gauge className="w-4 h-4 text-ios-blue" />
-                  <span>{'效率因子'}: <strong className="text-ios-blue tabular-nums">{analysis.efficiencyFactor} W/bpm</strong></span>
-                </span>
-              )}
-
-              {analysis.aerobicDecoupling !== undefined && (
-                <span className="hidden sm:inline-flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-ios-purple" />
-                  <span>{'有氧解耦率 (Pw:HR)'}: <strong className={`tabular-nums ${analysis.aerobicDecoupling > 5 ? 'text-ios-orange' : 'text-ios-green'}`}>{analysis.aerobicDecoupling}%</strong></span>
-                </span>
-              )}
-            </div>
-
-            <div className="text-[11px] text-slate-500 dark:text-slate-400">
-              {'总历时'}: <span className="tabular-nums">{formatDuration(analysis.totalDurationSec)}</span> · <span className="tabular-nums">{analysis.points.length}</span> {'个秒级采样点'}
-            </div>
-          </div>
+          <FitMetricsGrid
+            analysis={analysis}
+            weightKg={weightKg}
+            language={language}
+            formatDuration={formatDuration}
+          />
 
           {/* Interactive Tabbed Navigation */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -1978,1513 +1566,116 @@ export const FitActivityAnalyzer: React.FC<FitActivityAnalyzerProps> = ({ onNavi
 
           {/* TAB 1: Time-Series Trends */}
           {activeTab === 'trends' && (
-            <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5 select-none">
-              {/* Header Bar with Scrubbed Time & Presets */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="w-2 h-2 rounded-full bg-ios-blue animate-pulse shrink-0" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {language === 'zh-TW' ? '多軌時序遙測曲線' : '多轨时序遥测曲线'}
-                  </span>
-                  {currentScrubbedPoint ? (
-                    <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-ios-blue/15 text-ios-blue border border-ios-blue/30 tabular-nums">
-                      ⏱️ {formatDuration(currentScrubbedPoint.time)}
-                    </span>
-                  ) : (
-                    <span className="text-[11px] text-slate-400 font-mono tabular-nums">
-                      0:00 ~ {formatDuration(analysis.totalDurationSec)}
-                    </span>
-                  )}
-                </div>
-
-                {/* Quick Presets */}
-                <div className="flex items-center gap-1.5 text-xs">
-                  <span className="text-[11px] text-slate-400 hidden sm:inline">
-                    {language === 'zh-TW' ? '推薦組合:' : '推荐组合:'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPresetChannels('physiology')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold apple-touch transition ${
-                      isPhysiologyPreset
-                        ? 'bg-ios-blue text-white shadow-ios-sm'
-                        : 'bg-black/[0.04] dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-black/[0.08]'
-                    }`}
-                  >
-                    {language === 'zh-TW' ? '生理動力' : '生理动力'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetChannels('transmission')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold apple-touch transition ${
-                      isTransmissionPreset
-                        ? 'bg-ios-blue text-white shadow-ios-sm'
-                        : 'bg-black/[0.04] dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-black/[0.08]'
-                    }`}
-                  >
-                    {language === 'zh-TW' ? '巡航表現' : '巡航表现'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetChannels('all')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold apple-touch transition ${
-                      isAllPreset
-                        ? 'bg-ios-blue text-white shadow-ios-sm'
-                        : 'bg-black/[0.04] dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:bg-black/[0.08]'
-                    }`}
-                  >
-                    {language === 'zh-TW' ? '全開' : '全开'}
-                  </button>
-                </div>
-              </div>
-
-              {/* 5-Channel Unified HUD & Toggle Controls */}
-              <div className="grid grid-cols-5 gap-1 sm:gap-2 text-xs">
-                {/* 1. Power */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setShowPower(!showPower);
-                  }}
-                  className={`apple-touch transition-all duration-150 rounded-xl px-1 sm:px-3 py-1.5 sm:py-2 flex flex-col items-center justify-center min-w-0 ${
-                    showPower
-                      ? 'bg-cyan-500 text-white shadow-ios-sm ring-1 ring-cyan-400/40'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-80'
-                  }`}
-                  title={language === 'zh-TW' ? '功率通道開關' : '功率通道开关'}
-                >
-                  <div className="flex items-center gap-1 text-[11px] font-semibold leading-none truncate max-w-full">
-                    <Zap className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{language === 'zh-TW' ? '功率' : '功率'}</span>
-                  </div>
-                  <div className="text-[10px] sm:text-xs font-bold tabular-nums mt-1 leading-tight truncate max-w-full">
-                    {currentScrubbedPoint ? (
-                      currentScrubbedPoint.power !== undefined ? `${currentScrubbedPoint.power}W` : '--'
-                    ) : (
-                      <>
-                        <span>{analysis.avgPower}W</span>
-                        <span className="text-[9px] opacity-75 ml-0.5 hidden sm:inline">均</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-
-                {/* 2. Heart Rate */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setShowHeartRate(!showHeartRate);
-                  }}
-                  className={`apple-touch transition-all duration-150 rounded-xl px-1 sm:px-3 py-1.5 sm:py-2 flex flex-col items-center justify-center min-w-0 ${
-                    showHeartRate
-                      ? 'bg-rose-500 text-white shadow-ios-sm ring-1 ring-rose-400/40'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-80'
-                  }`}
-                  title={language === 'zh-TW' ? '心率通道開關' : '心率通道开关'}
-                >
-                  <div className="flex items-center gap-1 text-[11px] font-semibold leading-none truncate max-w-full">
-                    <Heart className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{language === 'zh-TW' ? '心率' : '心率'}</span>
-                  </div>
-                  <div className="text-[10px] sm:text-xs font-bold tabular-nums mt-1 leading-tight truncate max-w-full">
-                    {currentScrubbedPoint ? (
-                      currentScrubbedPoint.heartRate ? `${currentScrubbedPoint.heartRate}` : '--'
-                    ) : (
-                      <>
-                        <span>{analysis.avgHeartRate ?? '--'}</span>
-                        <span className="text-[9px] opacity-75 ml-0.5 hidden sm:inline">均</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-
-                {/* 3. Elevation */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setShowElevation(!showElevation);
-                  }}
-                  className={`apple-touch transition-all duration-150 rounded-xl px-1 sm:px-3 py-1.5 sm:py-2 flex flex-col items-center justify-center min-w-0 ${
-                    showElevation
-                      ? 'bg-emerald-500 text-white shadow-ios-sm ring-1 ring-emerald-400/40'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-80'
-                  }`}
-                  title={language === 'zh-TW' ? '海拔通道開關' : '海拔通道开关'}
-                >
-                  <div className="flex items-center gap-1 text-[11px] font-semibold leading-none truncate max-w-full">
-                    <Mountain className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{language === 'zh-TW' ? '海拔' : '海拔'}</span>
-                  </div>
-                  <div className="text-[10px] sm:text-xs font-bold tabular-nums mt-1 leading-tight truncate max-w-full">
-                    {currentScrubbedPoint ? (
-                      currentScrubbedPoint.altitude !== undefined ? `${Math.round(currentScrubbedPoint.altitude)}m` : '--'
-                    ) : (
-                      <span>+{analysis.elevationGainM}m</span>
-                    )}
-                  </div>
-                </button>
-
-                {/* 4. Speed */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setShowSpeed(!showSpeed);
-                  }}
-                  className={`apple-touch transition-all duration-150 rounded-xl px-1 sm:px-3 py-1.5 sm:py-2 flex flex-col items-center justify-center min-w-0 ${
-                    showSpeed
-                      ? 'bg-blue-500 text-white shadow-ios-sm ring-1 ring-blue-400/40'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-80'
-                  }`}
-                  title={language === 'zh-TW' ? '速度通道開關' : '速度通道开关'}
-                >
-                  <div className="flex items-center gap-1 text-[11px] font-semibold leading-none truncate max-w-full">
-                    <Gauge className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{language === 'zh-TW' ? '速度' : '速度'}</span>
-                  </div>
-                  <div className="text-[10px] sm:text-xs font-bold tabular-nums mt-1 leading-tight truncate max-w-full">
-                    {currentScrubbedPoint ? (
-                      currentScrubbedPoint.speed !== undefined ? `${currentScrubbedPoint.speed.toFixed(1)}` : '--'
-                    ) : (
-                      <>
-                        <span>{analysis.avgSpeedKmh}</span>
-                        <span className="text-[9px] opacity-75 ml-0.5 hidden sm:inline">均</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-
-                {/* 5. Cadence */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    setShowCadence(!showCadence);
-                  }}
-                  className={`apple-touch transition-all duration-150 rounded-xl px-1 sm:px-3 py-1.5 sm:py-2 flex flex-col items-center justify-center min-w-0 ${
-                    showCadence
-                      ? 'bg-amber-500 text-white shadow-ios-sm ring-1 ring-amber-400/40'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-80'
-                  }`}
-                  title={language === 'zh-TW' ? '踏頻通道開關' : '踏频通道开关'}
-                >
-                  <div className="flex items-center gap-1 text-[11px] font-semibold leading-none truncate max-w-full">
-                    <RotateCcw className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{language === 'zh-TW' ? '踏頻' : '踏频'}</span>
-                  </div>
-                  <div className="text-[10px] sm:text-xs font-bold tabular-nums mt-1 leading-tight truncate max-w-full">
-                    {currentScrubbedPoint ? (
-                      currentScrubbedPoint.cadence !== undefined ? `${currentScrubbedPoint.cadence}` : '--'
-                    ) : (
-                      <>
-                        <span>{analysis.avgCadence ?? '--'}</span>
-                        <span className="text-[9px] opacity-75 ml-0.5 hidden sm:inline">均</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-              </div>
-
-              {/* Chart Canvas with Scrubbing Touch Handlers */}
-              <div
-                className="h-72 sm:h-96 w-full touch-none select-none relative"
-                onMouseLeave={() => setHoveredPointIndex(null)}
-                onTouchEnd={() => setHoveredPointIndex(null)}
-              >
-                <Line data={trendChartData} options={trendChartOptions} />
-              </div>
-            </div>
+            <FitTrendsTab
+              language={language}
+              currentScrubbedPoint={currentScrubbedPoint}
+              totalDurationSec={analysis.totalDurationSec}
+              avgPower={analysis.avgPower}
+              avgHeartRate={analysis.avgHeartRate}
+              elevationGainM={analysis.elevationGainM}
+              avgSpeedKmh={analysis.avgSpeedKmh}
+              avgCadence={analysis.avgCadence}
+              showPower={showPower}
+              setShowPower={setShowPower}
+              showHeartRate={showHeartRate}
+              setShowHeartRate={setShowHeartRate}
+              showElevation={showElevation}
+              setShowElevation={setShowElevation}
+              showSpeed={showSpeed}
+              setShowSpeed={setShowSpeed}
+              showCadence={showCadence}
+              setShowCadence={setShowCadence}
+              onSetPresetChannels={setPresetChannels}
+              isPhysiologyPreset={isPhysiologyPreset}
+              isTransmissionPreset={isTransmissionPreset}
+              isAllPreset={isAllPreset}
+              trendChartData={trendChartData}
+              trendChartOptions={trendChartOptions}
+              setHoveredPointIndex={setHoveredPointIndex}
+              formatDuration={formatDuration}
+            />
           )}
 
           {/* TAB 2: Time in Zones */}
           {activeTab === 'zones' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-              {/* Coggan 7-Zone Power Distribution */}
-              <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-ios-blue" />
-                    {'Coggan 功率 7 区分布'}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">FTP: {ftpWatts}W</span>
-                </div>
-
-                <div className="h-56">
-                  <Bar
-                    data={powerZoneBarData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        x: { ticks: { font: { size: 9 }, color: '#AEAEB2' } },
-                        y: { ticks: { font: { size: 10 }, color: '#8E8E93' } }
-                      }
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  {analysis.timeInPowerZones.map((z) => (
-                    <div key={z.zone} className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: z.color }}></span>
-                        <strong className="text-slate-800 dark:text-white">{z.zone} {z.label}</strong>
-                        <span className="text-slate-400 text-[11px] tabular-nums">({z.range})</span>
-                      </div>
-                      <div className="font-mono flex items-center gap-3">
-                        <span className="text-slate-500 tabular-nums">{formatDuration(z.seconds)}</span>
-                        <span className="font-bold text-slate-900 dark:text-white min-w-[40px] text-right tabular-nums">{z.percent}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Heart Rate 5-Zone Distribution */}
-              <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-ios-red" />
-                    {'心率 5 区分布'}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">{'最大心率'}: {maxHr}bpm</span>
-                </div>
-
-                <div className="h-56">
-                  <Bar
-                    data={hrZoneBarData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        x: { ticks: { font: { size: 9 }, color: '#AEAEB2' } },
-                        y: { ticks: { font: { size: 10 }, color: '#8E8E93' } }
-                      }
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  {analysis.timeInHrZones.map((z) => (
-                    <div key={z.zone} className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/50 dark:border-white/5">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: z.color }}></span>
-                        <strong className="text-slate-800 dark:text-white">{z.zone} {z.label}</strong>
-                        <span className="text-slate-400 text-[11px] tabular-nums">({z.range})</span>
-                      </div>
-                      <div className="font-mono flex items-center gap-3">
-                        <span className="text-slate-500 tabular-nums">{formatDuration(z.seconds)}</span>
-                        <span className="font-bold text-slate-900 dark:text-white min-w-[40px] text-right tabular-nums">{z.percent}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <FitZonesTab
+              timeInPowerZones={analysis.timeInPowerZones}
+              timeInHrZones={analysis.timeInHrZones}
+              powerZoneBarData={powerZoneBarData}
+              hrZoneBarData={hrZoneBarData}
+              ftpWatts={ftpWatts}
+              maxHr={maxHr}
+              formatDuration={formatDuration}
+            />
           )}
 
           {/* TAB 3: MMP Power Curve & Skiba W' Balance */}
           {activeTab === 'mmp' && (
-            <div className="space-y-4 sm:space-y-5">
-              {/* Sub-view switcher */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="w-full sm:max-w-xs">
-                  <IOSSegmentedControl
-                    options={[
-                      {
-                        value: 'mmp_curve',
-                        label: (
-                          <>
-                            <span className="sm:hidden">{language === 'zh-TW' ? 'MMP 天梯' : 'MMP 天梯'}</span>
-                            <span className="hidden sm:inline">{language === 'zh-TW' ? 'MMP 峰值與天梯' : 'MMP 峰值与天梯'}</span>
-                          </>
-                        )
-                      },
-                      {
-                        value: 'w_balance',
-                        label: (
-                          <>
-                            <span className="sm:hidden">W' 耗竭</span>
-                            <span className="hidden sm:inline">{language === 'zh-TW' ? "W' Balance 耗竭模型" : "W' Balance 耗竭模型"}</span>
-                          </>
-                        )
-                      }
-                    ]}
-                    value={mmpSubView}
-                    onChange={(v) => setMmpSubView(v as any)}
-                  />
-                </div>
-
-                {mmpSubView === 'mmp_curve' && (
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    {/* Multi-Layer Envelope Toggles */}
-                    {localActivities.length > 0 && (
-                      <div className="flex items-center bg-slate-100 dark:bg-white/10 p-0.5 rounded-xl border border-slate-200/80 dark:border-white/10">
-                        <button
-                          type="button"
-                          onClick={() => setMmpShowCurrent(!mmpShowCurrent)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition apple-touch ${
-                            mmpShowCurrent ? 'bg-white dark:bg-[#2C2C2E] text-ios-purple shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          本次
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMmpShow90d(!mmpShow90d)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition apple-touch ${
-                            mmpShow90d ? 'bg-white dark:bg-[#2C2C2E] text-ios-orange shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <span className="sm:hidden">90天</span>
-                          <span className="hidden sm:inline">90天包络</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMmpShowAllTime(!mmpShowAllTime)}
-                          className={`px-2.5 py-1 rounded-lg font-medium transition apple-touch ${
-                            mmpShowAllTime ? 'bg-white dark:bg-[#2C2C2E] text-ios-red shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <span className="sm:hidden">最佳</span>
-                          <span className="hidden sm:inline">历史最佳</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Unit Switcher */}
-                    <div className="flex items-center bg-slate-100 dark:bg-white/10 p-0.5 rounded-xl border border-slate-200/80 dark:border-white/10">
-                      <button
-                        type="button"
-                        onClick={() => setMmpUnit('wkg')}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition apple-touch ${
-                          mmpUnit === 'wkg' ? 'bg-white dark:bg-[#2C2C2E] text-ios-purple shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                        }`}
-                      >
-                        <span className="sm:hidden">W/kg</span>
-                        <span className="hidden sm:inline">推重比</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMmpUnit('watts')}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition apple-touch ${
-                          mmpUnit === 'watts' ? 'bg-white dark:bg-[#2C2C2E] text-ios-purple shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                        }`}
-                      >
-                        <span className="sm:hidden">瓦特</span>
-                        <span className="hidden sm:inline">绝对功率</span>
-                      </button>
-                    </div>
-
-                    {/* Coggan Benchmark Tier Selector */}
-                    <select
-                      value={selectedCogganTier}
-                      onChange={(e) => setSelectedCogganTier(e.target.value)}
-                      className="h-9 bg-white dark:bg-[#1C1C1E] border border-slate-200 dark:border-white/10 rounded-xl px-3 text-xs text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:border-ios-purple"
-                    >
-                      <option value="all">能力分级全天梯标尺</option>
-                      <option value="world_tour">世巡职业级</option>
-                      <option value="cat1">国家精英级</option>
-                      <option value="cat2">省级健将级</option>
-                      <option value="cat3">俱乐部高阶</option>
-                      <option value="cat4">进阶骑手</option>
-                      <option value="cat5">业余入门</option>
-                      <option value="none">隐藏天梯对比线</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              {/* VIEW 1: Continuous MMP Curve & Coggan Benchmarks */}
-              {mmpSubView === 'mmp_curve' && (
-                <div className="space-y-4 sm:space-y-5">
-                  {/* PR Celebration Banner */}
-                  {currentActivityPrs && (currentActivityPrs.total90dPrs > 0 || currentActivityPrs.totalAllTimePrs > 0) && (
-                    <div className="p-3 sm:p-3.5 rounded-2xl bg-ios-orange/10 border border-ios-orange/30 flex items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-xl bg-ios-orange text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
-                          <Award className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            本次骑行共刷新 {currentActivityPrs.totalAllTimePrs + currentActivityPrs.total90dPrs} 项个人功率峰值记录！
-                          </span>
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-mono">
-                            包含 {currentActivityPrs.totalAllTimePrs} 项历史全时域新纪录 🏆 与 {currentActivityPrs.total90dPrs} 项近90天巅峰新高 👑
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Rider Phenotype Card */}
-                  {riderPhenotype && (
-                    <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card relative overflow-hidden">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                              {language === 'zh-TW' ? '車手表型畫像診斷' : '车手表型画像诊断'}
-                            </span>
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${riderPhenotype.badgeColor}`}>
-                              {riderPhenotype.title}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                            {riderPhenotype.description}
-                          </p>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                            训练建议：{riderPhenotype.trainingFocus}
-                          </p>
-                        </div>
-
-                        {onNavigateTool && (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (smartWorkoutRecommendation) {
-                                  setSelectedSmartTemplateId(smartWorkoutRecommendation.template.id);
-                                }
-                                setSmartWorkoutModalOpen(true);
-                              }}
-                              className="apple-touch h-9 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-xl bg-ios-red hover:bg-ios-red/90 text-white text-xs font-bold transition shadow-ios-sm active:scale-95"
-                            >
-                              <Sparkles className="w-3.5 h-3.5" />
-                              <span>智能生成靶向补强课表</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onNavigateTool('workout-builder')}
-                              className="apple-touch h-9 w-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-600 dark:text-slate-300 text-xs font-semibold transition flex items-center justify-center"
-                              title="直接打开训练工坊"
-                            >
-                              <Dumbbell className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* MMP Chart */}
-                  <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                          {language === 'zh-TW' ? 'MMP 功率曲線' : 'MMP 功率曲线'}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {'车手在各个标准时段内所维持的最高平均输出（瓦特与推重比对比 Coggan 世界标准）'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="h-72 sm:h-84">
-                      <Line
-                        data={mmpChartData}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: {
-                              display: true,
-                              position: 'top' as const,
-                              labels: { font: { size: 10 }, boxWidth: 12, color: '#94a3b8' }
-                            }
-                          },
-                          scales: {
-                            x: { ticks: { font: { size: 10 }, color: '#AEAEB2' } },
-                            y: {
-                              ticks: { font: { size: 10 }, color: '#8E8E93' },
-                              title: {
-                                display: true,
-                                text: mmpUnit === 'wkg' ? 'W/kg' : 'W',
-                                color: '#AF52DE',
-                                font: { size: 11 }
-                              }
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-
-                    {/* MMP Grid Table */}
-                    <div className="pt-2">
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                        {language === 'zh-TW' ? 'MMP 階梯數據表' : 'MMP 阶梯数据表'}
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                        {analysis.mmp.map((m) => {
-                          const pr = currentActivityPrs?.prs.find(p => p.durationSec === m.durationSec);
-                          return (
-                            <div key={m.label} className="p-2.5 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-center space-y-0.5 relative overflow-hidden">
-                              {pr?.isAllTimePr ? (
-                                <span className="absolute top-1 right-1 px-1 py-0.2 rounded text-[9px] font-bold bg-ios-red text-white uppercase">
-                                  PR
-                                </span>
-                              ) : pr?.is90dPr ? (
-                                <span className="absolute top-1 right-1 px-1 py-0.2 rounded text-[9px] font-bold bg-ios-orange text-white uppercase">
-                                  90d
-                                </span>
-                              ) : null}
-                              <div className="text-[11px] font-bold text-ios-purple uppercase">{m.label}</div>
-                              <div className="text-base font-bold text-slate-900 dark:text-white tabular-nums">{m.watts} W</div>
-                              <div className="text-[11px] text-slate-500 tabular-nums">{m.wkg} W/kg</div>
-                              {pr && (pr.isAllTimePr || pr.is90dPr) && pr.wattsGain > 0 && (
-                                <div className="text-[10px] text-ios-green font-bold tabular-nums">
-                                  +{pr.wattsGain}W
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* VIEW 2: Skiba W' Balance Anaerobic Battery Exhaustion Model */}
-              {mmpSubView === 'w_balance' && wPrimeResult && (
-                <div className="space-y-4 sm:space-y-5">
-                  {/* Parameter Tuning Bar */}
-                  <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Battery className="w-4 h-4 text-ios-green" />
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                            {language === 'zh-TW' ? "W' Balance 無氧電量" : "W' Balance 无氧电量"}
-                          </h3>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          模拟无氧电池在临界功率以上踩踏时的放电耗竭与低于临界功率时的动态指数重充
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-slate-500">临界功率 CP:</span>
-                          <NumberStepper
-                            value={cpWatts}
-                            onChange={setCpWatts}
-                            min={100}
-                            max={500}
-                            step={5}
-                            unit="W"
-                          />
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-slate-500">无氧容量 W' max:</span>
-                          <NumberStepper
-                            value={wPrimeKj}
-                            onChange={setWPrimeKj}
-                            min={5}
-                            max={40}
-                            step={1}
-                            unit="kJ"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Metric Tiles */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                      <div className="p-3 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 space-y-1">
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">最低剩余无氧电量</div>
-                        <div className="text-lg font-bold text-slate-900 dark:text-white flex items-baseline gap-1.5 tabular-nums">
-                          <span>{wPrimeResult.minWPrimePercent}%</span>
-                          <span className="text-xs font-normal text-slate-500">({(wPrimeResult.minWPrimeJoules / 1000).toFixed(1)} kJ)</span>
-                        </div>
-                        <div className="text-[11px]">
-                          {wPrimeResult.minWPrimePercent <= 10 ? (
-                            <span className="text-ios-red font-bold">⚠️ 濒临爆缸临界</span>
-                          ) : wPrimeResult.minWPrimePercent <= 30 ? (
-                            <span className="text-ios-orange font-bold">⚡ 深度无氧亏损</span>
-                          ) : (
-                            <span className="text-ios-green font-bold">✓ 电量充裕安全</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 space-y-1">
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">电量最低点时刻</div>
-                        <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">
-                          {formatDuration(wPrimeResult.minPointSec)}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">本次骑行最艰苦攻坚点</div>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 space-y-1">
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">深红放电次数 (&lt;30%)</div>
-                        <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">
-                          {wPrimeResult.matchesBurned} <span className="text-xs font-normal text-slate-500">次火柴</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">燃烧极限火柴次数</div>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 space-y-1">
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">超阈值做功 (Work &gt; CP)</div>
-                        <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">
-                          {wPrimeResult.workAboveCpKj} <span className="text-xs font-normal text-slate-500">kJ</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                          历时 <span className="tabular-nums">{formatDuration(wPrimeResult.timeAboveCpSec)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* W' Balance Dynamic Time-Series Chart */}
-                  <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-bold text-slate-850 dark:text-white">
-                        {"W' Balance 实时电量耗竭波形与踩踏功率对照"}
-                      </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
-                        CP 临界基准: {cpWatts} W · W' max: {wPrimeKj} kJ
-                      </span>
-                    </div>
-
-                    <div className="h-72 sm:h-84">
-                      <Line
-                        data={wPrimeChartData}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          interaction: { mode: 'index', intersect: false },
-                          plugins: {
-                            legend: {
-                              display: true,
-                              position: 'top' as const,
-                              labels: { font: { size: 10 }, boxWidth: 12, color: '#94a3b8' }
-                            }
-                          },
-                          scales: {
-                            x: { ticks: { font: { size: 10 }, color: '#94a3b8' } },
-                            yWBal: {
-                              type: 'linear' as const,
-                              position: 'left' as const,
-                              min: 0,
-                              max: 100,
-                              ticks: { font: { size: 10 }, color: '#10b981', callback: (v) => `${v}%` },
-                              title: { display: true, text: "W' 剩余百分比 (%)", color: '#10b981', font: { size: 10 } }
-                            },
-                            yPower: {
-                              type: 'linear' as const,
-                              position: 'right' as const,
-                              grid: { display: false },
-                              ticks: { font: { size: 10 }, color: '#3b82f6', callback: (v) => `${v}W` },
-                              title: { display: true, text: '功率 (W)', color: '#3b82f6', font: { size: 10 } }
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-
-                    {/* Scientific Explanation Banner */}
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-start gap-2.5">
-                        <Info className="w-4 h-4 text-ios-blue shrink-0 mt-0.5" />
-                        <div className="space-y-0.5 text-slate-600 dark:text-slate-300 leading-relaxed">
-                          <p>
-                            <strong>科学原理</strong>：当输出功率高于临界功率时，身体主要依靠无氧糖酵解供能，迅速消耗 W' 储备；当功率降回临界功率以下时，机体利用有氧代谢乳酸穿梭逐步重充电量。若 W' 降至 0%，将引发急性力竭。
-                          </p>
-                        </div>
-                      </div>
-
-                      {onNavigateTool && (
-                        <button
-                          type="button"
-                          onClick={() => onNavigateTool('workout-builder')}
-                          className="apple-touch self-start sm:self-auto shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-ios-blue/10 hover:bg-ios-blue/20 text-ios-blue font-bold text-xs border border-ios-blue/20 transition shadow-2xs"
-                        >
-                          <Dumbbell className="w-3.5 h-3.5" />
-                          <span>去课表工坊强化无氧池</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <FitMmpTab
+              analysis={analysis}
+              localActivities={localActivities}
+              language={language}
+              mmpUnit={mmpUnit}
+              setMmpUnit={setMmpUnit}
+              mmpSubView={mmpSubView}
+              setMmpSubView={setMmpSubView}
+              selectedCogganTier={selectedCogganTier}
+              setSelectedCogganTier={setSelectedCogganTier}
+              mmpShowCurrent={mmpShowCurrent}
+              setMmpShowCurrent={setMmpShowCurrent}
+              mmpShow90d={mmpShow90d}
+              setMmpShow90d={setMmpShow90d}
+              mmpShowAllTime={mmpShowAllTime}
+              setMmpShowAllTime={setMmpShowAllTime}
+              currentActivityPrs={currentActivityPrs}
+              riderPhenotype={riderPhenotype}
+              mmpChartData={mmpChartData}
+              wPrimeResult={wPrimeResult}
+              wPrimeChartData={wPrimeChartData}
+              cpWatts={cpWatts}
+              setCpWatts={setCpWatts}
+              wPrimeKj={wPrimeKj}
+              setWPrimeKj={setWPrimeKj}
+              formatDuration={formatDuration}
+              onNavigateTool={onNavigateTool}
+              onOpenSmartWorkoutModal={() => setActiveTab('coaching')}
+            />
           )}
 
           {/* TAB: Electronic Shifting Analysis */}
           {activeTab === 'shifting' && analysis.shiftingEvents && (
-            <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2.5">
-                <div className="text-xs font-bold text-slate-850 dark:text-white flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-ios-purple" />
-                  <span>{language === 'zh-TW' ? '電子變速換擋深度解析' : '电子变速换挡深度解析'}</span>
-                </div>
-                <div className="text-xs text-slate-500">
-                  {language === 'zh-TW' ? '全程累計換擋' : '全程累计换挡'}: <strong className="text-slate-900 dark:text-white tabular-nums">{analysis.shiftingEvents.length}</strong> {language === 'zh-TW' ? '次' : '次'}
-                </div>
-              </div>
-
-              {/* Shifting Metric Tiles */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10">
-                  <div className="text-[11px] text-slate-500">{language === 'zh-TW' ? '總換擋次數' : '总换挡次数'}</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums mt-0.5">{analysis.shiftingEvents.length} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '次' : '次'}</span></div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {analysis.totalDistanceKm > 0 ? `${(analysis.shiftingEvents.length / (analysis.totalDistanceKm / 10)).toFixed(1)} 次 / 10km` : '--'}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10">
-                  <div className="text-[11px] text-slate-500">{language === 'zh-TW' ? '前撥換檔' : '前拨换挡'}</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums mt-0.5">
-                    {analysis.shiftingEvents.filter(e => e.frontGearNum !== undefined).length} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '次' : '次'}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {language === 'zh-TW' ? '牙盤切換' : '牙盘切换'}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10">
-                  <div className="text-[11px] text-slate-500">{language === 'zh-TW' ? '後撥換擋' : '后拨换挡'}</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums mt-0.5">
-                    {analysis.shiftingEvents.filter(e => e.rearGearNum !== undefined).length} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '次' : '次'}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {language === 'zh-TW' ? '飛輪微調' : '飞轮微调'}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10">
-                  <div className="text-[11px] text-slate-500">{language === 'zh-TW' ? '換擋頻率' : '换挡频率'}</div>
-                  <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums mt-0.5">
-                    {analysis.movingTimeSec > 0 ? (analysis.shiftingEvents.length / (analysis.movingTimeSec / 3600)).toFixed(1) : '0'} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{language === 'zh-TW' ? '次/小時' : '次/小时'}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {language === 'zh-TW' ? '平均節奏調頻' : '平均节奏调频'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Rear Gear Distribution Bar */}
-              <div className="space-y-2">
-                <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'zh-TW' ? '後撥檔位切換使用次數分佈 (Gear Index 1~12)' : '后拨档位切换使用次数分布 (Gear Index 1~12)'}
-                </div>
-                <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map(gNum => {
-                    const count = analysis.shiftingEvents!.filter(e => e.rearGearNum === gNum).length;
-                    const maxCount = Math.max(1, ...Array.from({ length: 12 }, (_, j) => analysis.shiftingEvents!.filter(e => e.rearGearNum === j + 1).length));
-                    const pct = Math.round((count / maxCount) * 100);
-                    return (
-                      <div key={gNum} className="p-2 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10 text-center flex flex-col justify-between">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">{gNum}档</span>
-                        <div className="h-10 w-full bg-slate-100 dark:bg-white/5 rounded-md flex items-end justify-center my-1 overflow-hidden">
-                          <div
-                            style={{ height: `${pct}%` }}
-                            className={`w-full transition-all duration-300 ${count > 0 ? 'bg-ios-purple' : 'bg-transparent'}`}
-                          />
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 tabular-nums">{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            <FitShiftingTab
+              shiftingEvents={analysis.shiftingEvents}
+              totalDistanceKm={analysis.totalDistanceKm}
+              movingTimeSec={analysis.movingTimeSec}
+              language={language}
+            />
           )}
 
-          {/* TAB: PMC (Performance Management Chart) */}
+          {/* TAB 5: PMC (Performance Management Chart) */}
           {activeTab === 'pmc' && (
-            <div className="space-y-4 sm:space-y-5">
-              {/* PMC Overview Card */}
-              <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-4">
-                {/* Strava Live Sync Banner if Connected */}
-                {isStravaConnected && (
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-[#FC4C02]/10 border border-[#FC4C02]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-xl bg-[#FC4C02] text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
-                        <Cloud className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="font-bold text-slate-900 dark:text-white block truncate">
-                          Strava 云端真实训练负荷时序已激活
-                        </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                          已自动汇入 {stravaActivities.length} 次真实骑行 TSS 驱动 42天 CTL/ATL/TSB 曲线
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => syncStravaActivities(false)}
-                      disabled={isStravaSyncing}
-                      className="apple-touch self-start sm:self-auto px-3 py-1.5 rounded-xl bg-white dark:bg-[#1C1C1E] hover:bg-slate-50 dark:hover:bg-white/10 text-[#FC4C02] font-semibold text-xs border border-[#FC4C02]/30 shrink-0 flex items-center gap-1.5 transition shadow-2xs disabled:opacity-50"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${isStravaSyncing ? 'animate-spin' : ''}`} />
-                      <span>{isStravaSyncing ? '同步中...' : '同步最新'}</span>
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-ios-blue" />
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                        {language === 'zh-TW'
-                          ? '體能管理模型'
-                          : '体能管理模型'}
-                      </h3>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-mono bg-ios-blue/10 text-ios-blue border border-ios-blue/20">
-                        {pmcDataSource === 'local_history' ? 'Local-First 真实时序' : 'Bannister EWMA 模拟'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {pmcDataSource === 'local_history'
-                        ? `由本地持久化时序库中 ${localActivities.length} 场真实骑行连续驱动，每日自动递推计算体能累积与疲劳消退。`
-                        : '长期体能积累 (42天)、急性疲劳 (7天) 与比赛竞技状态动态时序监测。'}
-                    </p>
-                  </div>
-
-                  {/* Mode & Timeframe Controls */}
-                  <div className="flex flex-col xl:flex-row items-start xl:items-center gap-2.5">
-                    {/* Source Switcher */}
-                    {localActivities.length > 0 && (
-                      <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
-                        <button
-                          type="button"
-                          onClick={() => setPmcDataSource('local_history')}
-                          className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                            pmcDataSource === 'local_history'
-                              ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                          }`}
-                        >
-                          真实历史时序
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPmcDataSource('preset_mesocycle')}
-                          className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                            pmcDataSource === 'preset_mesocycle'
-                              ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                          }`}
-                        >
-                          周期课表模拟
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Controls for Local History Mode */}
-                    {pmcDataSource === 'local_history' && (
-                      <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
-                        {(['30d', '90d', '180d', 'ytd', 'all'] as PmcTimeRange[]).map((tr) => (
-                          <button
-                            key={tr}
-                            type="button"
-                            onClick={() => setPmcTimeRange(tr)}
-                            className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                              pmcTimeRange === tr
-                                ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            }`}
-                          >
-                            {tr === '30d' ? '近30天' : tr === '90d' ? '近90天' : tr === '180d' ? '近半年' : tr === 'ytd' ? '本赛季' : '全周期'}
-                          </button>
-                        ))}
-
-                        <button
-                          type="button"
-                          onClick={() => setFutureProjectionDays(prev => prev === 0 ? 14 : 0)}
-                          className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                            futureProjectionDays > 0
-                              ? 'bg-ios-purple text-white border-ios-purple shadow-xs font-bold'
-                              : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                          }`}
-                          title="向未来延长 14 天赛前减量预测"
-                        >
-                          {futureProjectionDays > 0 ? '✓ +14天减量' : '+14天预测'}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Controls for Simulated Mesocycle Mode */}
-                    {pmcDataSource === 'preset_mesocycle' && (
-                      <>
-                        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 overflow-x-auto max-w-full">
-                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 px-2 shrink-0">
-                            体能起点:
-                          </span>
-                          {(['rec', 'club', 'elite', 'pro'] as BaselineFitnessLevel[]).map((level) => (
-                            <button
-                              key={level}
-                              onClick={() => setBaselineFitness(level)}
-                              className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                                baselineFitness === level
-                                  ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                              }`}
-                              title={BASELINE_FITNESS_OPTIONS[level].desc}
-                            >
-                              {BASELINE_FITNESS_OPTIONS[level].label.split(' ')[0]} ({BASELINE_FITNESS_OPTIONS[level].ctl})
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
-                          <button
-                            onClick={() => setPmcMesocycle('base')}
-                            className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                              pmcMesocycle === 'base'
-                                ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            }`}
-                          >
-                            基础期 (60天)
-                          </button>
-                          <button
-                            onClick={() => setPmcMesocycle('build')}
-                            className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                              pmcMesocycle === 'build'
-                                ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            }`}
-                          >
-                            强化期 (45天)
-                          </button>
-                          <button
-                            onClick={() => setPmcMesocycle('taper')}
-                            className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                              pmcMesocycle === 'taper'
-                                ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            }`}
-                          >
-                            减量备战 (28天)
-                          </button>
-                          <button
-                            onClick={() => setPmcMesocycle('grand_tour')}
-                            className={`apple-touch px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                              pmcMesocycle === 'grand_tour'
-                                ? 'bg-white dark:bg-white/20 text-ios-blue shadow-xs font-bold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                            }`}
-                          >
-                            多日赛重负荷 (21天)
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* 4 Core Current Numbers */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-ios-blue/10 border border-ios-blue/20 text-center">
-                    <span className="text-[11px] font-semibold text-ios-blue block">
-                      当前长期体能
-                    </span>
-                    <span className="text-2xl sm:text-3xl font-bold font-mono text-ios-blue block my-1 tabular-nums">
-                      {latestPmcDay ? latestPmcDay.ctl : '--'}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">42 天滚动体能均线</span>
-                  </div>
-
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-ios-orange/10 border border-ios-orange/20 text-center">
-                    <span className="text-[11px] font-semibold text-ios-orange block">
-                      当前急性疲劳
-                    </span>
-                    <span className="text-2xl sm:text-3xl font-bold font-mono text-ios-orange block my-1 tabular-nums">
-                      {latestPmcDay ? latestPmcDay.atl : '--'}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">7 天短期负荷均线</span>
-                  </div>
-
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-ios-green/10 border border-ios-green/20 text-center">
-                    <span className="text-[11px] font-semibold text-ios-green block">
-                      当前竞技状态
-                    </span>
-                    <span
-                      className="text-2xl sm:text-3xl font-bold font-mono block my-1 tabular-nums"
-                      style={{ color: currentTsbZone.color }}
-                    >
-                      {latestPmcDay ? (latestPmcDay.tsb > 0 ? `+${latestPmcDay.tsb}` : latestPmcDay.tsb) : '--'}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">CTL - ATL 差值</span>
-                  </div>
-
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-center">
-                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block">
-                      {pmcSummary ? 'ACWR 负荷比率' : '本次骑行载入 TSS'}
-                    </span>
-                    <span className="text-2xl sm:text-3xl font-bold font-mono text-slate-900 dark:text-white block my-1 tabular-nums">
-                      {pmcSummary ? pmcSummary.acwr : (analysis ? analysis.tss : '--')}
-                    </span>
-                    <span className="text-[11px] text-ios-green font-medium truncate block">
-                      {pmcSummary ? `7日爬升: ${pmcSummary.rampRate7d > 0 ? `+${pmcSummary.rampRate7d}` : pmcSummary.rampRate7d}/周` : '已合并进末日时间轴'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Macro Season Summary Card when in Local-First history */}
-                {pmcSummary && (
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-ios-blue" />
-                      <span className="font-bold text-slate-800 dark:text-white">
-                        时序统计宏观战报:
-                      </span>
-                      <span className="text-slate-500">
-                        所选时段累计已完成 <strong className="text-slate-900 dark:text-white font-mono tabular-nums">{pmcSummary.activeDaysCount}</strong> 天出勤训练
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-slate-600 dark:text-slate-300 text-[11px] tabular-nums">
-                      <span>总里程: <strong className="text-slate-900 dark:text-white font-bold">{pmcSummary.totalSeasonKm}</strong> km</span>
-                      <span>累计负荷: <strong className="text-slate-900 dark:text-white font-bold">{pmcSummary.totalSeasonTss}</strong> TSS</span>
-                      <span>周均负荷: <strong className="text-slate-900 dark:text-white font-bold">{pmcSummary.weeklyAvgTss}</strong> TSS/周</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Triple-Curve Line Chart */}
-                <div className="h-80 w-full pt-2">
-                  <Line
-                    data={pmcChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      interaction: {
-                        mode: 'index',
-                        intersect: false
-                      },
-                      scales: {
-                        x: {
-                          grid: { color: 'rgba(150, 150, 150, 0.08)' },
-                          ticks: { color: '#94a3b8', font: { size: 10 } }
-                        },
-                        y: {
-                          type: 'linear',
-                          display: true,
-                          position: 'left',
-                          grid: { color: 'rgba(150, 150, 150, 0.08)' },
-                          ticks: { color: '#AEAEB2', font: { size: 10 } },
-                          title: { display: true, text: '长期体能 / 急性疲劳', color: '#8E8E93', font: { size: 11 } }
-                        },
-                        y1: {
-                          type: 'linear',
-                          display: true,
-                          position: 'right',
-                          grid: { drawOnChartArea: false },
-                          ticks: { color: '#10b981', font: { size: 10 } },
-                          title: { display: true, text: '竞技状态', color: '#10b981', font: { size: 11 } }
-                        }
-                      },
-                      plugins: {
-                        legend: {
-                          position: 'top',
-                          labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 14 }
-                        },
-                        tooltip: {
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                          borderColor: 'rgba(56, 189, 248, 0.3)',
-                          borderWidth: 1
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Race Day Peak Predictor & Coach Diagnostic */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                {/* Left: TSB Status Diagnostic */}
-                <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      当前机体竞技状态判定
-                    </span>
-                    <span
-                      className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono"
-                      style={{ backgroundColor: `${currentTsbZone.color}20`, color: currentTsbZone.color }}
-                    >
-                      {language === 'zh-TW' ? currentTsbZone.labelTw : currentTsbZone.label}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
-                    {language === 'zh-TW' ? currentTsbZone.adviceTw : currentTsbZone.advice}
-                  </p>
-
-                  {/* 5 TSB Reference Zones */}
-                  <div className="space-y-1.5 pt-2">
-                    <div className="text-[11px] font-bold text-slate-500">TSB 黄金区间速查：</div>
-                    <div className="grid grid-cols-5 gap-1 text-[11px] text-center font-mono font-bold">
-                      <div className="p-1 rounded-lg bg-red-500/10 text-red-500" title="过度透支">&lt; -30 透支</div>
-                      <div className="p-1 rounded-lg bg-blue-500/10 text-blue-500" title="强化提升">-30~-10 增能</div>
-                      <div className="p-1 rounded-lg bg-emerald-500/10 text-emerald-500" title="维持">-10~+5 维持</div>
-                      <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500" title="巅峰状态">+5~+25 巅峰</div>
-                      <div className="p-1 rounded-lg bg-slate-500/10 text-slate-500" title="衰退">&gt; +25 衰退</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Target Race Peak Predictor */}
-                <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Award className="w-4 h-4 text-amber-500" />
-                      目标赛事巅峰状态倒计时预测
-                    </span>
-                    <span className="text-xs font-mono font-bold text-amber-500 tabular-nums">
-                      目标 TSB: +{targetTsbForPeak}
-                    </span>
-                  </div>
-
-                  <div>
-                    <input
-                      type="range"
-                      min={5}
-                      max={25}
-                      value={targetTsbForPeak}
-                      onChange={(e) => setTargetTsbForPeak(parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-amber-500"
-                    />
-                    <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
-                      <span>+5 稳健参赛</span>
-                      <span>+15 爆发力巅峰</span>
-                      <span>+25 极限减量</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-1">
-                    <div className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
-                      预计所需减量备赛周期
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-bold font-mono text-amber-600 dark:text-amber-400 tabular-nums">
-                      {taperPrediction.daysNeeded} <span className="text-sm font-sans">天</span>
-                    </div>
-                    <div className="text-[11px] text-slate-600 dark:text-slate-300">
-                      出关比赛日预测 CTL 体能保全值：<strong className="font-mono text-slate-900 dark:text-white tabular-nums">{taperPrediction.predictedCtl}</strong>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    在减量期保持每天 20~35 TSS 的低量高频刺激（短冲刺激活神经，缩减总骑行时间 40%），可确保疲劳迅速消退而有氧酶活性不失。
-                  </p>
-                </div>
-              </div>
-
-              {/* Manual TSS Workout Logging Card */}
-              <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-ios-blue" />
-                    手动补录日常训练负荷
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    可补记未导出 FIT 文件的骑行台训练、通勤或周末外骑，实时重塑 42 天 CTL 体能与 ATL 疲劳走势。
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <div className="w-28 sm:w-32">
-                    <label className="text-xs text-slate-500 dark:text-slate-400 block mb-1">训练日期</label>
-                    <select
-                      value={newManualDayOffset}
-                      onChange={(e) => setNewManualDayOffset(Number(e.target.value))}
-                      className="w-full h-9 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 text-xs text-slate-900 dark:text-white focus:outline-none"
-                    >
-                      <option value={0}>今天</option>
-                      <option value={-1}>昨天</option>
-                      <option value={-2}>前天</option>
-                      <option value={-3}>3天前</option>
-                    </select>
-                  </div>
-
-                  <div className="w-28 sm:w-32">
-                    <label className="text-xs text-slate-500 dark:text-slate-400 block mb-1">TSS 负荷点数</label>
-                    <NumberStepper
-                      value={newManualTss}
-                      onChange={setNewManualTss}
-                      min={10}
-                      max={400}
-                      step={5}
-                      unit="TSS"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="text-xs text-slate-500 dark:text-slate-400 block mb-1">训练备注</label>
-                    <input
-                      type="text"
-                      value={newManualTitle}
-                      onChange={(e) => setNewManualTitle(e.target.value)}
-                      placeholder="例：90min 甜区团骑"
-                      className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleAddManualTss}
-                    className="apple-touch self-end h-9 px-4 bg-ios-blue/10 hover:bg-ios-blue/15 text-ios-blue dark:text-ios-blue-dark border border-ios-blue/25 rounded-xl text-xs font-semibold active:scale-95 transition shrink-0"
-                  >
-                    录入 PMC
-                  </button>
-                </div>
-
-                {manualTssEntries.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-black/[0.04] dark:border-white/[0.06]">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 self-center">已录入负荷:</span>
-                    {manualTssEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-ios-blue/10 border border-ios-blue/20 text-ios-blue text-xs font-mono"
-                      >
-                        <span>{entry.dayOffset === 0 ? '今日' : `${Math.abs(entry.dayOffset)}天前`}: <strong className="tabular-nums">{entry.tss}</strong> TSS ({entry.title})</span>
-                        <button
-                          onClick={() => handleRemoveManualTss(entry.id)}
-                          className="apple-touch hover:text-red-500 font-bold ml-1 text-slate-400"
-                          title="删除"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <FitPmcTab
+              localActivities={localActivities}
+              stravaActivities={stravaActivities}
+              isStravaConnected={isStravaConnected}
+              isStravaSyncing={isStravaSyncing}
+              syncStravaActivities={syncStravaActivities}
+              analysisTss={analysis.tss}
+              language={language}
+            />
           )}
 
-          {/* TAB 4: Physiological Coaching Insights */}
+          {/* TAB 6: Coaching Insights & Targeted Workouts */}
           {activeTab === 'coaching' && (
-            <div className="ios-card p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-ios-card space-y-3.5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-ios-blue" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {'自动化运动生理学诊断与复原窗口评估'}
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                {coachingNotes.map((note, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3.5 rounded-xl border flex items-start gap-3 text-xs ${
-                      note.type === 'success'
-                        ? 'bg-ios-green/10 border-ios-green/30 text-slate-900 dark:text-emerald-100'
-                        : note.type === 'warning'
-                        ? 'bg-ios-orange/10 border-ios-orange/30 text-slate-900 dark:text-amber-100'
-                        : 'bg-ios-blue/10 border-ios-blue/30 text-slate-900 dark:text-sky-100'
-                    }`}
-                  >
-                    {note.type === 'success' ? (
-                      <CheckCircle2 className="w-5 h-5 text-ios-green shrink-0 mt-0.5" />
-                    ) : note.type === 'warning' ? (
-                      <AlertTriangle className="w-5 h-5 text-ios-orange shrink-0 mt-0.5" />
-                    ) : (
-                      <Info className="w-5 h-5 text-ios-blue shrink-0 mt-0.5" />
-                    )}
-                    <div className="space-y-1">
-                      <div className="font-bold text-sm">{note.title}</div>
-                      <div className="leading-relaxed opacity-90">{note.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Smart Targeted Workout Recommendation Card */}
-              {smartWorkoutRecommendation && (
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-ios-red/10 via-ios-orange/10 to-transparent border border-ios-red/25 space-y-3 shadow-ios-sm relative overflow-hidden">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ios-red/15 text-ios-red text-xs font-bold border border-ios-red/25">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>运动科学智能靶向补强推荐</span>
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                        短板诊断：{smartWorkoutRecommendation.deficiencyTitle}
-                      </h4>
-                    </div>
-
-                    {onNavigateTool && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSmartTemplateId(smartWorkoutRecommendation.template.id);
-                          setSmartWorkoutModalOpen(true);
-                        }}
-                        className="apple-touch self-start sm:self-auto shrink-0 h-9 inline-flex items-center gap-2 px-3.5 rounded-xl bg-ios-red hover:bg-ios-red/90 text-white font-bold text-xs shadow-ios-sm transition active:scale-95"
-                      >
-                        <Dumbbell className="w-4 h-4" />
-                        <span>配置补强课表</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {smartWorkoutRecommendation.deficiencyDesc}
-                  </p>
-
-                  <div className="p-3 rounded-xl bg-white/80 dark:bg-white/5 border border-black/[0.04] dark:border-white/[0.08] flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">推荐专属科学课表</span>
-                      <span className="font-bold text-slate-900 dark:text-white">
-                        {smartWorkoutRecommendation.template.name}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-ios-red font-medium">
-                      {smartWorkoutRecommendation.template.targetAdaptation}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Recovery & Nutrition Advice */}
-              <div className="p-3.5 rounded-xl bg-white/70 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-xs space-y-2">
-                <div className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  <Flame className="w-4 h-4 text-ios-orange" />
-                  {'赛后糖原与肌肉超量恢复建议'}
-                </div>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {`本次骑行累计机械做功 ${analysis.workKj} kJ（约消耗 ${analysis.caloriesKcal} kcal 热量）。建议骑行结束后 45 分钟黄金恢复窗口内摄入约 ${(analysis.caloriesKcal * 0.4 / 4).toFixed(0)}g 易吸收碳水化合物，配合 25g 优质乳清蛋白，促进肌糖原重组与肌原纤维合成。`}
-                </p>
-              </div>
-            </div>
+            <FitCoachingTab
+              coachingNotes={coachingNotes}
+              smartWorkoutRecommendation={smartWorkoutRecommendation}
+              workKj={analysis.workKj}
+              caloriesKcal={analysis.caloriesKcal || analysis.workKj}
+              onNavigateTool={onNavigateTool}
+              onDispatchSmartWorkout={handleDispatchSmartWorkout}
+            />
           )}
-        </div>
-      )}
-
-      {/* Smart Workout Generator Modal */}
-      {smartWorkoutModalOpen && smartWorkoutRecommendation && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 dark:bg-black/75 backdrop-blur-2xl animate-in fade-in duration-200">
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-t-[28px] sm:rounded-2xl p-4 sm:p-5 border border-black/[0.06] dark:border-white/[0.08] shadow-ios-popover space-y-4 sm:space-y-5 bg-white dark:bg-[#1C1C1E] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-5">
-            {/* iOS Bottom Sheet Drag Handle */}
-            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-neutral-600 mx-auto -mt-1 mb-1 sm:hidden shrink-0" />
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-ios-red text-white flex items-center justify-center shadow-ios-sm">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                    智能靶向补强课表生成
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    基于本次骑行真实心率、功率与疲劳数据生成
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSmartWorkoutModalOpen(false)}
-                className="apple-touch w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Physiological Deficit Diagnosis Alert */}
-            <div className="p-3.5 rounded-xl bg-ios-red/10 border border-ios-red/25 space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-ios-red">
-                <AlertTriangle className="w-4 h-4" />
-                <span>生理学短板评估：{smartWorkoutRecommendation.deficiencyTitle}</span>
-              </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                {smartWorkoutRecommendation.deficiencyDesc}
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium pt-1">
-                训练建议：{smartWorkoutRecommendation.actionAdvice}
-              </p>
-            </div>
-
-            {/* Scientific Workout Template Selection */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
-                <span>选择训练课表方案：</span>
-                <span className="text-[11px] text-ios-red font-normal">已预选最匹配短板方案</span>
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {WORKOUT_TEMPLATES.map((tmpl) => {
-                  const isRecommended = tmpl.id === smartWorkoutRecommendation.template.id;
-                  const isSelected = (selectedSmartTemplateId || smartWorkoutRecommendation.template.id) === tmpl.id;
-                  return (
-                    <button
-                      key={tmpl.id}
-                      type="button"
-                      onClick={() => setSelectedSmartTemplateId(tmpl.id)}
-                      className={`p-3 rounded-xl border text-left transition relative apple-touch ${
-                        isSelected
-                          ? 'bg-ios-red/10 dark:bg-ios-red/20 border-ios-red text-slate-900 dark:text-white ring-2 ring-ios-red/30'
-                          : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                      }`}
-                    >
-                      {isRecommended && (
-                        <span className="absolute top-2 right-2 px-1.5 py-0.5 text-[11px] font-bold rounded-full bg-ios-red text-white shadow-2xs">
-                          推荐
-                        </span>
-                      )}
-                      <div className="font-bold text-xs pr-8">{tmpl.name}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{tmpl.subtitle}</div>
-                      <div className="text-[11px] text-ios-red font-medium mt-1">{tmpl.categoryLabel}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Selected Template Details Preview */}
-            {(() => {
-              const activeTmpl = WORKOUT_TEMPLATES.find(t => t.id === (selectedSmartTemplateId || smartWorkoutRecommendation.template.id)) || smartWorkoutRecommendation.template;
-              return (
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.08] space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 dark:text-white">{activeTmpl.name}</span>
-                    <span className="font-mono text-slate-500">共 {activeTmpl.segments.length} 个结构化分段</span>
-                  </div>
-                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
-                    {activeTmpl.description}
-                  </p>
-                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                    靶向适应：{activeTmpl.targetAdaptation}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setSmartWorkoutModalOpen(false)}
-                className="apple-touch h-9 px-4 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition"
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDispatchSmartWorkout()}
-                className="apple-touch h-9 px-4.5 rounded-xl bg-ios-red hover:bg-ios-red/90 text-white text-xs font-bold shadow-ios-sm flex items-center gap-2 transition active:scale-95"
-              >
-                <Dumbbell className="w-4 h-4" />
-                <span>载入课表工坊并开始训练</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
         </div>
       )}
 

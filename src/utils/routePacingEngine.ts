@@ -71,6 +71,8 @@ export interface CourseSegment {
   durationStr: string;
   vam: number; // m/h
   workKj: number;
+  isStalled?: boolean;
+  stallWarning?: string;
 }
 
 export interface PacingEngineOptions {
@@ -364,6 +366,13 @@ export function calculateTargetPower(
   };
 }
 
+export interface EquilibriumSpeedResult {
+  speedKmh: number;
+  speedMs: number;
+  isStalled?: boolean;
+  stallWarning?: string;
+}
+
 /**
  * Solve equilibrium velocity v using Bisection / Newton search
  * Equation: P_target * eta = (F_gravity + F_rolling + F_aero) * v
@@ -377,7 +386,7 @@ export function solveEquilibriumSpeed(
   crr: number,
   airDensityRho: number,
   drivetrainEfficiency: number = 0.975
-): { speedKmh: number; speedMs: number } {
+): EquilibriumSpeedResult {
   const g = 9.80665;
   const gradeRad = Math.atan(gradePct / 100);
   const fGravity = totalMassKg * g * Math.sin(gradeRad);
@@ -395,12 +404,22 @@ export function solveEquilibriumSpeed(
       const clampedSpeed = Math.min(25, coastingSpeedMs); // cap terminal safe speed at 90 km/h (25 m/s)
       return {
         speedKmh: parseFloat((clampedSpeed * 3.6).toFixed(1)),
-        speedMs: clampedSpeed
+        speedMs: clampedSpeed,
+        isStalled: false
       };
     }
   }
 
   const effectivePowerWatts = targetWatts * drivetrainEfficiency;
+
+  // Stall Detection: On steep uphills (>= 8%), if effective power is less than mechanical power required
+  // to maintain minimum balance velocity (v = 1.0 m/s = 3.6 km/h)
+  const minBalanceVelocityMs = 1.0;
+  const vAeroMin = Math.max(0, minBalanceVelocityMs + headwindComponentMs);
+  const fAeroMin = 0.5 * airDensityRho * cda * Math.pow(vAeroMin, 2);
+  const minRequiredPowerToBalance = (fGravity + fRolling + fAeroMin) * minBalanceVelocityMs;
+
+  const isStalled = gradePct >= 8.0 && effectivePowerWatts < minRequiredPowerToBalance;
 
   let low = 0.2; // 0.72 km/h
   let high = 27.8; // 100 km/h
@@ -422,7 +441,11 @@ export function solveEquilibriumSpeed(
   const safeSpeedKmh = Math.max(2.0, parseFloat((v * 3.6).toFixed(1)));
   return {
     speedKmh: safeSpeedKmh,
-    speedMs: safeSpeedKmh / 3.6
+    speedMs: safeSpeedKmh / 3.6,
+    isStalled,
+    stallWarning: isStalled
+      ? `坡度阻力超出踩踏功率(${targetWatts}W)，低于骑行平衡车速(3.6 km/h)，将面临失速推车风险`
+      : undefined
   };
 }
 
@@ -580,7 +603,7 @@ export function computeCoursePacingPlan(
     const targetWkg = parseFloat((targetWatts / options.riderWeightKg).toFixed(2));
 
     // Physics velocity solution
-    const { speedKmh, speedMs } = solveEquilibriumSpeed(
+    const eqResult = solveEquilibriumSpeed(
       targetWatts,
       gradePct,
       windDecomp.headwindComponentMs,
@@ -590,6 +613,8 @@ export function computeCoursePacingPlan(
       airDensityRho,
       drivetrainEfficiency
     );
+    const speedKmh = eqResult.speedKmh;
+    const speedMs = eqResult.speedMs;
 
     const segDurationSec = segDistM / speedMs;
     totalDurationSec += segDurationSec;
@@ -636,7 +661,9 @@ export function computeCoursePacingPlan(
       durationSec: Math.round(segDurationSec),
       durationStr,
       vam,
-      workKj: Math.round(segWorkJ / 1000)
+      workKj: Math.round(segWorkJ / 1000),
+      isStalled: eqResult.isStalled,
+      stallWarning: eqResult.stallWarning
     });
 
     currentStartIdx = endIdx;

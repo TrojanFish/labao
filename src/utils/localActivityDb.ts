@@ -279,23 +279,38 @@ export const exportActivitiesBackup = async (): Promise<string> => {
  * Import activities from JSON backup
  */
 export const importActivitiesBackup = async (jsonContent: string): Promise<number> => {
-  let parsed: any;
+  let parsed: unknown;
   try {
     parsed = JSON.parse(jsonContent);
   } catch {
     throw new Error('备份文件非有效的 JSON 格式');
   }
 
-  const items: LocalActivityRecord[] = Array.isArray(parsed)
-    ? parsed
-    : Array.isArray(parsed.activities)
-    ? parsed.activities
-    : [];
+  const rawList: unknown =
+    parsed && typeof parsed === 'object' && 'activities' in parsed
+      ? (parsed as { activities: unknown }).activities
+      : parsed;
 
-  if (items.length === 0) return 0;
+  if (!Array.isArray(rawList)) {
+    throw new Error('备份文件不包含有效的活动列表');
+  }
 
-  await saveActivitiesBatchToDb(items.map(record => ({ record })));
-  return items.length;
+  const validItems: LocalActivityRecord[] = rawList.filter((item): item is LocalActivityRecord => {
+    if (typeof item !== 'object' || item === null) return false;
+    const candidate = item as Record<string, unknown>;
+    return (
+      typeof candidate.id === 'string' &&
+      candidate.id.length > 0 &&
+      typeof candidate.name === 'string' &&
+      typeof candidate.startDate === 'string' &&
+      typeof candidate.startTime === 'number'
+    );
+  });
+
+  if (validItems.length === 0) return 0;
+
+  await saveActivitiesBatchToDb(validItems.map(record => ({ record })));
+  return validItems.length;
 };
 
 /**

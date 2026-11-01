@@ -14,6 +14,8 @@ describe('PMC Calculator - Impulse-Response Model & Zones', () => {
       expect(info.zone).toBe('overload');
       expect(info.color).toBe('#ef4444');
       expect(info.label).toContain('深度透支');
+      expect(info.labelEn).toBeDefined();
+      expect(info.adviceEn).toBeDefined();
     });
 
     it('correctly classifies productive overreaching (-30 <= TSB < -10)', () => {
@@ -57,6 +59,21 @@ describe('PMC Calculator - Impulse-Response Model & Zones', () => {
     it('generates expected day count for taper mesocycle', () => {
       const series = generatePmcSeries('taper', undefined, 'club');
       expect(series).toHaveLength(28);
+    });
+
+    it('adaptively expands daysCount beyond 60 when historical Strava activities cover 120 days', () => {
+      const now = new Date();
+      const past120Days = new Date(now.getTime() - 120 * 86400 * 1000).toISOString();
+      const past60Days = new Date(now.getTime() - 60 * 86400 * 1000).toISOString();
+
+      const stravaActs = [
+        { start_date: past120Days, tss: 120, name: 'Century Ride 4 Months Ago' },
+        { start_date: past60Days, tss: 85, name: 'Tempo Ride 2 Months Ago' }
+      ];
+
+      const series = generatePmcSeries('base', undefined, 'club', undefined, stravaActs);
+      expect(series.length).toBeGreaterThanOrEqual(120);
+      expect(series[0].day).toBe(1);
     });
 
     it('injects today TSS correctly into the final day', () => {

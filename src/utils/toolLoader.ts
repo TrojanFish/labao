@@ -41,3 +41,41 @@ export const prefetchTool = (id: string): void => {
     });
   }
 };
+
+/**
+ * Progressively prefetches all tools in the background during idle time
+ * so that when the user goes offline, all tool chunks are already cached in Service Worker.
+ */
+export const prefetchAllToolsIdle = (): void => {
+  if (typeof window === 'undefined') return;
+
+  const toolIds = Object.keys(TOOL_LOADERS);
+  let index = 0;
+
+  const scheduleNext = () => {
+    if (index >= toolIds.length) return;
+    const id = toolIds[index++];
+    prefetchTool(id);
+
+    if (typeof (window as unknown as { requestIdleCallback?: (cb: () => void, opt: { timeout: number }) => number }).requestIdleCallback === 'function') {
+      (window as unknown as { requestIdleCallback: (cb: () => void, opt: { timeout: number }) => number }).requestIdleCallback(
+        () => scheduleNext(),
+        { timeout: 2000 }
+      );
+    } else {
+      setTimeout(scheduleNext, 300);
+    }
+  };
+
+  // Give initial page load and critical hydration 3 seconds of quiet time
+  setTimeout(() => {
+    if (typeof (window as unknown as { requestIdleCallback?: (cb: () => void, opt: { timeout: number }) => number }).requestIdleCallback === 'function') {
+      (window as unknown as { requestIdleCallback: (cb: () => void, opt: { timeout: number }) => number }).requestIdleCallback(
+        () => scheduleNext(),
+        { timeout: 3000 }
+      );
+    } else {
+      setTimeout(scheduleNext, 500);
+    }
+  }, 3000);
+};

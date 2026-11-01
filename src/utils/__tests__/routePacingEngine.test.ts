@@ -135,6 +135,18 @@ describe('Route Pacing & Aerodynamics Physics Engine', () => {
       expect(Number.isNaN(stall.speedKmh)).toBe(false);
       expect(stall.speedKmh).toBeGreaterThanOrEqual(2.0);
     });
+
+    it('detects stall condition on extreme climbs with insufficient pedaling wattage', () => {
+      // 50W on 18% climb for 75kg total mass requires >130W just to crawl at 3.6 km/h
+      const stalled = solveEquilibriumSpeed(50, 18.0, 0, 75, 0.32, 0.004, 1.225);
+      expect(stalled.isStalled).toBe(true);
+      expect(stalled.stallWarning).toContain('失速推车风险');
+
+      // 350W on 18% climb should NOT stall
+      const vigorous = solveEquilibriumSpeed(350, 18.0, 0, 75, 0.32, 0.004, 1.225);
+      expect(vigorous.isStalled).toBe(false);
+      expect(vigorous.stallWarning).toBeUndefined();
+    });
   });
 
   describe('formatDuration', () => {
