@@ -1,6 +1,6 @@
-const CACHE_NAME = 'yolocycling-cache-v1';
-const TILE_CACHE_NAME = 'yolocycling-tiles-v1';
-const MAX_CACHED_TILES = 150;
+const CACHE_NAME = 'yolocycling-cache-v2';
+const TILE_CACHE_NAME = 'yolocycling-tiles-v2';
+const MAX_CACHED_TILES = 300;
 
 const STATIC_ASSETS = [
   '/',
@@ -60,8 +60,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. OpenStreetMap Tiles: Cache-First with background refresh & LRU limit (Mountain offline support)
-  if (url.hostname.includes('tile.openstreetmap.org')) {
+  // 2. Map Tiles: Cache-First with background refresh & LRU limit (OSM, Esri Topo/Satellite, OpenTopo)
+  const isMapTile =
+    url.hostname.includes('tile.openstreetmap.org') ||
+    url.hostname.includes('arcgisonline.com') ||
+    url.hostname.includes('opentopomap.org');
+
+  if (isMapTile) {
     event.respondWith(
       caches.open(TILE_CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(event.request);

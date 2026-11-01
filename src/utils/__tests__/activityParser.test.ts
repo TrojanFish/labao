@@ -157,6 +157,19 @@ describe('Activity Parser & Advanced Physiological Metrics', () => {
       expect(sampled[0].time).toBe(0);
       expect(sampled[sampled.length - 1].time).toBeGreaterThan(1900);
     });
+
+    it('preserves an extreme peak power surge with LTTB algorithm', () => {
+      const data: ActivityPoint[] = [];
+      for (let i = 0; i < 2000; i++) {
+        data.push({ time: i, distance: i * 5, power: 150 });
+      }
+      // Insert a peak sprint of 1200W at index 733 (which uniform step sampling would skip)
+      data[733] = { time: 733, distance: 733 * 5, power: 1200 };
+
+      const sampled = downsamplePoints(data, 100);
+      const hasSprintPeak = sampled.some(p => p.power === 1200);
+      expect(hasSprintPeak).toBe(true);
+    });
   });
 
   describe('analyzePoints & Left-Right Pedal Balance (Phase 1)', () => {

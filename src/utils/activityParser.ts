@@ -1,4 +1,5 @@
 import { Decoder, Stream } from '@garmin/fitsdk';
+import { downsampleLttb } from './telemetryDownsampler';
 
 export interface ActivityPoint {
   time: number; // Elapsed seconds from ride start
@@ -349,20 +350,17 @@ export function calculateSkibaWPrimeBalance(
 }
 
 /**
- * Downsample points for fluid 60fps chart rendering on mobile devices
+ * Downsample points for fluid 60fps chart rendering on mobile devices using LTTB (Largest Triangle Three Buckets)
+ * Preserves instantaneous peak sprint powers, maximum heart rate surges, and summit elevations.
  */
 export function downsamplePoints(points: ActivityPoint[], targetCount = 600): ActivityPoint[] {
-  if (points.length <= targetCount) return points;
-
-  const step = points.length / targetCount;
-  const sampled: ActivityPoint[] = [];
-
-  for (let i = 0; i < targetCount; i++) {
-    const idx = Math.min(Math.floor(i * step), points.length - 1);
-    sampled.push(points[idx]);
-  }
-
-  return sampled;
+  if (!points || points.length <= targetCount) return points || [];
+  return downsampleLttb(
+    points,
+    targetCount,
+    p => p.time,
+    p => (p.power !== undefined && p.power > 0 ? p.power : (p.heartRate || p.speed || p.altitude || 0))
+  );
 }
 
 /**

@@ -84,7 +84,7 @@ export const TargetRaceWizardModal: React.FC<TargetRaceWizardModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm transition-opacity">
       {/* Container: Desktop Centered Panel / Mobile Bottom Sheet */}
-      <div className="w-full sm:max-w-xl bg-white dark:bg-[#1C1C1E] rounded-t-[28px] sm:rounded-2xl border border-black/10 dark:border-white/10 shadow-ios-popover overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="w-full sm:max-w-xl bg-white dark:bg-[#1C1C1E] rounded-t-[28px] sm:rounded-2xl border border-black/10 dark:border-white/10 shadow-ios-popover overflow-hidden max-h-[90vh] flex flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0">
         {/* Mobile Pull Handle */}
         <div className="sm:hidden pt-3 pb-1 flex justify-center">
           <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-white/20"></div>

@@ -20,7 +20,7 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        className="w-full sm:max-w-lg bg-white dark:bg-[#1C1C1E] border border-slate-200/80 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl shadow-ios-popover overflow-hidden flex flex-col max-h-[90vh] animate-spring-up"
+        className="w-full sm:max-w-lg bg-white dark:bg-[#1C1C1E] border border-slate-200/80 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl shadow-ios-popover overflow-hidden flex flex-col max-h-[90vh] animate-spring-up pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0"
         role="dialog"
         aria-modal="true"
       >

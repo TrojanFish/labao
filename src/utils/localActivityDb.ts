@@ -321,6 +321,10 @@ export const seedDemoSeasonActivities = async (
   weightKg: number = 68,
   maxHr: number = 185
 ): Promise<LocalActivityRecord[]> => {
+  const safeWeight = Math.max(30, weightKg || 68);
+  const safeFtp = Math.max(50, ftpWatts || 240);
+  const safeMaxHr = Math.max(120, maxHr || 185);
+
   const now = Date.now();
   const DAY_MS = 86400 * 1000;
 
@@ -332,9 +336,9 @@ export const seedDemoSeasonActivities = async (
       dur: 8100, // 2h 15m
       mov: 7800,
       elev: 340,
-      pAvg: Math.round(ftpWatts * 0.65),
-      pNp: Math.round(ftpWatts * 0.68),
-      hrAvg: Math.round(maxHr * 0.68),
+      pAvg: Math.round(safeFtp * 0.65),
+      pNp: Math.round(safeFtp * 0.68),
+      hrAvg: Math.round(safeMaxHr * 0.68),
       cadAvg: 88,
       speedAvg: 30.2,
       tss: 105
@@ -577,12 +581,12 @@ export const seedDemoSeasonActivities = async (
 
       // Add a tiny variation
       const noise = 0.98 + (idx % 5) * 0.01;
-      const peakW = Math.round(ftpWatts * f * noise);
+      const peakW = Math.round(safeFtp * f * noise);
       return {
         durationSec: d.sec,
         label: d.label,
         watts: peakW,
-        wkg: parseFloat((peakW / weightKg).toFixed(2))
+        wkg: parseFloat((peakW / safeWeight).toFixed(2))
       };
     });
 

@@ -167,7 +167,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={language === 'zh-TW' ? '命令面板' : '命令面板'}
-        className="w-full sm:max-w-xl max-h-[85vh] sm:max-h-[600px] flex flex-col bg-white/95 dark:bg-[#1C1C1E]/95 border-t sm:border border-black/[0.08] dark:border-white/[0.12] rounded-t-[28px] sm:rounded-2xl shadow-ios-popover backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200"
+        className="w-full sm:max-w-xl max-h-[85vh] sm:max-h-[600px] flex flex-col bg-white/95 dark:bg-[#1C1C1E]/95 border-t sm:border border-black/[0.08] dark:border-white/[0.12] rounded-t-[28px] sm:rounded-2xl shadow-ios-popover backdrop-blur-2xl overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* iOS Drag Handle (Mobile only) */}

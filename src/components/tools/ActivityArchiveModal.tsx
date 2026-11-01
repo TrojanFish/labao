@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   Cloud,
   Loader2,
-  Activity
+  Activity,
+  HardDrive
 } from 'lucide-react';
 import {
   LocalActivityRecord,
@@ -83,13 +84,23 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'tss_desc' | 'dist_desc' | 'np_desc'>('date_desc');
   const [filterType, setFilterType] = useState<string>('all');
   const [isSeeding, setIsSeeding] = useState(false);
+  const [storageUsage, setStorageUsage] = useState<{ usedMb: number; quotaMb: number; percent: number } | null>(null);
 
-  // Load cached Strava activities from solorider_strava_db when modal opens
+  // Load cached Strava activities and estimate storage quota when modal opens
   useEffect(() => {
     if (isOpen) {
       getAllActivitiesFromDb()
         .then(list => setStravaActivities(list || []))
         .catch(() => setStravaActivities([]));
+
+      if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+        navigator.storage.estimate().then((est) => {
+          const used = est.usage ? est.usage / (1024 * 1024) : 0;
+          const total = est.quota ? est.quota / (1024 * 1024) : 0;
+          const pct = total > 0 ? Math.round((used / total) * 100) : 0;
+          setStorageUsage({ usedMb: parseFloat(used.toFixed(1)), quotaMb: Math.round(total), percent: pct });
+        }).catch(() => undefined);
+      }
     }
   }, [isOpen]);
 
@@ -274,7 +285,7 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
     >
       <div
         ref={panelRef}
-        className="w-full sm:max-w-3xl bg-white dark:bg-[#1C1C1E] border border-slate-200/80 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl shadow-ios-popover overflow-hidden flex flex-col max-h-[90vh] animate-spring-up"
+        className="w-full sm:max-w-3xl bg-white dark:bg-[#1C1C1E] border border-slate-200/80 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl shadow-ios-popover overflow-hidden flex flex-col max-h-[90vh] animate-spring-up pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0"
         role="dialog"
         aria-modal="true"
         aria-label={language === 'zh-TW' ? '本地活動檔案庫' : '本地活动档案库'}
@@ -298,6 +309,19 @@ export const ActivityArchiveModal: React.FC<ActivityArchiveModalProps> = ({
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-ios-blue/10 text-ios-blue border border-ios-blue/20 tabular-nums">
                   {activeTab === 'local' ? `${activities.length} 场骑行` : `${stravaActivities.length} 场同步`}
                 </span>
+                {storageUsage && (
+                  <span
+                    className={`hidden sm:inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full border tabular-nums ${
+                      storageUsage.percent > 80
+                        ? 'bg-ios-orange/10 text-ios-orange border-ios-orange/30'
+                        : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border-black/5 dark:border-white/10'
+                    }`}
+                    title={`浏览器离线配额已用 ${storageUsage.percent}% (约 ${storageUsage.quotaMb} MB)`}
+                  >
+                    <HardDrive className="w-3 h-3 text-ios-blue" />
+                    <span>已存 {storageUsage.usedMb} MB</span>
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500">
                 {language === 'zh-TW' ? '離線安全存儲 · 時序與 MMP 功率矩陣本地持久化' : '离线安全存储 · 时序与 MMP 功率矩阵本地持久化'}

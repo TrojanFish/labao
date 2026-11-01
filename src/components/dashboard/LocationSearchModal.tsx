@@ -164,7 +164,7 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
       <div className="fixed inset-0" onClick={onClose} />
 
       {/* Modal / Sheet Container: with fixed height bounds and flex column layout */}
-      <div className="relative z-10 w-full sm:max-w-md bg-white dark:bg-[#1C1C1E] rounded-t-[28px] sm:rounded-2xl shadow-ios-popover border border-black/10 dark:border-white/10 flex flex-col h-[75vh] sm:h-auto sm:max-h-[600px] animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
+      <div className="relative z-10 w-full sm:max-w-md bg-white dark:bg-[#1C1C1E] rounded-t-[28px] sm:rounded-2xl shadow-ios-popover border border-black/10 dark:border-white/10 flex flex-col h-[75vh] sm:h-auto sm:max-h-[600px] animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0">
         
         {/* Mobile Grabber Capsule */}
         <div className="w-full flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
